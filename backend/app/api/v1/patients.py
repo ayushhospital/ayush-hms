@@ -49,6 +49,9 @@ def get_patient_consultations(patient_id: int, db: Session = Depends(get_db)):
     if not patient:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Patient not found")
     consultations = get_consultations_by_patient(db, patient_id)
+    return [consultation_to_response(c) for c in consultations]
+
+
 @router.patch("/{patient_id}", response_model=PatientResponse)
 def update_patient(patient_id: int, data: PatientUpdate, db: Session = Depends(get_db)):
     """Update patient information (name, gender, age)."""
