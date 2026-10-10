@@ -10,8 +10,8 @@ router = APIRouter(prefix="/doctors", tags=["doctors"])
 
 @router.get("", response_model=list[DoctorResponse])
 def list_doctors(db: Session = Depends(get_db)):
-    """List all active doctors."""
-    doctors = db.query(Doctor).filter(Doctor.is_active == True).order_by(Doctor.name).all()
+    """List all active doctors in the order they were created."""
+    doctors = db.query(Doctor).filter(Doctor.is_active == True).order_by(Doctor.id).all()
     return doctors
 
 

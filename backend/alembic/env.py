@@ -1,5 +1,9 @@
 from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
+import sys
+import os
+# Add parent directory (backend/) to path so 'app' module is importable
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 from alembic import context
 
 # Alembic Config object

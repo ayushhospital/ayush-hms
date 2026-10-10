@@ -42,29 +42,26 @@ def calculate_valid_until(consultation_date: date) -> datetime:
 
 def create_consultation(db: Session, data: ConsultationCreate, consultation_number: Optional[str] = None) -> Consultation:
     """Create a new consultation record."""
-    # Verify patient exists
     patient = db.query(Patient).filter(Patient.id == data.patient_id).first()
     if not patient:
         raise ValueError("Patient not found")
 
-    # Verify doctor exists
-    doctor = db.query(Doctor).filter(Doctor.id == data.doctor_id).first()
-    if not doctor:
-        raise ValueError("Doctor not found")
+    # When custom_doctor_name is provided, skip doctor FK validation
+    if not data.custom_doctor_name:
+        doctor = db.query(Doctor).filter(Doctor.id == data.doctor_id).first()
+        if not doctor:
+            raise ValueError("Doctor not found")
 
-    consultation_date = datetime.combine(
-        data.consultation_date,
-        datetime.min.time(),
-    )
+    consultation_date = datetime.combine(data.consultation_date, datetime.min.time())
     tz = pytz.timezone("Asia/Kolkata")
     consultation_date_aware = tz.localize(consultation_date)
-
     valid_until = calculate_valid_until(data.consultation_date)
 
     consultation = Consultation(
         consultation_number=consultation_number or generate_consultation_number(db),
         patient_id=data.patient_id,
-        doctor_id=data.doctor_id,
+        doctor_id=data.doctor_id if data.doctor_id and not data.custom_doctor_name else None,
+        custom_doctor_name=data.custom_doctor_name,
         consultation_date=consultation_date_aware,
         visit_type=data.visit_type,
         fee_amount=data.fee_amount,
@@ -77,7 +74,6 @@ def create_consultation(db: Session, data: ConsultationCreate, consultation_numb
     db.commit()
     db.refresh(consultation)
 
-    # Eager load relationships for response
     consultation_with_relations = db.query(Consultation).options(
         joinedload(Consultation.patient),
         joinedload(Consultation.doctor),
@@ -102,12 +98,15 @@ def get_consultations_by_patient(db: Session, patient_id: int) -> list[Consultat
 
 
 def consultation_to_response(consultation: Consultation) -> ConsultationResponse:
-    """Convert a Consultation ORM object to a ConsultationResponse schema."""
+    """Convert a Consultation ORM object to a ConsultationResponse schema.
+    Returns the custom doctor name if set, otherwise the linked doctor's name."""
+    doctor_name = consultation.custom_doctor_name or (consultation.doctor.name if consultation.doctor else None)
     return ConsultationResponse(
         id=consultation.id,
         consultation_number=consultation.consultation_number,
         patient_id=consultation.patient_id,
         doctor_id=consultation.doctor_id,
+        custom_doctor_name=consultation.custom_doctor_name,
         consultation_date=consultation.consultation_date,
         visit_type=consultation.visit_type,
         fee_amount=float(consultation.fee_amount) if consultation.fee_amount else 0,
@@ -121,6 +120,6 @@ def consultation_to_response(consultation: Consultation) -> ConsultationResponse
         patient_age=consultation.patient.age if consultation.patient else None,
         patient_gender=consultation.patient.gender if consultation.patient else None,
         patient_phone=consultation.patient.phone_number if consultation.patient else None,
-        doctor_name=consultation.doctor.name if consultation.doctor else None,
+        doctor_name=doctor_name,
         doctor_department=consultation.doctor.department if consultation.doctor else None,
     )

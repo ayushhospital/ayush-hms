@@ -25,4 +25,4 @@ frontend/.env
 Thumbs.db
 
 # Postgres local data
-/tmp/pgdata-ayush/
+/tmp/pgdata-ayush/tsconfig.tsbuildinfo

@@ -32,7 +32,8 @@ export interface PatientCreate {
 // Consultation types
 export interface ConsultationCreate {
   patient_id: number;
-  doctor_id: number;
+  doctor_id: number | null;
+  custom_doctor_name?: string;
   consultation_date: string;
   visit_type: 'New' | 'Follow-up';
   fee_amount: number;
@@ -45,6 +46,7 @@ export interface ConsultationResponse {
   consultation_number: string;
   patient_id: number;
   doctor_id: number;
+  custom_doctor_name?: string | null;
   consultation_date: string;
   visit_type: string;
   fee_amount: number;

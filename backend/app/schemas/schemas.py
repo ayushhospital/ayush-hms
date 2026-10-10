@@ -53,7 +53,8 @@ class PatientSearchResponse(BaseModel):
 
 class ConsultationCreate(BaseModel):
     patient_id: int
-    doctor_id: int
+    doctor_id: Optional[int] = None  # null when using custom_doctor_name
+    custom_doctor_name: Optional[str] = Field(None, max_length=100)
     consultation_date: date
     visit_type: str = Field(..., pattern="^(New|Follow-up)$")
     fee_amount: float = Field(..., ge=0)
@@ -75,7 +76,8 @@ class ConsultationResponse(BaseModel):
     id: int
     consultation_number: str
     patient_id: int
-    doctor_id: int
+    doctor_id: Optional[int] = None
+    custom_doctor_name: Optional[str] = None
     consultation_date: datetime
     visit_type: str
     fee_amount: float

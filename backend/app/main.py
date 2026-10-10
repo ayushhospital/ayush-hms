@@ -1,8 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.core.database import engine, Base
+from app.core.database import engine, Base, SessionLocal
+from app.models.doctor import Doctor
 from app.api.v1.patients import router as patients_router
 from app.api.v1.consultations import router as consultations_router
 from app.api.v1.doctors import router as doctors_router
@@ -30,10 +32,29 @@ app.include_router(doctors_router, prefix="/api/v1")
 app.include_router(reports_router, prefix="/api/v1")
 
 
+DEFAULT_DOCTORS = [
+    {"name": "Dr. K Radhika", "department": "MS DGO", "consultation_fee": 500.0},
+    {"name": "Dr. K V Subba Rao", "department": "MD Pediatrics", "consultation_fee": 500.0},
+    {"name": "Dr. Uma Sai Manukonda", "department": "MS Ortho", "consultation_fee": 500.0},
+]
+
+
 @app.on_event("startup")
 def on_startup():
-    """Create all tables on startup (development only)."""
+    """Create all tables and seed default doctors on startup."""
     Base.metadata.create_all(bind=engine)
+    # Seed default doctors if none exist
+    db: Session = SessionLocal()
+    try:
+        existing = db.query(Doctor).count()
+        if existing == 0:
+            for doc_data in DEFAULT_DOCTORS:
+                doctor = Doctor(**doc_data)
+                db.add(doctor)
+            db.commit()
+            print(f"Seeded {len(DEFAULT_DOCTORS)} default doctors.")
+    finally:
+        db.close()
 
 
 @app.get("/api/health")
