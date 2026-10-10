@@ -52,6 +52,30 @@ def create_consultation(db: Session, data: ConsultationCreate, consultation_numb
         if not doctor:
             raise ValueError("Doctor not found")
 
+    # Prevent duplicate active consultation for the same patient + same doctor
+    now = datetime.now(pytz.timezone("Asia/Kolkata"))
+    if data.custom_doctor_name:
+        existing = db.query(Consultation).filter(
+            Consultation.patient_id == data.patient_id,
+            Consultation.custom_doctor_name == data.custom_doctor_name,
+            Consultation.payment_status == "Paid",
+            Consultation.valid_until >= now,
+        ).first()
+    else:
+        existing = db.query(Consultation).filter(
+            Consultation.patient_id == data.patient_id,
+            Consultation.doctor_id == data.doctor_id,
+            Consultation.payment_status == "Paid",
+            Consultation.valid_until >= now,
+        ).first()
+    if existing:
+        doc_name = data.custom_doctor_name or existing.doctor.name if existing.doctor else "this doctor"
+        raise ValueError(
+            f"Patient already has an active consultation with {doc_name} "
+            f"(valid until {existing.valid_until.strftime('%d-%b-%Y')}). "
+            f"Choose a different doctor."
+        )
+
     consultation_date = datetime.combine(data.consultation_date, datetime.min.time())
     tz = pytz.timezone("Asia/Kolkata")
     consultation_date_aware = tz.localize(consultation_date)

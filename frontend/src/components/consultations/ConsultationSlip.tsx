@@ -8,74 +8,93 @@ interface ConsultationSlipProps {
 }
 
 const ConsultationSlip: React.FC<ConsultationSlipProps> = ({ consultation, onClose }) => {
-  const d = (s: string) => new Date(s).toLocaleDateString('en-IN', {
-    day: '2-digit', month: 'short', year: 'numeric'
-  });
+  const d = (s: string) => {
+    const dt = new Date(s);
+    const day = ('0' + dt.getDate()).slice(-2);
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `${day}-${months[dt.getMonth()]}-${dt.getFullYear()} ${('0'+dt.getHours()).slice(-2)}:${('0'+dt.getMinutes()).slice(-2)}`;
+  };
+  const ds = (s: string) => {
+    const dt = new Date(s);
+    return `${('0'+dt.getDate()).slice(-2)}-${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][dt.getMonth()]}-${dt.getFullYear()}`;
+  };
+  const dl = consultation.custom_doctor_name || consultation.doctor_name || '';
 
-  const doctorLine = consultation.custom_doctor_name || consultation.doctor_name || '';
+  const inWords = (n: number) => {
+    if (n===0) return 'Zero';
+    const o=['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
+    const t=['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+    const c = (x: number): string => {
+      if (x<20) return o[x];
+      if (x<100) return t[Math.floor(x/10)]+' '+o[x%10];
+      if (x<1000) return o[Math.floor(x/100)]+' Hundred '+c(x%100);
+      if (x<100000) return c(Math.floor(x/1000))+' Thousand '+c(x%1000);
+      if (x<10000000) return c(Math.floor(x/100000))+' Lakh '+c(x%100000);
+      return c(Math.floor(x/10000000))+' Crore '+c(x%10000000);
+    };
+    return c(Math.round(n)).trim();
+  };
 
   return (
     <div>
       <div className="no-print bg-white rounded-xl border border-gray-200 p-6 mb-4">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between gap-4">
           <h3 className="text-base font-semibold text-gray-800 m-0">Consultation Slip</h3>
           <div className="flex gap-2">
             <button onClick={() => window.print()}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">
-              Print
-            </button>
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Print</button>
             <button onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">
-              Close
-            </button>
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">Close</button>
           </div>
         </div>
-        <p className="text-xs text-gray-500">Designed for A5 paper (148 x 210 mm).</p>
+        <p className="text-xs text-gray-500">A5 slip (148x210 mm).</p>
       </div>
 
-      <div className="slip-container bg-white border border-gray-200 rounded-xl p-5">
-        <div className="slip-header">
-          <h1 style={{fontSize:'13pt', fontWeight:700, margin:'0 0 3mm'}}>Ayush Hospital</h1>
-          <p style={{fontSize:'8pt', margin:0}}>Phone: +91-9876543210</p>
+      <div className="slip-container" style={{maxWidth:'500px', margin:'0 auto'}}>
+        <div style={{textAlign:'center', borderBottom:'2px solid #2563eb', paddingBottom:'2.5mm', marginBottom:'2.5mm'}}>
+          <h1 style={{fontSize:'14pt', fontWeight:700, margin:'0 0 0.5mm', color:'#1e3a5f'}}>Ayush Hospital</h1>
+          <p style={{fontSize:'8pt', margin:'0 0 0.5mm', color:'#555'}}>KPHB, Hyderabad</p>
+          <p style={{fontSize:'7.5pt', margin:0, color:'#555'}}>Phone: +91-9876543210 | Email: contact@ayushhospital.com</p>
         </div>
 
-        <div className="slip-body" style={{fontSize:'9pt'}}>
-          <div style={{textAlign:'center', fontWeight:600, fontSize:'10pt', margin:'3mm 0'}}>
-            CONSULTATION SLIP
+        <div style={{display:'flex', justifyContent:'space-between', fontSize:'9pt', marginBottom:'2mm'}}>
+          <b>Consultation No: {consultation.consultation_number}</b>
+          <span>{d(consultation.consultation_date)}</span>
+        </div>
+
+        <hr style={{border:'none', borderTop:'1px dashed #bbb', margin:'1mm 0'}} />
+
+        <div style={{fontSize:'9pt', lineHeight:1.6}}>
+          <div><b style={{display:'inline-block', width:'28mm'}}>UHID:</b>{consultation.patient_uhid}</div>
+          <div><b style={{display:'inline-block', width:'28mm'}}>Patient:</b>{consultation.patient_name}</div>
+          <div><b style={{display:'inline-block', width:'28mm'}}>Phone:</b>{consultation.patient_phone}</div>
+          <div><b style={{display:'inline-block', width:'28mm'}}>Age / Gender:</b>{consultation.patient_age} / {consultation.patient_gender}</div>
+        </div>
+
+        <hr style={{border:'none', borderTop:'1px dashed #bbb', margin:'1mm 0'}} />
+
+        <div style={{fontSize:'9pt', lineHeight:1.6}}>
+          <div><b style={{display:'inline-block', width:'32mm'}}>Doctor:</b>{dl}</div>
+          <div><b style={{display:'inline-block', width:'32mm'}}>Consultation Fee:</b>INR {consultation.fee_amount.toFixed(0)} ({inWords(consultation.fee_amount)} rupees only)</div>
+          <div style={{display:'flex', justifyContent:'space-between'}}>
+            <span><b>Payment:</b> {consultation.payment_mode}</span>
+            <span><b>Visit:</b> {consultation.visit_type}</span>
           </div>
-          <table style={{width:'100%', borderCollapse:'collapse'}}>
-            <tbody>
-              {[
-                ['Consultation No', consultation.consultation_number],
-                ['Date', d(consultation.consultation_date)],
-                ['', ''],
-                ['UHID', consultation.patient_uhid],
-                ['Patient', consultation.patient_name],
-                ['Age / Gender', `${consultation.patient_age} / ${consultation.patient_gender}`],
-                ['Phone', consultation.patient_phone],
-                ['', ''],
-                ['Doctor', doctorLine],
-                ['Visit Type', consultation.visit_type],
-                ['Fee', `\u20b9${consultation.fee_amount.toFixed(2)}`],
-                ['Payment', consultation.payment_mode],
-                ['', ''],
-                ['Valid Until', d(consultation.valid_until)],
-              ].map(([label, val], i) =>
-                label ? (
-                  <tr key={i}>
-                    <td style={{padding:'1mm 2mm 1mm 0', fontWeight:600, width:'40%'}}>{label}</td>
-                    <td style={{padding:'1mm 0'}}>{val}</td>
-                  </tr>
-                ) : (
-                  <tr key={i}><td colSpan={2} style={{borderTop:'1px solid #ccc'}}></td></tr>
-                )
-              )}
-            </tbody>
-          </table>
         </div>
 
-        <div className="slip-footer" style={{textAlign:'center', fontSize:'7pt', color:'#666', marginTop:'4mm'}}>
-          Computer-generated slip &bull; Valid for 7 days
+        <hr style={{border:'none', borderTop:'1px dashed #bbb', margin:'1mm 0'}} />
+
+        <div style={{fontSize:'9pt', marginBottom:'2.5mm'}}>
+          <b>Validity:</b> {ds(consultation.consultation_date)} to {ds(consultation.valid_until)}
+        </div>
+
+        <div style={{textAlign:'right', marginTop:'6mm', fontSize:'9pt'}}>
+          <div style={{marginBottom:'5mm'}}>Authorized signature</div>
+          <div style={{borderTop:'1px solid #000', width:'40mm', display:'inline-block', paddingTop:'1mm'}}></div>
+        </div>
+
+        <div style={{textAlign:'center', fontSize:'7pt', color:'#888', borderTop:'1px solid #ddd', paddingTop:'1.5mm', marginTop:'2mm'}}>
+          Computer-generated slip | Valid for 7 days from the date of issue
         </div>
       </div>
     </div>
