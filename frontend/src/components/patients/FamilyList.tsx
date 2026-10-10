@@ -45,7 +45,16 @@ const FamilyList: React.FC<FamilyListProps> = ({ patients, onNewConsultation, on
                 <div className="flex items-center gap-1 shrink-0">
                   <button onClick={() => { setEditingId(editingId === patient.id ? null : patient.id); setViewingId(null); }}
                     className="px-2.5 py-1.5 text-[11px] font-medium text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200">Edit</button>
-                  <button onClick={() => { setViewingId(viewingId === patient.id ? null : patient.id); setEditingId(null); setRefreshKey(refreshKey + 1); }}
+                  <button onClick={() => {
+                      const alreadyOpen = viewingId === patient.id;
+                      setEditingId(null);
+                      if (alreadyOpen) {
+                        setRefreshKey(refreshKey + 1); // Already open → just refresh
+                      } else {
+                        setViewingId(patient.id);
+                        setRefreshKey(refreshKey + 1);
+                      }
+                    }}
                     className="px-2.5 py-1.5 text-[11px] font-medium text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200">Consults</button>
                 </div>
               </div>
