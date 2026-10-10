@@ -18,7 +18,8 @@ const ConsultationSlip: React.FC<ConsultationSlipProps> = ({ consultation, onClo
     const dt = new Date(s);
     return `${('0'+dt.getDate()).slice(-2)}-${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][dt.getMonth()]}-${dt.getFullYear()}`;
   };
-  const dl = consultation.custom_doctor_name || consultation.doctor_name || '';
+  const dl = consultation.custom_doctor_name || 
+    (consultation.doctor_department ? `${consultation.doctor_name} (${consultation.doctor_department})` : consultation.doctor_name || '');
 
   const inWords = (n: number) => {
     if (n===0) return 'Zero';
@@ -59,7 +60,7 @@ const ConsultationSlip: React.FC<ConsultationSlipProps> = ({ consultation, onClo
 
         <div style={{display:'flex', justifyContent:'space-between', fontSize:'9pt', marginBottom:'2mm'}}>
           <b>Consultation No: {consultation.consultation_number}</b>
-          <span>{d(consultation.consultation_date)}</span>
+          <span>{d(consultation.created_at)}</span>
         </div>
 
         <hr style={{border:'none', borderTop:'1px dashed #bbb', margin:'1mm 0'}} />
