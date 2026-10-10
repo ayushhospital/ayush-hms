@@ -50,6 +50,9 @@ def doctor_summary_report(
     """Get doctor-wise consultation summary for a date range."""
     if start_date > end_date:
         raise HTTPException(status_code=400, detail="start_date must be before or equal to end_date")
+    return get_doctor_summary_report(db, start_date, end_date)
+
+
 @router.get("/patient-list", response_model=PatientListReport)
 def patient_list_report(
     start_date: date = Query(...),
@@ -60,4 +63,3 @@ def patient_list_report(
     if start_date > end_date:
         raise HTTPException(status_code=400, detail="start_date must be before or equal to end_date")
     return get_patient_list_report(db, start_date, end_date)
-    return get_doctor_summary_report(db, start_date, end_date)
