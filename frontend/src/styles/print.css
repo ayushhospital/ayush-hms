@@ -1,11 +1,23 @@
-/* Consultation Slip Print Styles - A5 (148x210mm) */
+/* Consultation Slip Print Styles — A5 (148×210 mm) */
 @media print {
+  /* Hide everything on the page except the slip container */
+  body * {
+    visibility: hidden !important;
+  }
+
+  .slip-container,
+  .slip-container * {
+    visibility: visible !important;
+  }
+
   .slip-container {
+    position: absolute;
+    left: 0;
+    top: 0;
     width: 148mm;
     min-height: 210mm;
     box-sizing: border-box;
-    margin: 0 auto;
-    padding: 6mm;
+    padding: 5mm 6mm;
     font-size: 9pt;
     line-height: 1.4;
     border: none !important;
@@ -16,16 +28,16 @@
   .slip-header {
     text-align: center;
     border-bottom: 1.5px solid #000;
-    padding-bottom: 2.5mm;
-    margin-bottom: 3mm;
+    padding-bottom: 2mm;
+    margin-bottom: 2.5mm;
   }
 
   .slip-footer {
-    margin-top: 6mm;
+    margin-top: 5mm;
     border-top: 1px solid #000;
-    padding-top: 2mm;
+    padding-top: 1.5mm;
     text-align: center;
     font-size: 7pt;
-    color: #666;
+    color: #444;
   }
 }

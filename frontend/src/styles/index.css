@@ -46,6 +46,6 @@ body {
 
   @page {
     size: A5 portrait;
-    margin: 10mm;
+    margin: 0;
   }
 }
