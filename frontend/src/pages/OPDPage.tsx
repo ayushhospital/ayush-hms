@@ -99,30 +99,34 @@ const handleSearch = async (phone: string) => {
 
   return (
     <div className="max-w-xl mx-auto">
-      <div className="mb-5">
-        <h2 className="text-lg font-bold text-gray-800 m-0">OPD — Patient Management</h2>
+      {/* Page header */}
+      <div className="mb-6">
+        <h2 className="text-lg font-bold text-gray-900 m-0">OPD — Patient Management</h2>
         <p className="text-xs text-gray-500 mt-0.5">Search by phone number to find or register a patient</p>
       </div>
 
-      <PhoneSearch onSearch={handleSearch} loading={false} />
+      {/* Search bar */}
+      <div className="mb-5">
+        <PhoneSearch onSearch={handleSearch} loading={false} />
+      </div>
 
       {searchError && (
-        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
-          {searchError}
-        </div>
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700">{searchError}</div>
       )}
 
       {searchResults.length > 0 && !showRegistration && !showConsultationForm && !printConsultation && (
-        <div className="mt-5">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-xs text-gray-500 m-0">
-              {searchResults.length} patient{searchResults.length !== 1 ? 's' : ''} found
-            </p>
+        <div className="mt-2">
+          {/* Results header */}
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-sm font-semibold text-gray-800 m-0">Patient Records</h3>
+              <p className="text-[11px] text-gray-500 mt-0.5">{searchResults.length} patient{searchResults.length !== 1 ? 's' : ''} found</p>
+            </div>
             <button
               onClick={() => { setShowRegistration(true); loadDoctors(); }}
-              className="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-colors"
             >
-              + Register
+              + New Registration
             </button>
           </div>
           <FamilyList
@@ -135,19 +139,21 @@ const handleSearch = async (phone: string) => {
       )}
 
       {searchResults.length === 0 && searchedPhone && !showRegistration && !searchError && (
-        <div className="mt-5 text-center py-8 bg-white rounded-lg border border-gray-200">
-          <p className="text-gray-500 text-sm mb-3">No patients found for this phone number</p>
+        <div className="mt-3 text-center py-10 bg-white rounded-xl border border-gray-200 shadow-sm">
+          <div className="text-4xl text-gray-300 mb-3">👤</div>
+          <p className="text-gray-700 text-sm font-medium mb-2">No patients found</p>
+          <p className="text-[11px] text-gray-500 mb-4">No records linked to this phone number</p>
           <button
             onClick={() => { setShowRegistration(true); loadDoctors(); }}
-            className="px-4 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+            className="px-5 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
           >
-            Register New Patient
+            + New Registration
           </button>
         </div>
       )}
 
       {showRegistration && (
-        <div className="mt-5">
+        <div className="mt-3">
           <PatientRegistrationForm
             phone={searchedPhone}
             doctors={doctors}
@@ -158,7 +164,7 @@ const handleSearch = async (phone: string) => {
       )}
 
       {showConsultationForm && doctors.length > 0 && (
-        <div className="mt-5">
+        <div className="mt-3">
           <ConsultationForm
             patient={showConsultationForm.patient}
             doctors={doctors}
@@ -170,7 +176,7 @@ const handleSearch = async (phone: string) => {
       )}
 
       {printConsultation && (
-        <div className="mt-5">
+        <div className="mt-3">
           <ConsultationSlip
             consultation={printConsultation}
             onClose={() => setPrintConsultation(null)}
@@ -179,11 +185,14 @@ const handleSearch = async (phone: string) => {
       )}
 
       {!searchedPhone && searchResults.length === 0 && !showRegistration && (
-        <div className="mt-12 text-center text-gray-400">
-          <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <p className="text-sm">Enter a phone number above to search</p>
+        <div className="mt-16 text-center text-gray-400">
+          <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M22 11.5l-10-8-1v10-3v-9m-1 4m2 9h-3" />
+            </svg>
+          </div>
+          <p className="text-sm font-medium text-gray-500 mb-1">Search for a patient</p>
+          <p className="text-[11px] text-gray-400">Enter a phone number above to get started</p>
         </div>
       )}
     </div>
