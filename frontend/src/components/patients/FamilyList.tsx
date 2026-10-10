@@ -45,7 +45,7 @@ const FamilyList: React.FC<FamilyListProps> = ({ patients, onNewConsultation, on
                   <button onClick={() => { setEditingId(editingId === patient.id ? null : patient.id); setViewingId(null); }}
                     className="px-2.5 py-1.5 text-[11px] font-medium text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200">Edit</button>
                   <button onClick={() => { setViewingId(viewingId === patient.id ? null : patient.id); setEditingId(null); }}
-                    className="px-2.5 py-1.5 text-[11px] font-medium text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200">View</button>
+                    className="px-2.5 py-1.5 text-[11px] font-medium text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200">Consults</button>
                   {item.active_consultation_id ? (
                     <button onClick={() => onPrintExisting(item.active_consultation_id!)}
                       className="px-2.5 py-1.5 text-[11px] font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">Slip</button>
