@@ -26,16 +26,18 @@ const FamilyList: React.FC<FamilyListProps> = ({ patients, onNewConsultation, on
         const patient = item.patient;
         return (
           <div key={patient.id}>
-            <div className="bg-white rounded-lg border border-gray-200 px-4 py-3">
+            <div className="bg-white rounded-lg border border-gray-200 px-4 py-2.5 shadow-sm">
               <div className="flex items-center justify-between gap-2">
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 mb-0.5">
+                  <div className="flex items-center gap-1.5 mb-0.5">
                     <h4 className="text-sm font-semibold text-gray-800 m-0 truncate">{patient.name}</h4>
                     <StatusBadge status={item.consultation_status} />
                   </div>
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-gray-500">
+                  <div className="flex items-center gap-x-2.5 gap-y-0.5 text-[11px] text-gray-500">
                     <span>{patient.uhid}</span>
+                    <span className="text-gray-300">|</span>
                     <span>{patient.gender}</span>
+                    <span className="text-gray-300">|</span>
                     <span>Age {patient.age}</span>
                   </div>
                 </div>

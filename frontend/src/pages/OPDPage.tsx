@@ -98,31 +98,31 @@ const handleSearch = async (phone: string) => {
   };
 
   return (
-    <div>
-      <div className="mb-6">
-        <h2 className="text-xl font-bold text-gray-800 m-0">OPD — Patient Management</h2>
-        <p className="text-sm text-gray-500 mt-1">Search by phone number to find or register a patient</p>
+    <div className="max-w-xl mx-auto">
+      <div className="mb-5">
+        <h2 className="text-lg font-bold text-gray-800 m-0">OPD — Patient Management</h2>
+        <p className="text-xs text-gray-500 mt-0.5">Search by phone number to find or register a patient</p>
       </div>
 
       <PhoneSearch onSearch={handleSearch} loading={false} />
 
       {searchError && (
-        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
           {searchError}
         </div>
       )}
 
       {searchResults.length > 0 && !showRegistration && !showConsultationForm && !printConsultation && (
-        <div className="mt-6">
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-sm text-gray-600 m-0">
-              Found {searchResults.length} patient{searchResults.length !== 1 ? 's' : ''} linked to this number
+        <div className="mt-5">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs text-gray-500 m-0">
+              {searchResults.length} patient{searchResults.length !== 1 ? 's' : ''} found
             </p>
             <button
               onClick={() => { setShowRegistration(true); loadDoctors(); }}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
             >
-              + Register New Family Member
+              + Register
             </button>
           </div>
           <FamilyList
@@ -135,11 +135,11 @@ const handleSearch = async (phone: string) => {
       )}
 
       {searchResults.length === 0 && searchedPhone && !showRegistration && !searchError && (
-        <div className="mt-6 text-center py-8 bg-white rounded-xl border border-gray-200">
-          <p className="text-gray-500 mb-4">No patients found for this phone number</p>
+        <div className="mt-5 text-center py-8 bg-white rounded-lg border border-gray-200">
+          <p className="text-gray-500 text-sm mb-3">No patients found for this phone number</p>
           <button
             onClick={() => { setShowRegistration(true); loadDoctors(); }}
-            className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+            className="px-4 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
           >
             Register New Patient
           </button>
@@ -147,7 +147,7 @@ const handleSearch = async (phone: string) => {
       )}
 
       {showRegistration && (
-        <div className="mt-6">
+        <div className="mt-5">
           <PatientRegistrationForm
             phone={searchedPhone}
             doctors={doctors}
@@ -158,7 +158,7 @@ const handleSearch = async (phone: string) => {
       )}
 
       {showConsultationForm && doctors.length > 0 && (
-        <div className="mt-6">
+        <div className="mt-5">
           <ConsultationForm
             patient={showConsultationForm.patient}
             doctors={doctors}
@@ -170,7 +170,7 @@ const handleSearch = async (phone: string) => {
       )}
 
       {printConsultation && (
-        <div className="mt-6">
+        <div className="mt-5">
           <ConsultationSlip
             consultation={printConsultation}
             onClose={() => setPrintConsultation(null)}
@@ -180,10 +180,10 @@ const handleSearch = async (phone: string) => {
 
       {!searchedPhone && searchResults.length === 0 && !showRegistration && (
         <div className="mt-12 text-center text-gray-400">
-          <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
-          <p>Enter a phone number above to search for a patient</p>
+          <p className="text-sm">Enter a phone number above to search</p>
         </div>
       )}
     </div>
