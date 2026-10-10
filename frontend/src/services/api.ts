@@ -2,6 +2,7 @@ import type {
   PatientSearchResponse,
   Patient,
   PatientCreate,
+  PatientUpdate,
   ConsultationResponse,
   ConsultationCreate,
   Doctor,
@@ -46,6 +47,12 @@ export const patientsApi = {
 
   getConsultations: (patientId: number) =>
     request<ConsultationResponse[]>(`/patients/${patientId}/consultations`),
+
+  update: (id: number, data: PatientUpdate) =>
+    request<Patient>(`/patients/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
 };
 
 // Consultations API

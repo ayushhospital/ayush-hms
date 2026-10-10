@@ -25,6 +25,10 @@ class PatientCreate(BaseModel):
         "phone_number": "9876543210"
     }}}
 
+class PatientUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    gender: Optional[str] = Field(None, pattern="^(Male|Female|Other)$")
+    age: Optional[int] = Field(None, ge=0, le=150)
 
 class PatientResponse(BaseModel):
     id: int

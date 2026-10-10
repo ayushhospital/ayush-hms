@@ -30,6 +30,11 @@ export interface PatientCreate {
 }
 
 // Consultation types
+export interface PatientUpdate {
+  name?: string;
+  gender?: string;
+  age?: number;
+}
 export interface ConsultationCreate {
   patient_id: number;
   doctor_id: number | null;

@@ -91,6 +91,12 @@ const handleSearch = async (phone: string) => {
     }
   };
 
+  const handlePatientChanged = async () => {
+    if (searchedPhone) {
+      await handleSearch(searchedPhone);
+    }
+  };
+
   return (
     <div>
       <div className="mb-6">
@@ -123,6 +129,7 @@ const handleSearch = async (phone: string) => {
             patients={searchResults}
             onNewConsultation={handleNewConsultation}
             onPrintExisting={handlePrintExisting}
+            onPatientChanged={handlePatientChanged}
           />
         </div>
       )}

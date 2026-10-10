@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 import re
+from typing import Optional
 
 from app.core.database import get_db
-from app.schemas.schemas import PatientCreate, PatientResponse, PatientSearchResponse
-from app.services.patient_service import register_patient, search_patients_by_phone, get_patient_by_id
+from app.schemas.schemas import PatientCreate, PatientUpdate, PatientResponse, PatientSearchResponse
+from app.services.patient_service import register_patient, search_patients_by_phone, get_patient_by_id, update_patient_info
 
 router = APIRouter(prefix="/patients", tags=["patients"])
 
@@ -48,4 +49,11 @@ def get_patient_consultations(patient_id: int, db: Session = Depends(get_db)):
     if not patient:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Patient not found")
     consultations = get_consultations_by_patient(db, patient_id)
+@router.patch("/{patient_id}", response_model=PatientResponse)
+def update_patient(patient_id: int, data: PatientUpdate, db: Session = Depends(get_db)):
+    """Update patient information (name, gender, age)."""
+    patient = update_patient_info(db, patient_id, data)
+    if not patient:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Patient not found")
+    return patient
     return [consultation_to_response(c) for c in consultations]

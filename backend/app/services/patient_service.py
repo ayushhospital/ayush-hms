@@ -8,7 +8,7 @@ from typing import Optional
 from app.models.patient import Patient
 from app.models.consultation import Consultation
 from app.models.doctor import Doctor
-from app.schemas.schemas import PatientCreate, PatientSearchResult, PatientSearchResponse
+from app.schemas.schemas import PatientCreate, PatientUpdate, PatientSearchResult, PatientSearchResponse
 from datetime import date as date_type
 
 
@@ -74,6 +74,20 @@ def search_patients_by_phone(db: Session, phone: str) -> PatientSearchResponse:
 
 def get_patient_by_id(db: Session, patient_id: int) -> Optional[Patient]:
     return db.query(Patient).filter(Patient.id == patient_id).first()
+def update_patient_info(db: Session, patient_id: int, data: PatientUpdate) -> Optional[Patient]:
+    """Update patient fields (name, gender, age). Returns None if patient not found."""
+    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+    if not patient:
+        return None
+    if data.name is not None:
+        patient.name = data.name.strip()
+    if data.gender is not None:
+        patient.gender = data.gender
+    if data.age is not None:
+        patient.age = data.age
+    db.commit()
+    db.refresh(patient)
+    return patient
 
 
 def get_consultation_status(db: Session, patient_id: int) -> tuple[str, Optional[int], Optional[datetime]]:
