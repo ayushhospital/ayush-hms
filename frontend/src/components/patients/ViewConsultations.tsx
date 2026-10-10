@@ -14,7 +14,7 @@ const ViewConsultations: React.FC<Props> = ({ patient, onNewConsultation, onPrin
 
   useEffect(() => {
     patientsApi.getConsultations(patient.id).then((data) => {
-      setConsultations(data);
+      setConsultations(Array.isArray(data) ? data : []);
     }).catch(() => {
       setConsultations([]);
     }).finally(() => setLoading(false));
