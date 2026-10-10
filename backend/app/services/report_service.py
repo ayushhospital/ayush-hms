@@ -4,10 +4,12 @@ from datetime import date, datetime, timedelta
 
 from app.models.consultation import Consultation
 from app.models.doctor import Doctor
+from app.models.patient import Patient
 from app.schemas.schemas import (
     RevenueReport, RevenueReportRow,
     FootfallReport,
     DoctorSummaryReport, DoctorSummaryRow,
+    PatientListReport, PatientListRow,
 )
 
 
@@ -151,4 +153,48 @@ def get_doctor_summary_report(db: Session, start_date: date, end_date: date) -> 
     return DoctorSummaryReport(
         start_date=start_date, end_date=end_date,
         rows=rows, grand_total=grand_total,
+    )
+def get_patient_list_report(db: Session, start_date: date, end_date: date) -> PatientListReport:
+    """Get individual patient visit list for a date range."""
+    start_dt, end_dt = _get_date_bounds(start_date, end_date)
+
+    rows = db.query(
+        Consultation.consultation_number,
+        Consultation.consultation_date,
+        Patient.name.label("patient_name"),
+        Patient.uhid.label("patient_uhid"),
+        Patient.phone_number.label("patient_phone"),
+        func.coalesce(Consultation.custom_doctor_name, Doctor.name).label("doctor_name"),
+        Consultation.visit_type,
+        Consultation.fee_amount,
+        Consultation.payment_mode,
+    ).join(
+        Patient, Consultation.patient_id == Patient.id,
+    ).outerjoin(
+        Doctor, Consultation.doctor_id == Doctor.id,
+    ).filter(
+        Consultation.consultation_date >= start_dt,
+        Consultation.consultation_date < end_dt,
+        Consultation.payment_status == "Paid",
+    ).order_by(
+        Consultation.consultation_date.desc(),
+    ).all()
+
+    report_rows = []
+    for r in rows:
+        report_rows.append(PatientListRow(
+            consultation_number=r.consultation_number,
+            consultation_date=r.consultation_date,
+            patient_name=r.patient_name,
+            patient_uhid=r.patient_uhid,
+            patient_phone=r.patient_phone,
+            doctor_name=r.doctor_name,
+            visit_type=r.visit_type,
+            fee_amount=float(r.fee_amount) if r.fee_amount else 0.0,
+            payment_mode=r.payment_mode,
+        ))
+
+    return PatientListReport(
+        start_date=start_date, end_date=end_date,
+        rows=report_rows, total_count=len(report_rows),
     )

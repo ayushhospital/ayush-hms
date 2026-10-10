@@ -4,9 +4,10 @@ import type {
   RevenueReport,
   FootfallReport,
   DoctorSummaryReport,
+  PatientListReport,
 } from '../types';
 
-type ReportTab = 'revenue' | 'footfall' | 'doctor';
+type ReportTab = 'revenue' | 'footfall' | 'doctor' | 'patientlist';
 
 const ReportsPage: React.FC = () => {
   const today = new Date().toISOString().split('T')[0];
@@ -22,6 +23,7 @@ const ReportsPage: React.FC = () => {
   const [revenue, setRevenue] = useState<RevenueReport | null>(null);
   const [footfall, setFootfall] = useState<FootfallReport | null>(null);
   const [doctorSummary, setDoctorSummary] = useState<DoctorSummaryReport | null>(null);
+  const [patientList, setPatientList] = useState<PatientListReport | null>(null);
 
   const fetchReport = async () => {
     setLoading(true);
@@ -36,6 +38,9 @@ const ReportsPage: React.FC = () => {
       } else if (activeTab === 'doctor') {
         const data = await reportsApi.doctorSummary(startDate, endDate);
         setDoctorSummary(data);
+      } else if (activeTab === 'patientlist') {
+        const data = await reportsApi.patientList(startDate, endDate);
+        setPatientList(data);
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to fetch report');
@@ -54,6 +59,7 @@ const ReportsPage: React.FC = () => {
     { key: 'revenue', label: 'Daily Revenue' },
     { key: 'footfall', label: 'Patient Footfall' },
     { key: 'doctor', label: 'Doctor-wise Summary' },
+    { key: 'patientlist', label: 'Patient List' },
   ];
 
   const handleTabChange = (tab: ReportTab) => {
@@ -61,6 +67,7 @@ const ReportsPage: React.FC = () => {
     setRevenue(null);
     setFootfall(null);
     setDoctorSummary(null);
+    setPatientList(null);
   };
 
   return (
@@ -216,7 +223,44 @@ const ReportsPage: React.FC = () => {
         </div>
       )}
 
-      {!revenue && !footfall && !doctorSummary && !loading && !error && (
+      {activeTab === 'patientlist' && patientList && (
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <h3 className="text-base font-semibold text-gray-800 mb-2">Patient Visit List</h3>
+          <p className="text-xs text-gray-500 mb-4">{patientList.total_count} visits found</p>
+          <div className="max-h-96 overflow-y-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="text-left py-2 font-medium text-gray-600">Date</th>
+                  <th className="text-left py-2 font-medium text-gray-600">Patient</th>
+                  <th className="text-left py-2 font-medium text-gray-600">UHID</th>
+                  <th className="text-left py-2 font-medium text-gray-600">Phone</th>
+                  <th className="text-left py-2 font-medium text-gray-600">Doctor</th>
+                  <th className="text-left py-2 font-medium text-gray-600">Type</th>
+                  <th className="text-right py-2 font-medium text-gray-600">Fee</th>
+                  <th className="text-left py-2 font-medium text-gray-600">Payment</th>
+                </tr>
+              </thead>
+              <tbody>
+                {patientList.rows.map((row) => (
+                  <tr key={row.consultation_number} className="border-b border-gray-100">
+                    <td className="py-1.5 whitespace-nowrap">{row.consultation_date.slice(0, 10)}</td>
+                    <td className="py-1.5">{row.patient_name}</td>
+                    <td className="py-1.5">{row.patient_uhid}</td>
+                    <td className="py-1.5">{row.patient_phone}</td>
+                    <td className="py-1.5">{row.doctor_name || '-'}</td>
+                    <td className="py-1.5">{row.visit_type}</td>
+                    <td className="py-1.5 text-right">₹{row.fee_amount.toFixed(0)}</td>
+                    <td className="py-1.5">{row.payment_mode}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {!revenue && !footfall && !doctorSummary && !patientList && !loading && !error && (
         <div className="text-center py-12 text-gray-400">
           <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />

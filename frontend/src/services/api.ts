@@ -8,6 +8,7 @@ import type {
   RevenueReport,
   FootfallReport,
   DoctorSummaryReport,
+  PatientListReport,
 } from '../types';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
@@ -86,4 +87,7 @@ export const reportsApi = {
 
   doctorSummary: (startDate: string, endDate: string) =>
     request<DoctorSummaryReport>(`/reports/doctor-summary?start_date=${startDate}&end_date=${endDate}`),
+
+  patientList: (startDate: string, endDate: string) =>
+    request<PatientListReport>(`/reports/patient-list?start_date=${startDate}&end_date=${endDate}`),
 };

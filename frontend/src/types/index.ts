@@ -81,6 +81,25 @@ export interface RevenueReportRow {
   upi_amount: number;
   total: number;
 }
+// Patient List Report
+export interface PatientListRow {
+  consultation_number: string;
+  consultation_date: string;
+  patient_name: string;
+  patient_uhid: string;
+  patient_phone: string;
+  doctor_name: string | null;
+  visit_type: string;
+  fee_amount: number;
+  payment_mode: string;
+}
+
+export interface PatientListReport {
+  start_date: string;
+  end_date: string;
+  rows: PatientListRow[];
+  total_count: number;
+}
 
 export interface RevenueReport {
   start_date: string;

@@ -16,32 +16,25 @@ const PhoneSearch: React.FC<PhoneSearchProps> = ({ onSearch, loading }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-200 p-4">
-      <div className="flex gap-3">
-        <div className="flex-1">
-          <label htmlFor="phone-search" className="block text-sm font-medium text-gray-700 mb-1">
-            Phone Number
-          </label>
-          <input
-            id="phone-search"
-            type="tel"
-            inputMode="numeric"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value.replace(/[^0-9+\-\s]/g, ''))}
-            placeholder="Enter phone number (e.g., 9876543210)"
-            className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
-            autoFocus
-          />
-        </div>
-        <div className="flex items-end">
-          <button
-            type="submit"
-            disabled={phone.replace(/\D/g, '').length < 10 || loading}
-            className="px-6 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {loading ? 'Searching...' : 'Search'}
-          </button>
-        </div>
+    <form onSubmit={handleSubmit} className="bg-white rounded-lg border border-gray-200 p-3">
+      <div className="flex items-center gap-2">
+        <input
+          id="phone-search"
+          type="tel"
+          inputMode="numeric"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value.replace(/[^0-9+\-\s]/g, ''))}
+          placeholder="Phone (e.g., 9876543210)"
+          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+          autoFocus
+        />
+        <button
+          type="submit"
+          disabled={phone.replace(/\D/g, '').length < 10 || loading}
+          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+        >
+          {loading ? 'Searching...' : 'Search'}
+        </button>
       </div>
     </form>
   );

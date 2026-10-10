@@ -159,3 +159,20 @@ class DoctorSummaryReport(BaseModel):
     end_date: date
     rows: list[DoctorSummaryRow]
     grand_total: float
+class PatientListRow(BaseModel):
+    consultation_number: str
+    consultation_date: datetime
+    patient_name: str
+    patient_uhid: str
+    patient_phone: str
+    doctor_name: Optional[str] = None
+    visit_type: str
+    fee_amount: float
+    payment_mode: str
+
+
+class PatientListReport(BaseModel):
+    start_date: date
+    end_date: date
+    rows: list[PatientListRow]
+    total_count: int

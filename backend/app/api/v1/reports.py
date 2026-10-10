@@ -1,14 +1,18 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from datetime import date
-
 from app.core.database import get_db
+
 from app.services.report_service import (
     get_revenue_report,
     get_footfall_report,
     get_doctor_summary_report,
+    get_patient_list_report,
 )
-from app.schemas.schemas import RevenueReport, FootfallReport, DoctorSummaryReport
+from app.schemas.schemas import (
+    RevenueReport, FootfallReport,
+    DoctorSummaryReport, PatientListReport,
+)
 
 router = APIRouter(prefix="/reports", tags=["reports"])
 
@@ -46,4 +50,14 @@ def doctor_summary_report(
     """Get doctor-wise consultation summary for a date range."""
     if start_date > end_date:
         raise HTTPException(status_code=400, detail="start_date must be before or equal to end_date")
+@router.get("/patient-list", response_model=PatientListReport)
+def patient_list_report(
+    start_date: date = Query(...),
+    end_date: date = Query(...),
+    db: Session = Depends(get_db),
+):
+    """Get individual patient visit list for a date range."""
+    if start_date > end_date:
+        raise HTTPException(status_code=400, detail="start_date must be before or equal to end_date")
+    return get_patient_list_report(db, start_date, end_date)
     return get_doctor_summary_report(db, start_date, end_date)
