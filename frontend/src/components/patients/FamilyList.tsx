@@ -19,6 +19,7 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
 const FamilyList: React.FC<FamilyListProps> = ({ patients, onNewConsultation, onPrintExisting, onPatientChanged }) => {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [viewingId, setViewingId] = useState<number | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0); // forces Consults panel to re-fetch
 
   return (
     <div className="space-y-2">
@@ -44,12 +45,8 @@ const FamilyList: React.FC<FamilyListProps> = ({ patients, onNewConsultation, on
                 <div className="flex items-center gap-1 shrink-0">
                   <button onClick={() => { setEditingId(editingId === patient.id ? null : patient.id); setViewingId(null); }}
                     className="px-2.5 py-1.5 text-[11px] font-medium text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200">Edit</button>
-                  <button onClick={() => { setViewingId(viewingId === patient.id ? null : patient.id); setEditingId(null); }}
+                  <button onClick={() => { setViewingId(viewingId === patient.id ? null : patient.id); setEditingId(null); setRefreshKey(refreshKey + 1); }}
                     className="px-2.5 py-1.5 text-[11px] font-medium text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200">Consults</button>
-                  {item.active_consultation_id ? (
-                    <button onClick={() => onPrintExisting(item.active_consultation_id!)}
-                      className="px-2.5 py-1.5 text-[11px] font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">Slip</button>
-                  ) : null}
                 </div>
               </div>
             </div>
@@ -57,7 +54,7 @@ const FamilyList: React.FC<FamilyListProps> = ({ patients, onNewConsultation, on
               <PatientEditForm patient={patient} onSaved={() => { setEditingId(null); onPatientChanged(); }} onCancel={() => setEditingId(null)} />
             )}
             {viewingId === patient.id && (
-              <ViewConsultations patient={patient}
+              <ViewConsultations patient={patient} refreshKey={refreshKey}
                 onNewConsultation={() => onNewConsultation(patient)}
                 onPrintExisting={onPrintExisting} />
             )}
