@@ -1,0 +1,54 @@
+/* Consultation Slip Print Styles */
+@media print {
+  .slip-container {
+    width: 148mm;
+    min-height: 210mm;
+    padding: 0;
+    margin: 0;
+    font-size: 10pt;
+    line-height: 1.4;
+  }
+
+  .slip-header {
+    text-align: center;
+    border-bottom: 2px solid #000;
+    padding-bottom: 4mm;
+    margin-bottom: 4mm;
+  }
+
+  .slip-header h1 {
+    font-size: 14pt;
+    font-weight: bold;
+    margin: 0 0 2mm;
+  }
+
+  .slip-header p {
+    margin: 0;
+    font-size: 9pt;
+  }
+
+  .slip-body {
+    padding: 0 2mm;
+  }
+
+  .slip-field {
+    margin-bottom: 2mm;
+    display: flex;
+  }
+
+  .slip-field-label {
+    font-weight: 600;
+    min-width: 50mm;
+  }
+
+  .slip-field-value {
+    flex: 1;
+  }
+
+  .slip-footer {
+    margin-top: 8mm;
+    padding-top: 4mm;
+    border-top: 1px solid #000;
+    font-size: 8pt;
+  }
+}

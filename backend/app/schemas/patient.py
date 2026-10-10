@@ -1,0 +1,119 @@
+from datetime import datetime, date
+from typing import Optional
+from pydantic import BaseModel, Field, field_validator
+import re
+
+
+class PatientCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+    gender: str = Field(..., pattern="^(Male|Female|Other)$")
+    age: int = Field(..., ge=0, le=150)
+    phone_number: str = Field(..., min_length=1, max_length=20)
+
+    @field_validator("phone_number")
+    @classmethod
+    def normalize_phone(cls, v: str) -> str:
+        # Remove all non-digit characters
+        digits = re.sub(r"\D", "", v)
+        if len(digits) < 10 or len(digits) > 15:
+            raise ValueError("Phone number must have 10-15 digits")
+        return digits
+
+    model_config = {"json_schema_extra": {"example": {
+        "name": "Ravi Kumar",
+        "gender": "Male",
+        "age": 30,
+        "phone_number": "9876543210"
+    }}}
+
+
+class PatientResponse(BaseModel):
+    id: int
+    uhid: str
+    name: str
+    gender: str
+    age: int
+    phone_number: str
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    model_config = {"from_attributes": True}
+
+
+class PatientSearchResult(BaseModel):
+    patient: PatientResponse
+    consultation_status: str  # "Active Consultation", "Expired", "No Consultation"
+    active_consultation_id: Optional[int] = None
+    valid_until: Optional[datetime] = None
+
+
+class PatientSearchResponse(BaseModel):
+    phone_number: str
+    patients: list[PatientSearchResult]
+
+
+class ConsultationCreate(BaseModel):
+    patient_id: int
+    doctor_id: int
+    consultation_date: date
+    visit_type: str = Field(..., pattern="^(New|Follow-up)$")
+    fee_amount: float = Field(..., ge=0)
+    payment_mode: str = Field(..., pattern="^(Cash|UPI)$")
+    notes: Optional[str] = None
+
+    model_config = {"json_schema_extra": {"example": {
+        "patient_id": 1,
+        "doctor_id": 1,
+        "consultation_date": "2026-10-10",
+        "visit_type": "New",
+        "fee_amount": 300.0,
+        "payment_mode": "Cash",
+        "notes": ""
+    }}}
+
+
+class ConsultationResponse(BaseModel):
+    id: int
+    consultation_number: str
+    patient_id: int
+    doctor_id: int
+    consultation_date: datetime
+    visit_type: str
+    fee_amount: float
+    payment_mode: str
+    payment_status: str
+    valid_until: datetime
+    notes: Optional[str] = None
+    created_at: datetime
+    patient_name: Optional[str] = None
+    patient_uhid: Optional[str] = None
+    patient_age: Optional[int] = None
+    patient_gender: Optional[str] = None
+    patient_phone: Optional[str] = None
+    doctor_name: Optional[str] = None
+    doctor_department: Optional[str] = None
+
+    model_config = {"from_attributes": True}
+
+
+class DoctorCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+    department: str = Field(..., min_length=1, max_length=100)
+    consultation_fee: float = Field(..., ge=0)
+
+    model_config = {"json_schema_extra": {"example": {
+        "name": "Dr. Sharma",
+        "department": "General Medicine",
+        "consultation_fee": 300.0
+    }}}
+
+
+class DoctorResponse(BaseModel):
+    id: int
+    name: str
+    department: str
+    consultation_fee: float
+    is_active: bool
+    created_at: datetime
+
+    model_config = {"from_attributes": True}

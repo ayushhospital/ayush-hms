@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+sqlalchemy
+psycopg
+alembic
+pydantic
+pydantic-settings
+python-dateutil
+pytz
