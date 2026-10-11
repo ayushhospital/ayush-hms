@@ -14,8 +14,7 @@ const HomePage: React.FC = () => {
     {
       title: 'IPD',
       description: 'Inpatient — admissions, wards, bed management',
-      disabled: true,
-      comingSoon: true,
+      onClick: () => navigate('/ipd'),
     },
     {
       title: 'Reports',
