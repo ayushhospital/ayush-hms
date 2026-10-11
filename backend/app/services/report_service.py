@@ -195,6 +195,12 @@ def get_patient_list_report(db: Session, start_date: date, end_date: date) -> Pa
             payment_mode=r.payment_mode,
         ))
 
+    return PatientListReport(
+        start_date=start_date, end_date=end_date,
+        rows=report_rows, total_count=len(report_rows),
+    )
+
+
 def get_daily_summary_report(db: Session, start_date: date, end_date: date) -> DailySummaryReport:
     """Daily revenue + footfall merged: per-day revenue by visit type, visits, and unique patients."""
     start_dt, end_dt = _get_date_bounds(start_date, end_date)
@@ -248,8 +254,4 @@ def get_daily_summary_report(db: Session, start_date: date, end_date: date) -> D
         grand_total_cash=grand_cash,
         grand_total_upi=grand_upi,
         grand_total=grand_total,
-    )
-    return PatientListReport(
-        start_date=start_date, end_date=end_date,
-        rows=report_rows, total_count=len(report_rows),
     )
