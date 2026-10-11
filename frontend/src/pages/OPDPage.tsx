@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { patientsApi, doctorsApi, consultationsApi } from '../services/api';
+import { useNavigate } from 'react-router-dom';
 import type { PatientSearchResult, Doctor, Patient, ConsultationResponse } from '../types';
 import PhoneSearch from '../components/patients/PhoneSearch';
 import FamilyList from '../components/patients/FamilyList';
@@ -8,6 +9,7 @@ import ConsultationForm from '../components/consultations/ConsultationForm';
 import ConsultationSlip from '../components/consultations/ConsultationSlip';
 
 const OPDPage: React.FC = () => {
+  const navigate = useNavigate();
   const [searchResults, setSearchResults] = useState<PatientSearchResult[]>([]);
   const [searchedQuery, setSearchedQuery] = useState('');
   const [searchMode, setSearchMode] = useState<'phone' | 'uhid' | 'date'>('phone');
@@ -130,7 +132,8 @@ const OPDPage: React.FC = () => {
           <FamilyList patients={searchResults}
             onNewConsultation={handleNewConsultation}
             onPrintExisting={handlePrintExisting}
-            onPatientChanged={handlePatientChanged} />
+            onPatientChanged={handlePatientChanged}
+            onViewConsultations={(pid) => navigate(`/opd/patient/${pid}/consultations`)} />
         </div>
       )}
 

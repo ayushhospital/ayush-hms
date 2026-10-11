@@ -4,6 +4,7 @@ import HomePage from './pages/HomePage';
 import OPDPage from './pages/OPDPage';
 import ReportsPage from './pages/ReportsPage';
 import IPDPlaceholderPage from './pages/IPDPlaceholderPage';
+import PatientConsultationsPage from './pages/PatientConsultationsPage';
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/opd" element={<OPDPage />} />
+            <Route path="/opd/patient/:id/consultations" element={<PatientConsultationsPage />} />
             <Route path="/reports" element={<ReportsPage />} />
             <Route path="/ipd" element={<IPDPlaceholderPage />} />
           </Routes>
