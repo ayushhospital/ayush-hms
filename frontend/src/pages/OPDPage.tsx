@@ -14,6 +14,7 @@ const OPDPage: React.FC = () => {
   const [searchResults, setSearchResults] = useState<PatientSearchResult[]>([]);
   const [searchedQuery, setSearchedQuery] = useState('');
   const [searchMode, setSearchMode] = useState<'phone' | 'uhid' | 'date'>('phone');
+  const [isSearching, setIsSearching] = useState(false);
 
   // Restore search from URL params
   useEffect(() => {
@@ -52,6 +53,7 @@ const OPDPage: React.FC = () => {
 
   const handleSearch = async (query: string, forcedMode?: 'phone' | 'uhid' | 'date') => {
     const mode = forcedMode || searchMode;
+    setIsSearching(true);
     setSearchError(''); setShowRegistration(false); setShowConsultationForm(null); setPrintConsultation(null);
     try {
       let result;
@@ -65,6 +67,8 @@ const OPDPage: React.FC = () => {
     } catch (err: unknown) {
       setSearchError(err instanceof Error ? err.message : 'Search failed');
       setSearchResults([]);
+    } finally {
+      setIsSearching(false);
     }
   };
 
@@ -144,6 +148,8 @@ const OPDPage: React.FC = () => {
       )}
 
       {searchError && <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700">{searchError}</div>}
+
+      {isSearching && <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-600 flex items-center gap-2"><span className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></span>Searching...</div>}
 
       {searchResults.length > 0 && !showRegistration && !showConsultationForm && !printConsultation && (
         <div className="mt-2">

@@ -112,8 +112,8 @@ const FamilyList: React.FC<FamilyListProps> = ({ patients, onNewConsultation, on
                   ) : (
                     <div className="flex gap-1.5 justify-center">
                       <button onClick={startEdit} className="px-2.5 py-1 text-[11px] font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-100">Edit</button>
-                      <button onClick={() => onNewConsultation(p)} className="px-2.5 py-1 text-[11px] font-medium text-white bg-emerald-600 rounded-md hover:bg-emerald-700">New</button>
-                      <button onClick={() => onViewConsultations(p.id)} className="px-2.5 py-1 text-[11px] font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">Consults</button>
+                      <button onClick={() => onNewConsultation(p)} className="px-2.5 py-1 text-[11px] font-medium text-white bg-emerald-600 rounded-md hover:bg-emerald-700">New Consultation</button>
+                      <button onClick={() => onViewConsultations(p.id)} className="px-2.5 py-1 text-[11px] font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">History</button>
                     </div>
                   )}
                 </td>
