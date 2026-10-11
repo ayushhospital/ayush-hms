@@ -1,3 +1,25 @@
+def generate_receipt_number(db: Session) -> str:
+    try:
+        db.execute(text("CREATE SEQUENCE IF NOT EXISTS ipd_receipt_seq START 1"))
+        db.commit()
+    except Exception:
+        db.rollback()
+        db.execute(text("CREATE SEQUENCE IF NOT EXISTS ipd_receipt_seq START 1"))
+        db.commit()
+    result = db.execute(text("SELECT nextval('ipd_receipt_seq')"))
+    return f"RCT-{result.scalar():06d}"
+
+
+def generate_refund_number(db: Session) -> str:
+    try:
+        db.execute(text("CREATE SEQUENCE IF NOT EXISTS ipd_refund_seq START 1"))
+        db.commit()
+    except Exception:
+        db.rollback()
+        db.execute(text("CREATE SEQUENCE IF NOT EXISTS ipd_refund_seq START 1"))
+        db.commit()
+    result = db.execute(text("SELECT nextval('ipd_refund_seq')"))
+    return f"RFN-{result.scalar():06d}"
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, text
 from datetime import datetime, date, timedelta

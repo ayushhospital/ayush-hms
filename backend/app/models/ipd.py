@@ -1,37 +1,39 @@
-from sqlalchemy import Column, Integer, String, DateTime, Numeric, Text, ForeignKey, func
+from sqlalchemy import Column, Integer, String, DateTime, Numeric, Text, ForeignKey, func, Date
 from sqlalchemy.orm import relationship
 from app.core.database import Base
 
-
 class IPDAdmission(Base):
     __tablename__ = "ipd_admissions"
-
     id = Column(Integer, primary_key=True, index=True)
     admission_number = Column(String(20), unique=True, nullable=False, index=True)
     patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False, index=True)
     admission_datetime = Column(DateTime(timezone=True), nullable=False)
-    admission_type = Column(String(20), nullable=False)  # Planned, Emergency, Referral
+    admission_type = Column(String(20), nullable=False)
     admitting_doctor_id = Column(Integer, ForeignKey("doctors.id"), nullable=False)
     department = Column(String(100), nullable=True)
     reason_for_admission = Column(Text, nullable=False)
     initial_diagnosis = Column(Text, nullable=True)
-    referral_source = Column(String(30), nullable=True)  # Self, Doctor, Hospital, Other
+    referral_source = Column(String(30), nullable=True)
     referring_provider = Column(String(200), nullable=True)
     ward_bed = Column(String(50), nullable=True)
     admission_notes = Column(Text, nullable=True)
-    status = Column(String(20), nullable=False, default="Open")  # Open, Discharged
+    status = Column(String(20), nullable=False, default="Open")
     discharge_datetime = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
-
     patient = relationship("Patient", backref="ipd_admissions")
     admitting_doctor = relationship("Doctor", backref="ipd_admissions")
     attendant = relationship("IPDAttendant", uselist=False, back_populates="admission")
-
+    tests = relationship("IPDTests", back_populates="admission")
+    medications = relationship("IPDMedication", back_populates="admission")
+    insurance_policies = relationship("IPDInsurancePolicy", back_populates="admission")
+    charges = relationship("IPDCharge", back_populates="admission")
+    payments = relationship("IPDPayment", back_populates="admission")
+    discharge_summaries = relationship("IPDDischargeSummary", back_populates="admission")
+    activity_logs = relationship("IPDActivityLog", back_populates="admission")
 
 class IPDAttendant(Base):
     __tablename__ = "ipd_attendants"
-
     id = Column(Integer, primary_key=True, index=True)
     admission_id = Column(Integer, ForeignKey("ipd_admissions.id"), nullable=False, unique=True, index=True)
     name = Column(String(100), nullable=False)
@@ -42,5 +44,141 @@ class IPDAttendant(Base):
     notes = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
-
     admission = relationship("IPDAdmission", back_populates="attendant")
+
+class IPDTests(Base):
+    __tablename__ = "ipd_tests"
+    id = Column(Integer, primary_key=True, index=True)
+    admission_id = Column(Integer, ForeignKey("ipd_admissions.id"), nullable=False, index=True)
+    test_name = Column(String(200), nullable=False)
+    category = Column(String(100), nullable=True)
+    ordered_datetime = Column(DateTime(timezone=True), nullable=False)
+    ordered_by = Column(Integer, ForeignKey("doctors.id"), nullable=True)
+    instructions = Column(Text, nullable=True)
+    status = Column(String(20), nullable=False, default="Ordered")
+    result_text = Column(Text, nullable=True)
+    result_datetime = Column(DateTime(timezone=True), nullable=True)
+    result_status = Column(String(20), nullable=True)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    admission = relationship("IPDAdmission", back_populates="tests")
+
+class IPDMedication(Base):
+    __tablename__ = "ipd_medications"
+    id = Column(Integer, primary_key=True, index=True)
+    admission_id = Column(Integer, ForeignKey("ipd_admissions.id"), nullable=False, index=True)
+    medicine_name = Column(String(200), nullable=False)
+    strength = Column(String(100), nullable=True)
+    dose = Column(String(100), nullable=False)
+    route = Column(String(30), nullable=False)
+    frequency = Column(String(100), nullable=False)
+    start_date = Column(Date, nullable=False)
+    end_date = Column(Date, nullable=True)
+    duration = Column(String(100), nullable=True)
+    instructions = Column(Text, nullable=True)
+    prescribing_doctor_id = Column(Integer, ForeignKey("doctors.id"), nullable=True)
+    status = Column(String(20), nullable=False, default="Active")
+    discontinued_at = Column(DateTime(timezone=True), nullable=True)
+    discontinuation_reason = Column(Text, nullable=True)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    admission = relationship("IPDAdmission", back_populates="medications")
+
+class IPDInsurancePolicy(Base):
+    __tablename__ = "ipd_insurance_policies"
+    id = Column(Integer, primary_key=True, index=True)
+    admission_id = Column(Integer, ForeignKey("ipd_admissions.id"), nullable=False, index=True)
+    provider = Column(String(200), nullable=False)
+    policy_number = Column(String(100), nullable=True)
+    policyholder_name = Column(String(100), nullable=True)
+    member_id = Column(String(100), nullable=True)
+    valid_from = Column(Date, nullable=True)
+    valid_to = Column(Date, nullable=True)
+    sum_insured = Column(Numeric(12,2), nullable=True)
+    tpa_name = Column(String(200), nullable=True)
+    contact_number = Column(String(20), nullable=True)
+    claim_number = Column(String(100), nullable=True)
+    preauthorization_number = Column(String(100), nullable=True)
+    requested_amount = Column(Numeric(12,2), nullable=True)
+    approved_amount = Column(Numeric(12,2), nullable=True)
+    settled_amount = Column(Numeric(12,2), nullable=True)
+    claim_status = Column(String(30), nullable=False, default="Not Submitted")
+    claim_notes = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    admission = relationship("IPDAdmission", back_populates="insurance_policies")
+
+class IPDCharge(Base):
+    __tablename__ = "ipd_charges"
+    id = Column(Integer, primary_key=True, index=True)
+    admission_id = Column(Integer, ForeignKey("ipd_admissions.id"), nullable=False, index=True)
+    charge_datetime = Column(DateTime(timezone=True), nullable=False)
+    category = Column(String(50), nullable=True)
+    description = Column(String(500), nullable=False)
+    quantity = Column(Numeric(10,2), nullable=False, default=1)
+    unit_price = Column(Numeric(10,2), nullable=False)
+    total_amount = Column(Numeric(12,2), nullable=False)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    admission = relationship("IPDAdmission", back_populates="charges")
+
+class IPDPayment(Base):
+    __tablename__ = "ipd_payments"
+    id = Column(Integer, primary_key=True, index=True)
+    admission_id = Column(Integer, ForeignKey("ipd_admissions.id"), nullable=False, index=True)
+    receipt_number = Column(String(20), unique=True, nullable=False)
+    payment_datetime = Column(DateTime(timezone=True), nullable=False)
+    amount = Column(Numeric(10,2), nullable=False)
+    payment_mode = Column(String(20), nullable=False)
+    transaction_reference = Column(String(200), nullable=True)
+    status = Column(String(20), nullable=False, default="Successful")
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    admission = relationship("IPDAdmission", back_populates="payments")
+
+class IPDRefund(Base):
+    __tablename__ = "ipd_refunds"
+    id = Column(Integer, primary_key=True, index=True)
+    admission_id = Column(Integer, ForeignKey("ipd_admissions.id"), nullable=False, index=True)
+    payment_id = Column(Integer, ForeignKey("ipd_payments.id"), nullable=True)
+    refund_number = Column(String(20), unique=True, nullable=False)
+    refund_datetime = Column(DateTime(timezone=True), nullable=False)
+    amount = Column(Numeric(10,2), nullable=False)
+    refund_mode = Column(String(20), nullable=False)
+    reason = Column(Text, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    admission = relationship("IPDAdmission")
+
+class IPDDischargeSummary(Base):
+    __tablename__ = "ipd_discharge_summaries"
+    id = Column(Integer, primary_key=True, index=True)
+    admission_id = Column(Integer, ForeignKey("ipd_admissions.id"), nullable=False, index=True)
+    status = Column(String(20), nullable=False, default="Draft")
+    discharge_datetime = Column(DateTime(timezone=True), nullable=True)
+    discharging_doctor_id = Column(Integer, ForeignKey("doctors.id"), nullable=True)
+    final_diagnosis = Column(Text, nullable=True)
+    clinical_history = Column(Text, nullable=True)
+    examination_findings = Column(Text, nullable=True)
+    investigations = Column(Text, nullable=True)
+    treatment_given = Column(Text, nullable=True)
+    procedures_performed = Column(Text, nullable=True)
+    condition_at_discharge = Column(Text, nullable=True)
+    discharge_medications = Column(Text, nullable=True)
+    follow_up_instructions = Column(Text, nullable=True)
+    diet_activity_advice = Column(Text, nullable=True)
+    warning_signs = Column(Text, nullable=True)
+    additional_notes = Column(Text, nullable=True)
+    finalized_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    admission = relationship("IPDAdmission", back_populates="discharge_summaries")
+
+class IPDActivityLog(Base):
+    __tablename__ = "ipd_activity_logs"
+    id = Column(Integer, primary_key=True, index=True)
+    admission_id = Column(Integer, ForeignKey("ipd_admissions.id"), nullable=False, index=True)
+    action = Column(String(50), nullable=False)
+    section = Column(String(50), nullable=True)
+    description = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    admission = relationship("IPDAdmission", back_populates="activity_logs")
