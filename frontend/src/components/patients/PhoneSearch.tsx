@@ -16,25 +16,23 @@ const PhoneSearch: React.FC<PhoneSearchProps> = ({ onSearch, loading }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-xl shadow-sm">
-      <div className="flex items-center gap-0 px-4 py-2.5">
-        <div className="flex-1 flex items-center gap-2">
-          &#128222;
-          <input
-            id="phone-search"
-            type="tel"
-            inputMode="numeric"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value.replace(/[^0-9+\-\s]/g, ''))}
-            placeholder="Enter phone number"
-            className="flex-1 border-0 bg-transparent text-sm outline-none placeholder-gray-400"
-            autoFocus
-          />
-        </div>
+    <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-xl shadow-sm w-max">
+      <div className="flex items-center gap-3 px-4 py-2.5">
+        <span className="text-gray-400 text-base">&#128222;</span>
+        <input
+          id="phone-search"
+          type="tel"
+          inputMode="numeric"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value.replace(/[^0-9+\-\s]/g, ''))}
+          placeholder="Enter phone number"
+          className="w-56 border-0 bg-transparent text-sm outline-none placeholder-gray-400"
+          autoFocus
+        />
         <button
           type="submit"
           disabled={phone.replace(/\D/g, '').length < 10 || loading}
-          className="px-5 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 active:bg-blue-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
           {loading ? 'Searching...' : 'Search'}
         </button>

@@ -119,26 +119,26 @@ const OPDPage: React.FC = () => {
       {searchMode === 'phone' && <PhoneSearch onSearch={handleSearch} loading={false} />}
 
       {searchMode === 'uhid' && (
-        <form onSubmit={(e) => { e.preventDefault(); const v = (document.getElementById('uhid-input') as HTMLInputElement).value.trim(); if (v) handleSearch(v); }} className="bg-white border border-gray-200 rounded-xl shadow-sm">
-          <div className="flex items-center gap-0 px-4 py-2.5">
+        <form onSubmit={(e) => { e.preventDefault(); const v = (document.getElementById('uhid-input') as HTMLInputElement).value.trim(); if (v) handleSearch(v); }} className="bg-white border border-gray-200 rounded-xl shadow-sm w-max">
+          <div className="flex items-center gap-3 px-4 py-2.5">
             <input id="uhid-input" type="text" placeholder="Enter UHID (e.g. AYH-000001)"
-              className="flex-1 border-0 bg-transparent text-sm outline-none placeholder-gray-400" autoFocus />
-            <button type="submit" className="px-5 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Search</button>
+              className="w-56 border-0 bg-transparent text-sm outline-none placeholder-gray-400" autoFocus />
+            <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Search</button>
           </div>
         </form>
       )}
 
       {searchMode === 'date' && (
-        <form onSubmit={(e) => { e.preventDefault(); if (dateStart && dateEnd) handleSearch(''); }} className="bg-white border border-gray-200 rounded-xl shadow-sm">
+        <form onSubmit={(e) => { e.preventDefault(); if (dateStart && dateEnd) handleSearch(''); }} className="bg-white border border-gray-200 rounded-xl shadow-sm w-max">
           <div className="flex items-center gap-3 px-4 py-2.5">
             <span className="text-xs text-gray-500">From</span>
             <input type="date" value={dateStart} onChange={(e) => setDateStart(e.target.value)}
-              className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm outline-none" />
+              className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm outline-none" />
             <span className="text-xs text-gray-500">To</span>
             <input type="date" value={dateEnd} onChange={(e) => setDateEnd(e.target.value)}
-              className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm outline-none" />
+              className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm outline-none" />
             <button type="submit" disabled={!dateStart || !dateEnd}
-              className="px-5 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-40">Search</button>
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-40">Search</button>
           </div>
         </form>
       )}
