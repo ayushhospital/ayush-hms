@@ -169,9 +169,7 @@ const OPDPage: React.FC = () => {
       {!searchedQuery && searchResults.length === 0 && !showRegistration && (
         <div className="mt-16 text-center text-gray-400">
           <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M22 11.5l-10-8-1v10-3v-9m-1 4m2 9h-3" />
-            </svg>
+            <div className="text-4xl text-gray-300 mb-3">&#128269;</div>
           </div>
           <p className="text-sm font-medium text-gray-500 mb-1">Search for a patient</p>
           <p className="text-[11px] text-gray-400">Use Phone, UHID, or Date Range above</p>
