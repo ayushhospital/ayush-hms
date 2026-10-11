@@ -53,20 +53,21 @@ const ViewConsultations: React.FC<Props> = ({ patient, refreshKey, onNewConsulta
   );
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm mt-2">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+    <div className="mt-0 pt-0">
+      {/* Inline header with + New button */}
+      <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-t border-b border-gray-200">
         <div>
-          <h3 className="text-sm font-semibold text-gray-800 m-0">Consultations — {patient.name}</h3>
-          <p className="text-[11px] text-gray-500 mt-0.5">{patient.uhid}</p>
+          <span className="text-xs font-semibold text-gray-800">{patient.name}</span>
+          <span className="text-xs text-gray-400 ml-2">{patient.uhid}</span>
         </div>
         <button onClick={onNewConsultation}
           className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">+ New Consultation</button>
       </div>
 
       {consultations.length === 0 ? (
-        <div className="px-4 py-5 text-center text-xs text-gray-400">No consultations yet</div>
+        <div className="px-5 py-4 text-center text-xs text-gray-400">No consultations yet</div>
       ) : (
-        <div className="px-3 py-2">
+        <div className="px-4 py-3">
           {active.length > 0 && (
             <>
               <h4 className="text-xs font-semibold text-green-700 mb-1.5">Active Consultations</h4>
