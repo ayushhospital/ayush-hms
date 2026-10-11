@@ -41,11 +41,7 @@ const HomePage: React.FC = () => {
 
   return (
     <div>
-      <div className="text-center mb-8">
-        <h2 className="text-xl font-bold text-gray-800 m-0">Welcome to Ayush HMS</h2>
-        <p className="text-sm text-gray-500 mt-1">Select a module to get started</p>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto mt-4">
         {modules.map((mod) => (
           <Card
             key={mod.title}

@@ -13,7 +13,7 @@ const Header: React.FC = () => {
             <span className="text-white font-bold text-sm">A</span>
           </div>
           <div>
-            <h1 className="text-lg font-bold m-0">Ayush HMS</h1>
+            <h1 className="text-lg font-bold m-0">Ayush Hospital</h1>
             <p className="text-xs text-gray-500 m-0">Hospital Management System</p>
           </div>
         </Link>
@@ -26,7 +26,7 @@ const Header: React.FC = () => {
               ← Home
             </Link>
           )}
-          <span className="text-sm text-gray-500">
+          <span className="text-sm font-semibold text-gray-700">
             {new Date().toLocaleDateString('en-IN', {
               weekday: 'short',
               year: 'numeric',
