@@ -19,19 +19,22 @@ const OPDPage: React.FC = () => {
   useEffect(() => {
     const s = window.location.search;
     if (!s) return;
-    const q = new URLSearchParams(s).get('q');
-    const m = new URLSearchParams(s).get('m');
-    if (q && m) {
-      setSearchMode(m as 'phone' | 'uhid' | 'date');
-      setSearchedQuery(q);
-      // trigger search after a short delay to let the component settle
-      const timer = setTimeout(() => {
-        const PhoneSearch = document.getElementById('phone-search');
-        if (PhoneSearch) (PhoneSearch as HTMLInputElement).value = q;
-        handleSearch(q);
-      }, 100);
-      return () => clearTimeout(timer);
-    }
+    try {
+      const q = new URLSearchParams(s).get('q');
+      const m = new URLSearchParams(s).get('m');
+      if (q && m) {
+        const mode = m as 'phone' | 'uhid' | 'date';
+        setSearchMode(mode);
+        if (mode === 'date') {
+          const [start, end] = q.split('|');
+          setDateStart(start || '');
+          setDateEnd(end || '');
+        }
+        setSearchedQuery(q);
+        const timer = setTimeout(() => handleSearch(q, mode), 150);
+        return () => clearTimeout(timer);
+      }
+    } catch {}
   }, []);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [showRegistration, setShowRegistration] = useState(false);
@@ -47,15 +50,18 @@ const OPDPage: React.FC = () => {
     catch { return []; }
   };
 
-  const handleSearch = async (query: string) => {
+  const handleSearch = async (query: string, forcedMode?: 'phone' | 'uhid' | 'date') => {
+    const mode = forcedMode || searchMode;
     setSearchError(''); setShowRegistration(false); setShowConsultationForm(null); setPrintConsultation(null);
     try {
       let result;
-      if (searchMode === 'phone') result = await patientsApi.search(query);
-      else if (searchMode === 'uhid') result = await patientsApi.searchByUhid(query);
-      else result = await patientsApi.searchByDateRange(dateStart, dateEnd);
-      setSearchResults(result.patients);
-      setSearchedQuery(query);
+      if (mode === 'phone') result = await patientsApi.search(query);
+      else if (mode === 'uhid') result = await patientsApi.searchByUhid(query);
+      else if (mode === 'date') result = await patientsApi.searchByDateRange(dateStart, dateEnd);
+      if (result) {
+        setSearchResults(result.patients);
+        setSearchedQuery(query);
+      }
     } catch (err: unknown) {
       setSearchError(err instanceof Error ? err.message : 'Search failed');
       setSearchResults([]);
@@ -154,7 +160,10 @@ const OPDPage: React.FC = () => {
             onPrintExisting={handlePrintExisting}
             onPatientChanged={handlePatientChanged}
             onViewConsultations={(pid) => {
-              const q = searchedQuery ? `?q=${encodeURIComponent(searchedQuery)}&m=${searchMode}` : '';
+              let q = '';
+              if (searchMode === 'phone') q = `?q=${encodeURIComponent(searchedQuery)}&m=phone`;
+              else if (searchMode === 'uhid') q = `?q=${encodeURIComponent(searchedQuery)}&m=uhid`;
+              else if (searchMode === 'date') q = `?q=${encodeURIComponent(`${dateStart}|${dateEnd}`)}&m=date`;
               navigate(`/opd/patient/${pid}/consultations${q}`);
             }} />
         </div>
