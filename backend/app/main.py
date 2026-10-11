@@ -30,6 +30,9 @@ app.include_router(patients_router, prefix="/api/v1")
 app.include_router(consultations_router, prefix="/api/v1")
 app.include_router(doctors_router, prefix="/api/v1")
 app.include_router(reports_router, prefix="/api/v1")
+from app.api.v1.ipd import router as ipd_router
+
+app.include_router(ipd_router, prefix="/api/v1")
 
 
 DEFAULT_DOCTORS = [
