@@ -53,6 +53,12 @@ export const patientsApi = {
       method: 'PATCH',
       body: JSON.stringify(data),
     }),
+
+  searchByUhid: (uhid: string) =>
+    request<PatientSearchResponse>(`/patients/by-uhid?uhid=${encodeURIComponent(uhid)}`),
+
+  searchByDateRange: (start: string, end: string) =>
+    request<PatientSearchResponse>(`/patients/by-date-range?start=${start}&end=${end}`),
 };
 
 // Consultations API

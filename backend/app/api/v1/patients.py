@@ -52,6 +52,50 @@ def get_patient_consultations(patient_id: int, db: Session = Depends(get_db)):
     return [consultation_to_response(c) for c in consultations]
 
 
+@router.get("/by-uhid")
+def search_by_uhid(uhid: str, db: Session = Depends(get_db)):
+    """Search patient by UHID."""
+    patient = db.query(Patient).filter(Patient.uhid == uhid.upper().strip()).first()
+    if not patient:
+        return {"phone_number": "", "patients": []}
+    from app.services.patient_service import get_consultation_status
+    status, cid, vu = get_consultation_status(db, patient.id)
+    return {
+        "phone_number": patient.phone_number,
+        "patients": [{
+            "patient": patient,
+            "consultation_status": status,
+            "active_consultation_id": cid,
+            "valid_until": vu.isoformat() if vu else None,
+        }]
+    }
+
+
+@router.get("/by-date-range")
+def search_by_date_range(start: str, end: str, db: Session = Depends(get_db)):
+    """Search patients who had consultations in a date range."""
+    from datetime import datetime, timedelta
+    start_dt = datetime.strptime(start, "%Y-%m-%d")
+    end_dt = datetime.strptime(end, "%Y-%m-%d") + timedelta(days=1)
+    patients = db.query(Patient).join(Consultation).filter(
+        Consultation.patient_id == Patient.id,
+        Consultation.consultation_date >= start_dt,
+        Consultation.consultation_date < end_dt,
+    ).distinct().all()
+    results = []
+    for patient in patients:
+        from app.services.patient_service import get_consultation_status
+        status, cid, vu = get_consultation_status(db, patient.id)
+        results.append({
+            "patient": patient,
+            "consultation_status": status,
+            "active_consultation_id": cid,
+            "valid_until": vu.isoformat() if vu else None,
+        })
+    # Fallback: also add patients without consultations in range but active
+    return {"phone_number": "", "patients": results}
+
+
 @router.patch("/{patient_id}", response_model=PatientResponse)
 def update_patient(patient_id: int, data: PatientUpdate, db: Session = Depends(get_db)):
     """Update patient information (name, gender, age)."""
@@ -59,4 +103,3 @@ def update_patient(patient_id: int, data: PatientUpdate, db: Session = Depends(g
     if not patient:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Patient not found")
     return patient
-    return [consultation_to_response(c) for c in consultations]

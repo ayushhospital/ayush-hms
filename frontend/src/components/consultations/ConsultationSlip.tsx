@@ -12,7 +12,10 @@ const ConsultationSlip: React.FC<ConsultationSlipProps> = ({ consultation, onClo
     const dt = new Date(s);
     const day = ('0' + dt.getDate()).slice(-2);
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    return `${day}-${months[dt.getMonth()]}-${dt.getFullYear()} ${('0'+dt.getHours()).slice(-2)}:${('0'+dt.getMinutes()).slice(-2)}`;
+    const hh = dt.getHours();
+    const mm = ('0' + dt.getMinutes()).slice(-2);
+    const ampm = hh >= 12 ? 'PM' : 'AM';
+    return `${day}-${months[dt.getMonth()]}-${dt.getFullYear()} ${hh % 12 || 12}:${mm} ${ampm}`;
   };
   const ds = (s: string) => {
     const dt = new Date(s);
@@ -52,43 +55,53 @@ const ConsultationSlip: React.FC<ConsultationSlipProps> = ({ consultation, onClo
       </div>
 
       <div className="slip-container" style={{maxWidth:'500px', margin:'0 auto'}}>
-        <div style={{textAlign:'center', borderBottom:'2px solid #2563eb', paddingBottom:'2.5mm', marginBottom:'2.5mm'}}>
+        {/* Header */}
+        <div style={{textAlign:'center', borderBottom:'2px solid #1d4ed8', paddingBottom:'2.5mm', marginBottom:'2.5mm'}}>
           <h1 style={{fontSize:'14pt', fontWeight:700, margin:'0 0 0.5mm', color:'#1e3a5f'}}>Ayush Hospital</h1>
           <p style={{fontSize:'8pt', margin:'0 0 0.5mm', color:'#555'}}>KPHB, Hyderabad</p>
           <p style={{fontSize:'7.5pt', margin:0, color:'#555'}}>Phone: +91-9876543210 | Email: contact@ayushhospital.com</p>
         </div>
 
+        {/* Consultation No + Date + Visit Type */}
         <div style={{display:'flex', justifyContent:'space-between', fontSize:'9pt', marginBottom:'2mm'}}>
-          <b>Consultation No: {consultation.consultation_number}</b>
-          <span>{d(consultation.created_at)}</span>
+          <div><b>Consultation No:</b> {consultation.consultation_number}</div>
+          <div><b>Date:</b> {d(consultation.created_at)}</div>
+        </div>
+        <div style={{fontSize:'9pt', marginBottom:'2.5mm'}}>
+          <b>Visit Type:</b> {consultation.visit_type}
         </div>
 
-        <hr style={{border:'none', borderTop:'1px dashed #bbb', margin:'1mm 0'}} />
+        <hr style={{border:'none', borderTop:'1.5px solid #2563eb', margin:'2mm 0'}} />
 
+        {/* Patient Details */}
         <div style={{fontSize:'9pt', lineHeight:1.6}}>
-          <div><b style={{display:'inline-block', width:'28mm'}}>UHID:</b>{consultation.patient_uhid}</div>
-          <div><b style={{display:'inline-block', width:'28mm'}}>Patient:</b>{consultation.patient_name}</div>
-          <div><b style={{display:'inline-block', width:'28mm'}}>Phone:</b>{consultation.patient_phone}</div>
-          <div><b style={{display:'inline-block', width:'28mm'}}>Age / Gender:</b>{consultation.patient_age} / {consultation.patient_gender}</div>
+          <div><span style={{fontWeight:600, display:'inline-block', width:'30mm'}}>UHID:</span><span style={{fontWeight:600}}>{consultation.patient_uhid}</span></div>
+          <div><span style={{fontWeight:600, display:'inline-block', width:'30mm'}}>Patient:</span><span style={{fontWeight:500}}>{consultation.patient_name}</span></div>
+          <div><span style={{fontWeight:600, display:'inline-block', width:'30mm'}}>Phone:</span>{consultation.patient_phone}</div>
+          <div><span style={{fontWeight:600, display:'inline-block', width:'30mm'}}>Age / Gender:</span>{consultation.patient_age} / {consultation.patient_gender}</div>
         </div>
 
-        <hr style={{border:'none', borderTop:'1px dashed #bbb', margin:'1mm 0'}} />
+        <hr style={{border:'none', borderTop:'1.5px solid #2563eb', margin:'2mm 0'}} />
 
+        {/* Consultation Details */}
         <div style={{fontSize:'9pt', lineHeight:1.6}}>
-          <div><b style={{display:'inline-block', width:'32mm'}}>Doctor:</b>{dl}</div>
-          <div><b style={{display:'inline-block', width:'32mm'}}>Consultation Fee:</b>INR {consultation.fee_amount.toFixed(0)} ({inWords(consultation.fee_amount)} rupees only)</div>
-          <div style={{display:'flex', justifyContent:'space-between'}}>
-            <span><b>Payment:</b> {consultation.payment_mode}</span>
-            <span><b>Visit:</b> {consultation.visit_type}</span>
+          <div style={{marginBottom:'1mm'}}><span style={{fontWeight:600, display:'inline-block', width:'34mm'}}>Doctor:</span><span style={{fontWeight:600}}>{dl}</span></div>
+          <div><span style={{fontWeight:600, display:'inline-block', width:'34mm'}}>Consultation Fee:</span>INR {consultation.fee_amount.toFixed(0)}</div>
+          <div style={{fontSize:'8pt', color:'#555', marginLeft:'34mm'}}>({inWords(consultation.fee_amount)} rupees only)</div>
+          <div style={{marginTop:'1mm', display:'flex', justifyContent:'space-between'}}>
+            <span><span style={{fontWeight:600}}>Payment:</span> {consultation.payment_mode}</span>
+
           </div>
         </div>
 
-        <hr style={{border:'none', borderTop:'1px dashed #bbb', margin:'1mm 0'}} />
+        <hr style={{border:'none', borderTop:'1.5px solid #2563eb', margin:'2mm 0'}} />
 
-        <div style={{fontSize:'9pt', marginBottom:'2.5mm'}}>
-          <b>Validity:</b> {ds(consultation.consultation_date)} to {ds(consultation.valid_until)}
+        {/* Validity centered */}
+        <div style={{textAlign:'center', fontSize:'9pt', marginBottom:'2.5mm', color:'#444'}}>
+          <b>Validity:</b> {ds(consultation.consultation_date)} — {ds(consultation.valid_until)}
         </div>
 
+        {/* Authorized signature */}
         <div style={{textAlign:'right', marginTop:'6mm', fontSize:'9pt'}}>
           <div style={{marginBottom:'5mm'}}>Authorized signature</div>
           <div style={{borderTop:'1px solid #000', width:'40mm', display:'inline-block', paddingTop:'1mm'}}></div>
