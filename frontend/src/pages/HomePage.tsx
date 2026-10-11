@@ -32,8 +32,6 @@ const HomePage: React.FC = () => {
             title={mod.title}
             description={mod.description}
             onClick={mod.onClick}
-            disabled={mod.disabled}
-            comingSoon={mod.comingSoon}
           />
         ))}
       </div>
