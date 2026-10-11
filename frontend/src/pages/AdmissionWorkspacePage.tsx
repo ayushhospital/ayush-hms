@@ -296,7 +296,7 @@ const BillingTab: React.FC<{aid:number}> = ({aid}) => {
     </div>}
     <div className="flex gap-2 mb-3">
       <button onClick={()=>{setShowCharge(!showCharge);setShowPayment(false)}} className="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">{showCharge?'Cancel':'+ Add Charge'}</button>
-      <button onClick={()=>{setShowPayment(!showPayment);setShowCharge(false)}} className="px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700">{showPayment?'Cancel':'+ Record Payment'}</button>
+      <button onClick={()=>{setShowPayment(!showPayment);setShowCharge(false);setP({payment_mode:'Cash'})}} className="px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700">{showPayment?'Cancel':'+ Record Payment'}</button>
     </div>
     {showCharge && <div className="bg-gray-50 rounded-lg p-3 mb-3 space-y-2">
       <input value={c.description||''} onChange={e=>setC({...c,description:e.target.value})} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Description *" />
