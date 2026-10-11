@@ -139,6 +139,86 @@ export interface DoctorSummaryReport {
   rows: DoctorSummaryRow[];
   grand_total: number;
 }
+// IPD Types
+export interface IPDAdmissionSummary {
+  id: number;
+  admission_number: string;
+  patient_id: number;
+  patient_name?: string | null;
+  patient_uhid?: string | null;
+  patient_phone?: string | null;
+  admission_datetime: string;
+  admitting_doctor_id: number;
+  doctor_name?: string | null;
+  ward_bed?: string | null;
+  status: string;
+}
+
+export interface IPDAdmissionListResponse {
+  admissions: IPDAdmissionSummary[];
+  total: number;
+  open_count: number;
+  today_admissions: number;
+  discharged_today: number;
+}
+
+export interface IPDAdmissionCreate {
+  patient_id: number;
+  admission_datetime: string;
+  admission_type: 'Planned' | 'Emergency' | 'Referral';
+  admitting_doctor_id: number;
+  department?: string;
+  reason_for_admission: string;
+  initial_diagnosis?: string;
+  referral_source?: string;
+  referring_provider?: string;
+  ward_bed?: string;
+  admission_notes?: string;
+  attendant_name: string;
+  attendant_relationship: string;
+  attendant_phone: string;
+  attendant_alternate_phone?: string;
+  attendant_address?: string;
+  attendant_notes?: string;
+}
+
+export interface IPDAdmissionResponse {
+  id: number;
+  admission_number: string;
+  patient_id: number;
+  admission_datetime: string;
+  admission_type: string;
+  admitting_doctor_id: number;
+  department?: string | null;
+  reason_for_admission: string;
+  initial_diagnosis?: string | null;
+  referral_source?: string | null;
+  referring_provider?: string | null;
+  ward_bed?: string | null;
+  admission_notes?: string | null;
+  status: string;
+  discharge_datetime?: string | null;
+  created_at: string;
+  updated_at?: string | null;
+  patient_name?: string | null;
+  patient_uhid?: string | null;
+  patient_age?: number | null;
+  patient_gender?: string | null;
+  patient_phone?: string | null;
+  doctor_name?: string | null;
+  doctor_department?: string | null;
+}
+
+export interface IPDAttendantResponse {
+  id: number;
+  admission_id: number;
+  name: string;
+  relation: string;
+  phone_number: string;
+  alternate_phone_number?: string | null;
+  address?: string | null;
+  notes?: string | null;
+}
 // Daily Summary Report
 export interface DailySummaryRow {
   date: string;

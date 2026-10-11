@@ -9,6 +9,10 @@ import type {
   DailySummaryReport,
   DoctorSummaryReport,
   PatientListReport,
+  IPDAdmissionListResponse,
+  IPDAdmissionResponse,
+  IPDAdmissionCreate,
+  IPDAttendantResponse,
 } from '../types';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
@@ -99,4 +103,35 @@ export const reportsApi = {
 
   patientList: (startDate: string, endDate: string) =>
     request<PatientListReport>(`/reports/patient-list?start_date=${startDate}&end_date=${endDate}`),
+};
+// IPD API
+export const ipdApi = {
+  list: (params?: { status?: string; search?: string; start_date?: string; end_date?: string }) => {
+    let q = '';
+    if (params) {
+      if (params.status) q += `&status=${params.status}`;
+      if (params.search) q += `&search=${encodeURIComponent(params.search)}`;
+      if (params.start_date) q += `&start_date=${params.start_date}`;
+      if (params.end_date) q += `&end_date=${params.end_date}`;
+    }
+    return request<IPDAdmissionListResponse>(`/ipd/admissions?limit=100${q}`);
+  },
+
+  get: (id: number) =>
+    request<IPDAdmissionResponse>(`/ipd/admissions/${id}`),
+
+  create: (data: IPDAdmissionCreate) =>
+    request<IPDAdmissionResponse>('/ipd/admissions', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  getAttendant: (admissionId: number) =>
+    request<IPDAttendantResponse>(`/ipd/admissions/${admissionId}/attendant`),
+
+  updateAttendant: (admissionId: number, data: { name: string; relation: string; phone_number: string; alternate_phone_number?: string; address?: string; notes?: string }) =>
+    request<IPDAttendantResponse>(`/ipd/admissions/${admissionId}/attendant`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
 };
