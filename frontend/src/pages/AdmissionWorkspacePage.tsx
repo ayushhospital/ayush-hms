@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ipdApi, doctorsApi } from '../services/api';
+import { ipdApi, doctorsApi, API_BASE } from '../services/api';
 import type { IPDAdmissionResponse, IPDAttendantResponse, Doctor } from '../types';
 
 type TabId = 'overview'|'tests'|'medications'|'insurance'|'billing'|'discharge'|'activity';
@@ -100,7 +100,7 @@ const OverviewTab: React.FC<{admission:IPDAdmissionResponse; attendant:IPDAttend
     ]).then(([b, a]) => { setBilling(b); setActivity(Array.isArray(a) ? a : []); });
   }, [aid]);
   const fmt = (s?:string) => { if(!s) return '-'; const d=new Date(s); return `${('0'+d.getDate()).slice(-2)}-${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]}-${d.getFullYear()}`; };
-  const BASE = window.location.origin + '/api/v1';
+  const BASE = API_BASE;
   return (<>
     <div className="grid grid-cols-2 gap-4 mb-4">
       <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
@@ -152,7 +152,7 @@ const TestsTab: React.FC<{aid:number; doctors:Doctor[]; onError:(s:string)=>void
   const [showForm, setShowForm] = useState(false);
   const [fName, setFName] = useState(''); const [fCat, setFCat] = useState(''); const [fNotes, setFNotes] = useState('');
   const [fResText, setFResText] = useState(''); const [fResId, setFResId] = useState<number|null>(null);
-  const BASE = window.location.origin + '/api/v1';
+  const BASE = API_BASE;
   useEffect(() => { fetch(BASE+`/ipd/admissions/${aid}/tests`).then(r=>r.json()).then(d=>setTests(Array.isArray(d)?d:[])).catch(()=>{}).finally(()=>setLoading(false)); }, [aid]);
   const addTest = async () => {
     if(!fName.trim()) return;
@@ -196,7 +196,7 @@ const MedicationsTab: React.FC<{aid:number; doctors:Doctor[]}> = ({aid, doctors}
   const [meds, setMeds] = useState<any[]>([]); const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [f, setF] = useState<any>({});
-  const BASE = window.location.origin + '/api/v1';
+  const BASE = API_BASE;
   useEffect(() => { fetch(BASE+`/ipd/admissions/${aid}/medications`).then(r=>r.json()).then(d=>setMeds(Array.isArray(d)?d:[])).catch(()=>{}).finally(()=>setLoading(false)); }, [aid]);
   const save = async () => {
     if(!f.medicine_name||!f.dose||!f.route||!f.frequency||!f.start_date) return;
@@ -232,7 +232,7 @@ const MedicationsTab: React.FC<{aid:number; doctors:Doctor[]}> = ({aid, doctors}
 const InsuranceTab: React.FC<{aid:number}> = ({aid}) => {
   const [policies, setPolicies] = useState<any[]>([]); const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false); const [f, setF] = useState<any>({provider:'',policy_number:'',policyholder_name:'',claim_status:'Not Submitted'});
-  const BASE = window.location.origin + '/api/v1';
+  const BASE = API_BASE;
   useEffect(() => { fetch(BASE+`/ipd/admissions/${aid}/insurance`).then(r=>r.json()).then(d=>setPolicies(Array.isArray(d)?d:[])).catch(()=>{}).finally(()=>setLoading(false)); }, [aid]);
   const save = async () => {
     if(!f.provider) return;
@@ -265,7 +265,7 @@ const BillingTab: React.FC<{aid:number}> = ({aid}) => {
   const [billing, setBilling] = useState<any>(null); const [loading, setLoading] = useState(true);
   const [showCharge, setShowCharge] = useState(false); const [showPayment, setShowPayment] = useState(false);
   const [c, setC] = useState<any>({}); const [p, setP] = useState<any>({});
-  const BASE = window.location.origin + '/api/v1';
+  const BASE = API_BASE;
   const load = async () => {
     Promise.all([
       fetch(BASE+`/ipd/admissions/${aid}/charges`).then(r=>r.json()),
@@ -336,7 +336,7 @@ const DischargeTab: React.FC<{aid:number; doctors:Doctor[]; admission:IPDAdmissi
   const [ds, setDs] = useState<any>(null); const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false); const [finError, setFinError] = useState('');
   const [f, setF] = useState<any>({});
-  const BASE = window.location.origin + '/api/v1';
+  const BASE = API_BASE;
   useEffect(() => {
     fetch(BASE+`/ipd/admissions/${aid}/discharge-summary`).then(r=>r.ok?r.json():null).then(d => {
       if(d) { setDs(d); setF(d); } else setF({status:'Draft'});
@@ -390,7 +390,7 @@ const DischargeTab: React.FC<{aid:number; doctors:Doctor[]; admission:IPDAdmissi
 
 const ActivityTab: React.FC<{aid:number}> = ({aid}) => {
   const [logs, setLogs] = useState<any[]>([]); const [loading, setLoading] = useState(true);
-  const BASE = window.location.origin + '/api/v1';
+  const BASE = API_BASE;
   useEffect(() => { fetch(BASE+`/ipd/admissions/${aid}/activity`).then(r=>r.json()).then(d=>setLogs(Array.isArray(d)?d:[])).catch(()=>{}).finally(()=>setLoading(false)); }, [aid]);
   const fmt=(s:string)=>{const d=new Date(s);return `${('0'+d.getDate()).slice(-2)}-${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]}-${d.getFullYear()} ${('0'+d.getHours()).slice(-2)}:${('0'+d.getMinutes()).slice(-2)}`;};
   return (<div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
