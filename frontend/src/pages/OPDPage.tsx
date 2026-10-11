@@ -97,7 +97,7 @@ const OPDPage: React.FC = () => {
   const today = () => new Date().toISOString().split('T')[0];
 
   return (
-    <div className="max-w-xl mx-auto">
+    <div className="max-w-4xl mx-auto px-2">
       <div className="mb-6">
         <h2 className="text-lg font-bold text-gray-900 m-0">OPD — Patient Management</h2>
         <p className="text-xs text-gray-500 mt-0.5">Search to find or register a patient</p>

@@ -104,15 +104,15 @@ const FamilyList: React.FC<FamilyListProps> = ({ patients, onNewConsultation, on
                     <>
                       {editError && <span className="text-[10px] text-red-500 block">{editError}</span>}
                       <div className="flex gap-1.5 justify-center">
-                        <button onClick={cancelEdit} className="px-2.5 py-1 text-[11px] font-medium text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200">Cancel</button>
+                        <button onClick={cancelEdit} className="px-2.5 py-1 text-[11px] font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-100">Cancel</button>
                         <button onClick={saveEdit} disabled={editSaving||!editName.trim()}
                           className="px-2.5 py-1 text-[11px] font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50">{editSaving?'Saving...':'Save'}</button>
                       </div>
                     </>
                   ) : (
                     <div className="flex gap-1.5 justify-center">
-                      <button onClick={startEdit} className="px-2.5 py-1 text-[11px] font-medium text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200">Edit</button>
-                      <button onClick={() => onViewConsultations(p.id)} className="px-2.5 py-1 text-[11px] font-medium text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200">Consults</button>
+                      <button onClick={startEdit} className="px-2.5 py-1 text-[11px] font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-100">Edit</button>
+                      <button onClick={() => onViewConsultations(p.id)} className="px-2.5 py-1 text-[11px] font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">Consults</button>
                     </div>
                   )}
                 </td>
