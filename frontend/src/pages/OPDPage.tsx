@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { patientsApi, doctorsApi, consultationsApi } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import type { PatientSearchResult, Doctor, Patient, ConsultationResponse } from '../types';
@@ -10,9 +10,29 @@ import ConsultationSlip from '../components/consultations/ConsultationSlip';
 
 const OPDPage: React.FC = () => {
   const navigate = useNavigate();
+  
   const [searchResults, setSearchResults] = useState<PatientSearchResult[]>([]);
   const [searchedQuery, setSearchedQuery] = useState('');
   const [searchMode, setSearchMode] = useState<'phone' | 'uhid' | 'date'>('phone');
+
+  // Restore search from URL params
+  useEffect(() => {
+    const s = window.location.search;
+    if (!s) return;
+    const q = new URLSearchParams(s).get('q');
+    const m = new URLSearchParams(s).get('m');
+    if (q && m) {
+      setSearchMode(m as 'phone' | 'uhid' | 'date');
+      setSearchedQuery(q);
+      // trigger search after a short delay to let the component settle
+      const timer = setTimeout(() => {
+        const PhoneSearch = document.getElementById('phone-search');
+        if (PhoneSearch) (PhoneSearch as HTMLInputElement).value = q;
+        handleSearch(q);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, []);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [showRegistration, setShowRegistration] = useState(false);
   const [showConsultationForm, setShowConsultationForm] = useState<{ patient: Patient } | null>(null);
@@ -133,7 +153,10 @@ const OPDPage: React.FC = () => {
             onNewConsultation={handleNewConsultation}
             onPrintExisting={handlePrintExisting}
             onPatientChanged={handlePatientChanged}
-            onViewConsultations={(pid) => navigate(`/opd/patient/${pid}/consultations`)} />
+            onViewConsultations={(pid) => {
+              const q = searchedQuery ? `?q=${encodeURIComponent(searchedQuery)}&m=${searchMode}` : '';
+              navigate(`/opd/patient/${pid}/consultations${q}`);
+            }} />
         </div>
       )}
 

@@ -7,6 +7,8 @@ import ConsultationSlip from '../components/consultations/ConsultationSlip';
 const PatientConsultationsPage: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const searchParams = window.location.search;
+  const backQ = searchParams || '';
   const [patient, setPatient] = useState<Patient | null>(null);
   const [consultations, setConsultations] = useState<ConsultationResponse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,7 +49,7 @@ const PatientConsultationsPage: React.FC = () => {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <button onClick={()=>navigate('/opd')} className="mb-4 px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">&larr; Back to patients</button>
+      <button onClick={()=>navigate('/opd' + backQ)} className="mb-4 px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">&larr; Back to patients</button>
       <div className="bg-white rounded-xl border border-gray-200 px-5 py-4 shadow-sm mb-4">
         <div className="flex items-center justify-between mb-1">
           <h2 className="text-base font-semibold text-gray-900 m-0">{patient.name}</h2>
