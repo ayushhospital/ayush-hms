@@ -104,7 +104,7 @@ class IPDAttendantUpdate(BaseModel):
 class IPDTestsCreate(BaseModel):
     test_name: str = Field(..., min_length=1)
     category: Optional[str] = None
-    ordered_datetime: datetime = None
+    ordered_datetime: Optional[datetime] = None
     ordered_by: Optional[int] = None
     instructions: Optional[str] = None
     status: str = "Ordered"
