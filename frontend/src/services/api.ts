@@ -6,8 +6,7 @@ import type {
   ConsultationResponse,
   ConsultationCreate,
   Doctor,
-  RevenueReport,
-  FootfallReport,
+  DailySummaryReport,
   DoctorSummaryReport,
   PatientListReport,
 } from '../types';
@@ -92,11 +91,8 @@ export const doctorsApi = {
 
 // Reports API
 export const reportsApi = {
-  revenue: (startDate: string, endDate: string) =>
-    request<RevenueReport>(`/reports/revenue?start_date=${startDate}&end_date=${endDate}`),
-
-  footfall: (startDate: string, endDate: string) =>
-    request<FootfallReport>(`/reports/footfall?start_date=${startDate}&end_date=${endDate}`),
+  dailySummary: (startDate: string, endDate: string) =>
+    request<DailySummaryReport>(`/reports/daily-summary?start_date=${startDate}&end_date=${endDate}`),
 
   doctorSummary: (startDate: string, endDate: string) =>
     request<DoctorSummaryReport>(`/reports/doctor-summary?start_date=${startDate}&end_date=${endDate}`),

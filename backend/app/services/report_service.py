@@ -10,6 +10,7 @@ from app.schemas.schemas import (
     FootfallReport,
     DoctorSummaryReport, DoctorSummaryRow,
     PatientListReport, PatientListRow,
+    DailySummaryReport, DailySummaryRow,
 )
 
 
@@ -194,6 +195,60 @@ def get_patient_list_report(db: Session, start_date: date, end_date: date) -> Pa
             payment_mode=r.payment_mode,
         ))
 
+def get_daily_summary_report(db: Session, start_date: date, end_date: date) -> DailySummaryReport:
+    """Daily revenue + footfall merged: per-day revenue by visit type, visits, and unique patients."""
+    start_dt, end_dt = _get_date_bounds(start_date, end_date)
+    
+    rows = db.query(
+        func.date(Consultation.consultation_date).label("dt"),
+        func.count(Consultation.id).label("total_visits"),
+        func.count(func.distinct(Consultation.patient_id)).label("unique_patients"),
+        func.coalesce(func.sum(case((Consultation.visit_type == "New", 1), else_=0)), 0).label("new_visits"),
+        func.coalesce(func.sum(case((Consultation.visit_type == "Follow-up", 1), else_=0)), 0).label("followup_visits"),
+        func.coalesce(func.sum(case((Consultation.payment_mode == "Cash", Consultation.fee_amount), else_=0)), 0).label("cash_amount"),
+        func.coalesce(func.sum(case((Consultation.payment_mode == "UPI", Consultation.fee_amount), else_=0)), 0).label("upi_amount"),
+        func.coalesce(func.sum(Consultation.fee_amount), 0).label("total_amount"),
+    ).filter(
+        Consultation.consultation_date >= start_dt,
+        Consultation.consultation_date < end_dt,
+        Consultation.payment_status == "Paid",
+    ).group_by(
+        func.date( Consultation.consultation_date),
+    ).order_by(
+        func.date(Consultation.consultation_date),
+    ).all()
+
+    report_rows = []
+    grand_visits = 0
+    grand_cash = 0.0
+    grand_upi = 0.0
+    grand_total = 0.0
+
+    for r in rows:
+        row_data = DailySummaryRow(
+            date=r.dt,
+            new_visits=int(r.new_visits),
+            followup_visits=int(r.followup_visits),
+            cash_amount=float(r.cash_amount),
+            upi_amount=float(r.upi_amount),
+            total_amount=float(r.total_amount),
+            total_visits=int(r.total_visits),
+            unique_patients=int(r.unique_patients),
+        )
+        report_rows.append(row_data)
+        grand_visits += row_data.total_visits
+        grand_cash += row_data.cash_amount
+        grand_upi += row_data.upi_amount
+        grand_total += row_data.total_amount
+
+    return DailySummaryReport(
+        start_date=start_date, end_date=end_date,
+        rows=report_rows,
+        grand_total_visits=grand_visits,
+        grand_total_cash=grand_cash,
+        grand_total_upi=grand_upi,
+        grand_total=grand_total,
+    )
     return PatientListReport(
         start_date=start_date, end_date=end_date,
         rows=report_rows, total_count=len(report_rows),

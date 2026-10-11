@@ -139,3 +139,24 @@ export interface DoctorSummaryReport {
   rows: DoctorSummaryRow[];
   grand_total: number;
 }
+// Daily Summary Report
+export interface DailySummaryRow {
+  date: string;
+  new_visits: number;
+  followup_visits: number;
+  cash_amount: number;
+  upi_amount: number;
+  total_amount: number;
+  total_visits: number;
+  unique_patients: number;
+}
+
+export interface DailySummaryReport {
+  start_date: string;
+  end_date: string;
+  rows: DailySummaryRow[];
+  grand_total_visits: number;
+  grand_total_cash: number;
+  grand_total_upi: number;
+  grand_total: number;
+}
