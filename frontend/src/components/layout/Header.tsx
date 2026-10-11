@@ -24,8 +24,7 @@ const Header: React.FC = () => {
         <div className="flex items-center gap-2">
           {!isHome && (
             <Link to="/"
-              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors no-underline">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 16 16"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 8l-6-2v-4" /></svg>
+              className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors no-underline">
               Home
             </Link>
           )}
