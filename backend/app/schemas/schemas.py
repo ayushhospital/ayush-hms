@@ -159,6 +159,12 @@ class DoctorSummaryRow(BaseModel):
 
 
 class DoctorSummaryReport(BaseModel):
+    start_date: date
+    end_date: date
+    rows: list[DoctorSummaryRow]
+    grand_total: float
+
+
 class DailySummaryRow(BaseModel):
     date: date
     new_visits: int
@@ -178,10 +184,8 @@ class DailySummaryReport(BaseModel):
     grand_total_cash: float
     grand_total_upi: float
     grand_total: float
-    start_date: date
-    end_date: date
-    rows: list[DoctorSummaryRow]
-    grand_total: float
+
+
 class PatientListRow(BaseModel):
     consultation_number: str
     consultation_date: datetime
