@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ipdApi, doctorsApi, API_BASE } from '../services/api';
 import type { IPDAdmissionResponse, IPDAttendantResponse, Doctor } from '../types';
+import PaymentReceiptPrint from '../components/ipd/PaymentReceiptPrint';
+import BillPrintTemplate from '../components/ipd/BillPrintTemplate';
+import DischargePrintTemplate from '../components/ipd/DischargePrintTemplate';
 
 type TabId = 'overview'|'tests'|'medications'|'insurance'|'billing'|'discharge'|'activity';
 
@@ -16,6 +19,9 @@ const AdmissionWorkspacePage: React.FC = () => {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [tabError, setTabError] = useState('');
   const [tabSuccess, setTabSuccess] = useState('');
+  const [printPayment, setPrintPayment] = useState<any>(null);
+  const [printBill, setPrintBill] = useState<{mode:string;charges:any[];payments:any[];billing:any}|null>(null);
+  const [printDischarge, setPrintDischarge] = useState<any>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -85,6 +91,9 @@ const AdmissionWorkspacePage: React.FC = () => {
     {tab === 'billing' && <BillingTab aid={aid} />}
     {tab === 'discharge' && <DischargeTab aid={aid} doctors={doctors} admission={admission} />}
     {tab === 'activity' && <ActivityTab aid={aid} />}
+    {printPayment && <PaymentReceiptPrint payment={printPayment} onClose={()=>setPrintPayment(null)} />}
+    {printBill && <BillPrintTemplate admission={admission} charges={printBill.charges} payments={printBill.payments} billing={printBill.billing} mode={printBill.mode as any} onClose={()=>setPrintBill(null)} />}
+    {printDischarge && <DischargePrintTemplate discharge={printDischarge.ds} admission={admission} attendant={attendant} onClose={()=>setPrintDischarge(null)} />}
   </div>);
 };
 

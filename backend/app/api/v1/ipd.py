@@ -1,3 +1,25 @@
+@router.get('/payments/{payment_id}/receipt')
+def get_payment_receipt(payment_id: int, db: Session = Depends(get_db)):
+    """Get payment with admission context for receipt printing."""
+    pay = db.query(IPDPayment).filter(IPDPayment.id == payment_id).first()
+    if not pay:
+        raise HTTPException(status_code=404, detail='Payment not found')
+    adm = db.query(IPDAdmission).options(
+        joinedload(IPDAdmission.patient), joinedload(IPDAdmission.admitting_doctor)
+    ).filter(IPDAdmission.id == pay.admission_id).first()
+    # Build response with all needed data
+    import json
+    from app.services.ipd_service import admission_to_response
+    from app.schemas.ipd import IPDPaymentResponse
+    pay_resp = IPDPaymentResponse.model_validate(pay)
+    data = pay_resp.model_dump()
+    if adm:
+        data['patient_name'] = adm.patient.name if adm.patient else None
+        data['patient_uhid'] = adm.patient.uhid if adm.patient else None
+        data['patient_age'] = adm.patient.age if adm.patient else None
+        data['patient_gender'] = adm.patient.gender if adm.patient else None
+        data['admission_number'] = adm.admission_number
+    return data
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from datetime import date, datetime
