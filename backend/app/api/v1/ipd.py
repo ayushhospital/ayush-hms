@@ -6,7 +6,8 @@ from app.core.database import get_db
 from app.models.ipd import (IPDAdmission, IPDAttendant, IPDTests, IPDMedication,
     IPDInsurancePolicy, IPDCharge, IPDPayment, IPDRefund, IPDDischargeSummary, IPDActivityLog)
 from app.services.ipd_service import (create_admission, get_admission_by_id, list_admissions,
-    admission_to_response, update_attendant, generate_receipt_number, generate_refund_number)
+    admission_to_response, update_attendant, generate_receipt_number, generate_refund_number,
+    _log_activity)
 from app.schemas.ipd import (
     IPDAdmissionCreate, IPDAdmissionResponse, IPDAdmissionListResponse, IPDAttendantResponse, IPDAttendantUpdate,
     IPDTestsCreate, IPDTestsResponse, IPDTestResultUpdate,
@@ -64,6 +65,7 @@ def create_test(admission_id: int, data: IPDTestsCreate, db: Session = Depends(g
     test = IPDTests(admission_id=admission_id, **data.model_dump(exclude_none=True))
     test.ordered_datetime = data.ordered_datetime or datetime.now(tz())
     db.add(test); db.commit(); db.refresh(test)
+    _log_activity(db, admission_id, "Test Added", "Tests", test.test_name)
     return test
 
 @router.patch('/tests/{test_id}', response_model=IPDTestsResponse)
@@ -93,6 +95,7 @@ def list_medications(admission_id: int, db: Session = Depends(get_db)):
 def create_medication(admission_id: int, data: IPDMedicationCreate, db: Session = Depends(get_db)):
     med = IPDMedication(admission_id=admission_id, **data.model_dump(exclude_none=True))
     db.add(med); db.commit(); db.refresh(med)
+    _log_activity(db, admission_id, "Medication Added", "Medications", med.medicine_name)
     return med
 
 @router.patch('/medications/{medication_id}', response_model=IPDMedicationResponse)
@@ -134,6 +137,7 @@ def create_charge(admission_id: int, data: IPDChargeCreate, db: Session = Depend
         category=data.category, description=data.description, quantity=data.quantity,
         unit_price=data.unit_price, total_amount=total, notes=data.notes)
     db.add(charge); db.commit(); db.refresh(charge)
+    _log_activity(db, admission_id, "Charge Added", "Billing", charge.description)
     return charge
 
 @router.get('/admissions/{admission_id}/payments', response_model=list[IPDPaymentResponse])
@@ -147,6 +151,7 @@ def create_payment(admission_id: int, data: IPDPaymentCreate, db: Session = Depe
         amount=data.amount, payment_mode=data.payment_mode,
         transaction_reference=data.transaction_reference, notes=data.notes)
     db.add(pay); db.commit(); db.refresh(pay)
+    _log_activity(db, admission_id, "Payment Recorded", "Billing", f"{pay.receipt_number} INR {pay.amount}")
     return pay
 
 @router.post('/admissions/{admission_id}/refunds', response_model=IPDRefundResponse, status_code=201)
@@ -194,6 +199,7 @@ def finalize_discharge(admission_id: int, db: Session = Depends(get_db)):
     if adm:
         adm.status = 'Discharged'
         adm.discharge_datetime = ds.discharge_datetime or datetime.now(tz())
+    _log_activity(db, admission_id, "Discharge Finalized", "Discharge", f"{adm.admission_number} discharged")
     db.commit(); db.refresh(ds)
     return ds
 

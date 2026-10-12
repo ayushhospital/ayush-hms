@@ -1,3 +1,20 @@
+# Append activity logging and helper functions below
+
+def _log_activity(db: Session, admission_id: int, action: str, section: str = None, description: str = None):
+    """Record an activity log entry for an admission."""
+    log = IPDActivityLog(admission_id=admission_id, action=action, section=section, description=description)
+    db.add(log)
+    db.commit()
+
+def _log_create(adm_id, db): _log_activity(db, adm_id, 'Admission Created', 'Admission')
+def _log_test_add(adm_id, db, desc): _log_activity(db, adm_id, 'Test Added', 'Tests', desc)
+def _log_test_result(adm_id, db, desc): _log_activity(db, adm_id, 'Test Result', 'Tests', desc)
+def _log_med_add(adm_id, db, desc): _log_activity(db, adm_id, 'Medication Added', 'Medications', desc)
+def _log_ins_add(adm_id, db, desc): _log_activity(db, adm_id, 'Insurance Added', 'Insurance', desc)
+def _log_charge(adm_id, db, desc): _log_activity(db, adm_id, 'Charge Added', 'Billing', desc)
+def _log_payment(adm_id, db, desc): _log_activity(db, adm_id, 'Payment Recorded', 'Billing', desc)
+def _log_discharge_saved(adm_id, db): _log_activity(db, adm_id, 'Discharge Summary Saved', 'Discharge')
+def _log_discharge_finalize(adm_id, db): _log_activity(db, adm_id, 'Discharge Finalized', 'Discharge')
 def generate_receipt_number(db: Session) -> str:
     try:
         db.execute(text("CREATE SEQUENCE IF NOT EXISTS ipd_receipt_seq START 1"))
@@ -28,7 +45,7 @@ from typing import Optional
 
 from app.models.patient import Patient
 from app.models.doctor import Doctor
-from app.models.ipd import IPDAdmission, IPDAttendant
+from app.models.ipd import IPDAdmission, IPDAttendant, IPDActivityLog
 from app.schemas.ipd import IPDAdmissionCreate, IPDAttendantUpdate, IPDAdmissionResponse, IPDAdmissionSummary, IPDAdmissionListResponse
 
 
@@ -75,6 +92,7 @@ def create_admission(db: Session, data: IPDAdmissionCreate) -> IPDAdmission:
     db.add(attendant)
     db.commit()
     db.refresh(admission)
+    _log_activity(db, admission.id, 'Admission Created', 'Admission', f'{admission.admission_number}')
     return admission
 
 
