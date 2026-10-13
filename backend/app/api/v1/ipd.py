@@ -1,27 +1,5 @@
-@router.get('/payments/{payment_id}/receipt')
-def get_payment_receipt(payment_id: int, db: Session = Depends(get_db)):
-    """Get payment with admission context for receipt printing."""
-    pay = db.query(IPDPayment).filter(IPDPayment.id == payment_id).first()
-    if not pay:
-        raise HTTPException(status_code=404, detail='Payment not found')
-    adm = db.query(IPDAdmission).options(
-        joinedload(IPDAdmission.patient), joinedload(IPDAdmission.admitting_doctor)
-    ).filter(IPDAdmission.id == pay.admission_id).first()
-    # Build response with all needed data
-    import json
-    from app.services.ipd_service import admission_to_response
-    from app.schemas.ipd import IPDPaymentResponse
-    pay_resp = IPDPaymentResponse.model_validate(pay)
-    data = pay_resp.model_dump()
-    if adm:
-        data['patient_name'] = adm.patient.name if adm.patient else None
-        data['patient_uhid'] = adm.patient.uhid if adm.patient else None
-        data['patient_age'] = adm.patient.age if adm.patient else None
-        data['patient_gender'] = adm.patient.gender if adm.patient else None
-        data['admission_number'] = adm.admission_number
-    return data
 from fastapi import APIRouter, Depends, HTTPException, status, Query
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from datetime import date, datetime
 from typing import Optional
 from app.core.database import get_db
@@ -156,6 +134,7 @@ def list_charges(admission_id: int, db: Session = Depends(get_db)):
 def create_charge(admission_id: int, data: IPDChargeCreate, db: Session = Depends(get_db)):
     total = data.quantity * data.unit_price
     charge = IPDCharge(admission_id=admission_id, charge_datetime=data.charge_datetime or datetime.now(tz()),
+        charge_date=data.charge_date or date.today(),
         category=data.category, description=data.description, quantity=data.quantity,
         unit_price=data.unit_price, total_amount=total, notes=data.notes)
     db.add(charge); db.commit(); db.refresh(charge)
@@ -228,3 +207,26 @@ def finalize_discharge(admission_id: int, db: Session = Depends(get_db)):
 @router.get('/admissions/{admission_id}/activity', response_model=list[IPDActivityLogResponse])
 def list_activity(admission_id: int, db: Session = Depends(get_db)):
     return db.query(IPDActivityLog).filter(IPDActivityLog.admission_id == admission_id).order_by(IPDActivityLog.created_at.desc()).limit(50).all()
+
+@router.get('/payments/{payment_id}/receipt')
+def get_payment_receipt(payment_id: int, db: Session = Depends(get_db)):
+    """Get payment with admission context for receipt printing."""
+    pay = db.query(IPDPayment).filter(IPDPayment.id == payment_id).first()
+    if not pay:
+        raise HTTPException(status_code=404, detail='Payment not found')
+    adm = db.query(IPDAdmission).options(
+        joinedload(IPDAdmission.patient), joinedload(IPDAdmission.admitting_doctor)
+    ).filter(IPDAdmission.id == pay.admission_id).first()
+    # Build response with all needed data
+    import json
+    from app.services.ipd_service import admission_to_response
+    from app.schemas.ipd import IPDPaymentResponse
+    pay_resp = IPDPaymentResponse.model_validate(pay)
+    data = pay_resp.model_dump()
+    if adm:
+        data['patient_name'] = adm.patient.name if adm.patient else None
+        data['patient_uhid'] = adm.patient.uhid if adm.patient else None
+        data['patient_age'] = adm.patient.age if adm.patient else None
+        data['patient_gender'] = adm.patient.gender if adm.patient else None
+        data['admission_number'] = adm.admission_number
+    return data

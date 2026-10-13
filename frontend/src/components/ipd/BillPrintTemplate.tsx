@@ -12,12 +12,32 @@ interface Props {
 }
 
 const BillPrintTemplate: React.FC<Props> = ({ admission, charges, payments, billing, mode, onClose }) => {
-  const d = (s?: string) => {
+  const d = (s?: string | null) => {
     if (!s) return '-';
     const dt = new Date(s);
     return `${('0'+dt.getDate()).slice(-2)}-${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][dt.getMonth()]}-${dt.getFullYear()}`;
   };
+  const dt = (s?: string | null) => {
+    if (!s) return '-';
+    const t = new Date(s);
+    const hh = t.getHours();
+    const mm = ('0'+t.getMinutes()).slice(-2);
+    return `${d(s)} ${hh%12||12}:${mm} ${hh>=12?'PM':'AM'}`;
+  };
+  const num = (n: any) => (typeof n==='number' && n%1!==0 ? n.toFixed(2) : n);
   const title = mode === 'final' ? 'FINAL BILL' : 'DETAILED BILL';
+
+  // Final bill: aggregate same category+description into one row (qty sum, amount sum, rate = avg)
+  const summarised = (() => {
+    const map = new Map<string, any>();
+    for (const ch of charges) {
+      const key = (ch.category||'Other') + '|' + ch.description;
+      const ex = map.get(key);
+      if (ex) { ex.quantity += ch.quantity; ex.amount += ch.total_amount; }
+      else map.set(key, {description: ch.description, category: ch.category||'Other', quantity: ch.quantity, amount: ch.total_amount});
+    }
+    return Array.from(map.entries()).map(([key, v]) => ({...v, rate: v.amount / v.quantity, key}));
+  })();
 
   return (<div>
     <div className="no-print bg-white rounded-xl border border-gray-200 p-6 mb-4">
@@ -47,41 +67,63 @@ const BillPrintTemplate: React.FC<Props> = ({ admission, charges, payments, bill
 
       <hr style={{border:'none', borderTop:'1.5px solid #000', margin:'2mm 0'}} />
 
-      <div style={{fontSize:'10pt', lineHeight:1.6}}>
-        <div style={{display:'flex', justifyContent:'space-between'}}>
-          <span><b>Patient:</b> {admission.patient_name}</span>
-          <span><b>UHID:</b> {admission.patient_uhid}</span>
-        </div>
-        <div style={{display:'flex', justifyContent:'space-between'}}>
-          <span><b>Admission:</b> {admission.admission_number}</span>
-          <span><b>Admitted:</b> {d(admission.admission_datetime)}</span>
-        </div>
+      <div style={{fontSize:'10pt', lineHeight:1.7}}>
+        <div><b>Patient:</b> {admission.patient_name}</div>
+        <div><b>UHID:</b> {admission.patient_uhid}</div>
+        <div><b>Admission:</b> {admission.admission_number}</div>
+        <div><b>Admitted:</b> {d(admission.admission_datetime)}</div>
+        {mode==='final' && <div><b>Discharge Date:</b> {d(admission.discharge_datetime)}</div>}
         <div><b>Doctor:</b> {admission.doctor_name}</div>
       </div>
 
       <hr style={{border:'none', borderTop:'1.5px solid #000', margin:'2mm 0'}} />
 
       {charges.length > 0 && <div style={{fontSize:'9pt'}}>
-        <h3 style={{fontSize:'10pt', fontWeight:600, margin:'2mm 0'}}>Charges</h3>
-        <table style={{width:'100%', borderCollapse:'collapse'}}>
-          <thead><tr style={{borderBottom:'1px solid #000'}}>
+        <h3 style={{fontSize:'10pt', fontWeight:600, margin:'2mm 0'}}>{mode==='final' ? 'Charges Summary' : 'Charges (itemized)'}</h3>
+
+        {mode==='detailed' && <table style={{width:'100%', borderCollapse:'collapse'}}>
+          <thead><tr style={{borderBottom:'1.5px solid #000'}}>
+            <th style={{padding:'1mm 2mm', textAlign:'left', fontWeight:600, fontSize:'9pt'}}>Date &amp; Time</th>
             <th style={{padding:'1mm 2mm', textAlign:'left', fontWeight:600, fontSize:'9pt'}}>Description</th>
-            <th style={{padding:'1mm 2mm', textAlign:'center', fontWeight:600, fontSize:'9pt'}}>Category</th>
-            <th style={{padding:'1mm 2mm', textAlign:'right', fontWeight:600, fontSize:'9pt'}}>Qty</th>
+            <th style={{padding:'1mm 2mm', textAlign:'left', fontWeight:600, fontSize:'9pt'}}>Category</th>
+            <th style={{padding:'1mm 2mm', textAlign:'center', fontWeight:600, fontSize:'9pt'}}>Qty</th>
             <th style={{padding:'1mm 2mm', textAlign:'right', fontWeight:600, fontSize:'9pt'}}>Rate</th>
-            <th style={{padding:'1mm 2mm', textAlign:'right', fontWeight:600, fontSize:'9pt'}}>Total</th>
+            <th style={{padding:'1mm 2mm', textAlign:'right', fontWeight:600, fontSize:'9pt'}}>Amount</th>
           </tr></thead>
           <tbody>{charges.map((ch:any) => (
             <tr key={ch.id} style={{borderBottom:'1px solid #ddd'}}>
-              <td style={{padding:'1mm 2mm'}}>{ch.description}</td>
-              <td style={{padding:'1mm 2mm', textAlign:'center'}}>{ch.category||'-'}</td>
-              <td style={{padding:'1mm 2mm', textAlign:'right'}}>{ch.quantity}</td>
-              <td style={{padding:'1mm 2mm', textAlign:'right'}}>{ch.unit_price}</td>
-              <td style={{padding:'1mm 2mm', textAlign:'right', fontWeight:600}}>{ch.total_amount}</td>
+              <td style={{padding:'1mm 2mm'}}>{dt(ch.charge_datetime)}</td>
+              <td style={{padding:'1mm 2mm', fontWeight:500}}>{ch.description}</td>
+              <td style={{padding:'1mm 2mm'}}>{ch.category||'-'}</td>
+              <td style={{padding:'1mm 2mm', textAlign:'center'}}>{num(ch.quantity)}</td>
+              <td style={{padding:'1mm 2mm', textAlign:'right'}}>{num(ch.unit_price)}</td>
+              <td style={{padding:'1mm 2mm', textAlign:'right', fontWeight:600}}>{num(ch.total_amount)}</td>
             </tr>
-          ))}
-          <tr style={{fontWeight:700}}>
-            <td colSpan={4} style={{padding:'1mm 2mm', textAlign:'right'}}>Total Charges</td>
+          ))}</tbody>
+        </table>}
+
+        {mode==='final' && <table style={{width:'100%', borderCollapse:'collapse'}}>
+          <thead><tr style={{borderBottom:'1.5px solid #000'}}>
+            <th style={{padding:'1mm 2mm', textAlign:'left', fontWeight:600, fontSize:'9pt'}}>Description</th>
+            <th style={{padding:'1mm 2mm', textAlign:'left', fontWeight:600, fontSize:'9pt'}}>Category</th>
+            <th style={{padding:'1mm 2mm', textAlign:'center', fontWeight:600, fontSize:'9pt'}}>Qty</th>
+            <th style={{padding:'1mm 2mm', textAlign:'right', fontWeight:600, fontSize:'9pt'}}>Rate</th>
+            <th style={{padding:'1mm 2mm', textAlign:'right', fontWeight:600, fontSize:'9pt'}}>Amount</th>
+          </tr></thead>
+          <tbody>{summarised.map((s:any) => (
+            <tr key={s.key} style={{borderBottom:'1px solid #ddd'}}>
+              <td style={{padding:'1mm 2mm', fontWeight:500}}>{s.description}</td>
+              <td style={{padding:'1mm 2mm'}}>{s.category}</td>
+              <td style={{padding:'1mm 2mm', textAlign:'center'}}>{num(s.quantity)}</td>
+              <td style={{padding:'1mm 2mm', textAlign:'right'}}>{num(s.rate)}</td>
+              <td style={{padding:'1mm 2mm', textAlign:'right', fontWeight:600}}>{num(s.amount)}</td>
+            </tr>
+          ))}</tbody>
+        </table>}
+
+        <table style={{width:'100%', borderCollapse:'collapse', marginTop:'1mm'}}>
+          <tbody><tr style={{fontWeight:700, borderTop:'1.5px solid #000'}}>
+            <td colSpan={mode==='detailed'?5:4} style={{padding:'1mm 2mm', textAlign:'right'}}>Total Charges</td>
             <td style={{padding:'1mm 2mm', textAlign:'right'}}>{billing?.total_charges?.toFixed(0)}</td>
           </tr></tbody>
         </table>

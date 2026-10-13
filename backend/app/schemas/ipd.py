@@ -198,6 +198,7 @@ class IPDInsuranceResponse(BaseModel):
 # --- Charges & Payments ---
 class IPDChargeCreate(BaseModel):
     charge_datetime: datetime = None
+    charge_date: Optional[date] = None
     category: Optional[str] = None
     description: str = Field(..., min_length=1)
     quantity: float = 1
@@ -206,6 +207,7 @@ class IPDChargeCreate(BaseModel):
 
 class IPDChargeResponse(BaseModel):
     id: int; admission_id: int; charge_datetime: datetime
+    charge_date: Optional[date] = None
     category: Optional[str] = None; description: str
     quantity: float; unit_price: float; total_amount: float
     notes: Optional[str] = None

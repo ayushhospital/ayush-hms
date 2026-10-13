@@ -113,6 +113,7 @@ class IPDCharge(Base):
     id = Column(Integer, primary_key=True, index=True)
     admission_id = Column(Integer, ForeignKey("ipd_admissions.id"), nullable=False, index=True)
     charge_datetime = Column(DateTime(timezone=True), nullable=False)
+    charge_date = Column(Date, nullable=True)
     category = Column(String(50), nullable=True)
     description = Column(String(500), nullable=False)
     quantity = Column(Numeric(10,2), nullable=False, default=1)

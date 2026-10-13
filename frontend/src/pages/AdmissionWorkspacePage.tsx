@@ -288,7 +288,7 @@ const BillingTab: React.FC<{aid:number; onPrintPayment:(p:any)=>void; onPrintBil
   useEffect(() => { load(); }, [aid]);
   const addCharge = async () => {
     if(!c.description||!c.unit_price) return;
-    await fetch(BASE+`/ipd/admissions/${aid}/charges`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({description:c.description, unit_price:parseFloat(c.unit_price), quantity:c.quantity?parseInt(c.quantity):1, category:c.category})});
+    await fetch(BASE+`/ipd/admissions/${aid}/charges`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({description:c.description, unit_price:parseFloat(c.unit_price), quantity:c.quantity?parseInt(c.quantity):1, category:c.category, charge_date:c.charge_date||new Date().toISOString().substring(0,10)})});
     setShowCharge(false); setC({}); load();
   };
   const addPayment = async () => {
@@ -319,16 +319,39 @@ const BillingTab: React.FC<{aid:number; onPrintPayment:(p:any)=>void; onPrintBil
       </div>
       {showCharge && <div className="bg-gray-50 rounded-lg p-3 mb-3 space-y-2">
         <input value={c.description||''} onChange={e=>setC({...c,description:e.target.value})} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Description *" />
-        <div className="flex gap-3"><input value={c.unit_price||''} onChange={e=>setC({...c,unit_price:e.target.value})} type="number" step="0.01" className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Unit price *" />
-        <input value={c.quantity||1} onChange={e=>setC({...c,quantity:e.target.value})} type="number" className="w-20 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Qty" />
-        <input value={c.category||''} onChange={e=>setC({...c,category:e.target.value})} className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Category" /></div>
+        <div className="flex gap-3">
+          <select value={c.category||''} onChange={e=>setC({...c,category:e.target.value})} className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none bg-white">
+            <option value="">Category...</option>
+            <option>Room Rent</option>
+            <option>Nursing</option>
+            <option>Main Surgeon</option>
+            <option>Main Doctor</option>
+            <option>Assistant Surgeon</option>
+            <option>Anaesthesiologist</option>
+            <option>Tests / Investigations</option>
+            <option>Pharmacy / Medicines</option>
+            <option>Consumables</option>
+            <option>Procedure / OT</option>
+            <option>Physiotherapy</option>
+            <option>Diet / Nutrition</option>
+            <option>ICU / CCU</option>
+            <option>Ambulance</option>
+            <option>Blood Transfusion</option>
+            <option>Miscellaneous</option>
+          </select>
+          <input value={c.unit_price||''} onChange={e=>setC({...c,unit_price:e.target.value})} type="number" step="0.01" className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Unit price *" />
+        </div>
+        <div className="flex gap-3">
+          <input value={c.quantity||1} onChange={e=>setC({...c,quantity:e.target.value})} type="number" className="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Qty" />
+          <label className="flex-1 flex items-center gap-2 text-xs text-gray-500"><input value={c.charge_date||new Date().toISOString().substring(0,10)} onChange={e=>setC({...c,charge_date:e.target.value})} type="date" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" /></label>
+        </div>
         <button onClick={addCharge} className="px-4 py-2 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Add Charge</button>
       </div>}
       {loading ? <p className="text-xs text-gray-400">Loading...</p> : charges.length===0 ? <p className="text-xs text-gray-400">No charges added</p> :
       <div className="overflow-x-auto"><table className="w-full text-xs"><thead><tr className="border-b border-gray-200 bg-gray-50">
         <th className="py-1.5 px-2 text-left font-medium text-gray-600">Date</th><th className="py-1.5 px-2 text-left font-medium text-gray-600">Description</th><th className="py-1.5 px-2 text-left font-medium text-gray-600">Category</th><th className="py-1.5 px-2 text-right font-medium text-gray-600">Qty</th><th className="py-1.5 px-2 text-right font-medium text-gray-600">Rate</th><th className="py-1.5 px-2 text-right font-medium text-gray-600">Total</th>
       </tr></thead><tbody>{charges.map((ch:any) => <tr key={ch.id} className="border-b border-gray-100">
-        <td className="py-1.5 px-2 whitespace-nowrap">{fmt(ch.charge_datetime)}</td><td className="py-1.5 px-2">{ch.description}</td><td className="py-1.5 px-2 text-gray-500">{ch.category||'-'}</td>
+        <td className="py-1.5 px-2 whitespace-nowrap">{fmt(ch.charge_date||ch.charge_datetime)}</td><td className="py-1.5 px-2">{ch.description}</td><td className="py-1.5 px-2 text-gray-500">{ch.category||'-'}</td>
         <td className="py-1.5 px-2 text-right">{ch.quantity}</td><td className="py-1.5 px-2 text-right">{ch.unit_price}</td><td className="py-1.5 px-2 text-right font-medium">{ch.total_amount}</td>
       </tr>)}</tbody></table></div>}
     </div>
