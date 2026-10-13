@@ -88,8 +88,8 @@ const AdmissionWorkspacePage: React.FC = () => {
     {tab === 'tests' && <TestsTab aid={aid} doctors={doctors} onError={(s:string)=>setTabError(s)} onSuccess={(s:string)=>setTabSuccess(s)} />}
     {tab === 'medications' && <MedicationsTab aid={aid} doctors={doctors} />}
     {tab === 'insurance' && <InsuranceTab aid={aid} />}
-    {tab === 'billing' && <BillingTab aid={aid} />}
-    {tab === 'discharge' && <DischargeTab aid={aid} doctors={doctors} admission={admission} />}
+    {tab === 'billing' && <BillingTab aid={aid} onPrintPayment={(p)=>setPrintPayment(p)} onPrintBill={(mode,c,p,b)=>{setPrintBill({mode,charges:c,payments:p,billing:b})}} />}
+    {tab === 'discharge' && <DischargeTab aid={aid} doctors={doctors} admission={admission} onPrint={(ds)=>setPrintDischarge({ds})} />}
     {tab === 'activity' && <ActivityTab aid={aid} />}
     {printPayment && <PaymentReceiptPrint payment={printPayment} onClose={()=>setPrintPayment(null)} />}
     {printBill && <BillPrintTemplate admission={admission} charges={printBill.charges} payments={printBill.payments} billing={printBill.billing} mode={printBill.mode as any} onClose={()=>setPrintBill(null)} />}
@@ -269,7 +269,7 @@ const InsuranceTab: React.FC<{aid:number}> = ({aid}) => {
   </div>);
 };
 
-const BillingTab: React.FC<{aid:number}> = ({aid}) => {
+const BillingTab: React.FC<{aid:number; onPrintPayment:(p:any)=>void; onPrintBill:(mode:string,c:any[],p:any[],b:any)=>void}> = ({aid, onPrintPayment, onPrintBill}) => {
   const [charges, setCharges] = useState<any[]>([]); const [payments, setPayments] = useState<any[]>([]);
   const [billing, setBilling] = useState<any>(null); const [loading, setLoading] = useState(true);
   const [showCharge, setShowCharge] = useState(false); const [showPayment, setShowPayment] = useState(false);
@@ -306,6 +306,10 @@ const BillingTab: React.FC<{aid:number}> = ({aid}) => {
         <div className="p-2 bg-blue-50 rounded-lg"><span className="text-blue-600">Balance</span><p className="font-semibold text-blue-700 m-0 mt-0.5">INR {billing.outstanding_balance?.toFixed(0)}</p></div>
       </div>
     </div>}
+    {billing && <div className="flex gap-2 mt-3 mb-1">
+      <button onClick={()=>onPrintBill('final', charges, payments, billing)} className="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Final Bill</button>
+      <button onClick={()=>onPrintBill('detailed', charges, payments, billing)} className="px-3 py-1.5 text-xs font-medium text-white bg-gray-600 rounded-lg hover:bg-gray-700">Detailed Bill</button>
+    </div>}
 
     <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
       <div className="flex items-center justify-between mb-2">
@@ -341,17 +345,18 @@ const BillingTab: React.FC<{aid:number}> = ({aid}) => {
       </div>}
       {loading ? <p className="text-xs text-gray-400">Loading...</p> : payments.length===0 ? <p className="text-xs text-gray-400">No payments recorded</p> :
       <div className="overflow-x-auto"><table className="w-full text-xs"><thead><tr className="border-b border-gray-200 bg-gray-50">
-        <th className="py-1.5 px-2 text-left font-medium text-gray-600">Receipt</th><th className="py-1.5 px-2 text-left font-medium text-gray-600">Date</th><th className="py-1.5 px-2 text-right font-medium text-gray-600">Amount</th><th className="py-1.5 px-2 text-left font-medium text-gray-600">Mode</th><th className="py-1.5 px-2 text-left font-medium text-gray-600">Ref</th><th className="py-1.5 px-2 text-center font-medium text-gray-600">Status</th>
+        <th className="py-1.5 px-2 text-left font-medium text-gray-600">Receipt</th><th className="py-1.5 px-2 text-left font-medium text-gray-600">Date</th><th className="py-1.5 px-2 text-right font-medium text-gray-600">Amount</th><th className="py-1.5 px-2 text-left font-medium text-gray-600">Mode</th><th className="py-1.5 px-2 text-left font-medium text-gray-600">Ref</th><th className="py-1.5 px-2 text-center font-medium text-gray-600">Status</th><th className="py-1.5 px-2 text-center font-medium text-gray-600">Print</th>
       </tr></thead><tbody>{payments.map((pm:any) => <tr key={pm.id} className="border-b border-gray-100">
         <td className="py-1.5 px-2 font-mono">{pm.receipt_number}</td><td className="py-1.5 px-2 whitespace-nowrap">{fmt(pm.payment_datetime)}</td>
         <td className="py-1.5 px-2 text-right font-medium">{pm.amount}</td><td className="py-1.5 px-2">{pm.payment_mode}</td>
         <td className="py-1.5 px-2 text-gray-500">{pm.transaction_reference||'-'}</td>
         <td className="py-1.5 px-2 text-center">{pm.status==='Successful'?<span className="text-green-600">Paid</span>:<span className="text-gray-500">{pm.status}</span>}</td>
+        <td className="py-1.5 px-2 text-center"><button onClick={()=>onPrintPayment(pm)} className="px-2 py-1 text-[10px] font-medium text-blue-600 bg-blue-50 rounded hover:bg-blue-100">Print</button></td>
       </tr>)}</tbody></table></div>}
     </div>
   </div>);
 };
-const DischargeTab: React.FC<{aid:number; doctors:Doctor[]; admission:IPDAdmissionResponse}> = ({aid, doctors, admission}) => {
+const DischargeTab: React.FC<{aid:number; doctors:Doctor[]; admission:IPDAdmissionResponse; onPrint:(ds:any)=>void}> = ({aid, doctors, admission, onPrint}) => {
   const [ds, setDs] = useState<any>(null); const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false); const [finError, setFinError] = useState('');
   const [f, setF] = useState<any>({});
@@ -380,6 +385,7 @@ const DischargeTab: React.FC<{aid:number; doctors:Doctor[]; admission:IPDAdmissi
       <h4 className="text-xs font-semibold text-gray-700 m-0">Discharge Summary {ds?.status==='Finalized'?<span className="text-emerald-600 ml-2">(Finalized)</span>:<span className="text-amber-600 ml-2">(Draft)</span>}</h4>
       <div className="flex gap-2">
         <button onClick={save} disabled={saving||ds?.status==='Finalized'} className="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50">{saving?'Saving...':'Save Draft'}</button>
+        <button onClick={()=>ds && onPrint(ds)} disabled={!ds} className="px-3 py-1.5 text-xs font-medium text-white bg-gray-600 rounded-lg hover:bg-gray-700 disabled:opacity-40">Print Summary</button>
         {ds?.status!=='Finalized' && <button onClick={finalize} className="px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700">Finalize Discharge</button>}
       </div>
     </div>
