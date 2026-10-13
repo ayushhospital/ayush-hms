@@ -157,9 +157,8 @@ const NewAdmissionPage: React.FC = () => {
           </div>
         )}
       </div>
-      <div className="flex gap-2 justify-end mt-4">
+      <div className="flex justify-end mt-4">
         <button onClick={() => navigate('/ipd')} className="px-4 py-2 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">Cancel</button>
-        <button onClick={() => { if (selectedPatient) setStep(2); else setError('Please select a patient'); }} className="px-4 py-2 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Continue &rarr;</button>
       </div>
     </div>)}
 
