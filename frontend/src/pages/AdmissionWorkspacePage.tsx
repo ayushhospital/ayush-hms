@@ -210,7 +210,9 @@ const MedicationsTab: React.FC<{aid:number; doctors:Doctor[]}> = ({aid, doctors}
   useEffect(() => { fetch(BASE+`/ipd/admissions/${aid}/medications`).then(r=>r.json()).then(d=>setMeds(Array.isArray(d)?d:[])).catch(()=>{}).finally(()=>setLoading(false)); }, [aid]);
   const save = async () => {
     if(!f.medicine_name||!f.dose||!f.route||!f.frequency||!f.start_date) return;
-    const r = await fetch(BASE+`/ipd/admissions/${aid}/medications`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(f)});
+    const payload:any = {medicine_name:f.medicine_name, strength:f.strength||null, dose:f.dose, route:f.route, frequency:f.frequency, start_date:f.start_date};
+    if(f.end_date) payload.end_date = f.end_date;
+    const r = await fetch(BASE+`/ipd/admissions/${aid}/medications`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
     if(r.ok) { setShowForm(false); setF({}); const d=await fetch(BASE+`/ipd/admissions/${aid}/medications`).then(r=>r.json()); setMeds(Array.isArray(d)?d:[]); }
   };
   const fmt=(s?:string)=>{if(!s)return'-';const d=new Date(s);return `${('0'+d.getDate()).slice(-2)}-${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]}-${d.getFullYear()}`;};
@@ -220,13 +222,35 @@ const MedicationsTab: React.FC<{aid:number; doctors:Doctor[]}> = ({aid, doctors}
       <button onClick={()=>setShowForm(!showForm)} className="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">{showForm?'Cancel':'+ Add Medication'}</button>
     </div>
     {showForm && <div className="bg-gray-50 rounded-lg p-3 mb-3 space-y-2">
-      <div className="flex gap-3"><input value={f.medicine_name||''} onChange={e=>setF({...f,medicine_name:e.target.value})} className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Medicine *" />
-      <input value={f.strength||''} onChange={e=>setF({...f,strength:e.target.value})} className="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Strength" /></div>
-      <div className="flex gap-3"><input value={f.dose||''} onChange={e=>setF({...f,dose:e.target.value})} className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Dose *" />
-      <input value={f.route||''} onChange={e=>setF({...f,route:e.target.value})} className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Route * (Oral/IV/IM)" /></div>
-      <div className="flex gap-3"><input value={f.frequency||''} onChange={e=>setF({...f,frequency:e.target.value})} className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Frequency *" />
-      <input value={f.start_date||''} onChange={e=>setF({...f,start_date:e.target.value})} type="date" className="w-32 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Start" /></div>
-      <button onClick={save} className="px-4 py-2 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Save Medication</button>
+      <div className="flex gap-3"><input value={f.medicine_name||''} onChange={e=>setF({...f,medicine_name:e.target.value})} className="w-56 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Medicine *" /><input value={f.strength||''} onChange={e=>setF({...f,strength:e.target.value})} className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Strength (e.g. 500 mg)" /></div>
+      <div className="flex gap-3"><input value={f.dose||''} onChange={e=>setF({...f,dose:e.target.value})} className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Dose * (e.g. 1 tablet, 5 ml)" />
+      <select value={f.route||''} onChange={e=>setF({...f,route:e.target.value})} className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none bg-white">
+        <option value="">Route *</option>
+        <option>Oral</option><option>IV</option><option>IM</option><option>Subcutaneous</option>
+        <option>Topical</option><option>Sublingual</option><option>Inhalation</option><option>Suppository</option>
+      </select></div>
+      <div className="flex gap-3">
+        <select value={f.frequency||''} onChange={e=>setF({...f,frequency:e.target.value})} className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none bg-white">
+          <option value="">Frequency *</option>
+          <option value="OD">OD - Once daily</option>
+          <option value="BD">BD - Twice daily</option>
+          <option value="TDS">TDS - Three times a day</option>
+          <option value="QID">QID - Four times a day</option>
+          <option value="HS">HS - At bedtime</option>
+          <option value="SOS">SOS - As needed</option>
+          <option value="Alternate days">Alternate days</option>
+          <option value="Weekly">Weekly</option>
+          <option value="Q4H">Q4H - Every 4 hours</option>
+          <option value="Q6H">Q6H - Every 6 hours</option>
+          <option value="Q8H">Q8H - Every 8 hours</option>
+        </select>
+        <label className="flex-1 flex items-center gap-2 text-xs text-gray-500"><input value={f.start_date||''} onChange={e=>setF({...f,start_date:e.target.value})} type="date" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" />Start *</label>
+        <label className="flex-1 flex items-center gap-2 text-xs text-gray-500"><input value={f.end_date||''} onChange={e=>setF({...f,end_date:e.target.value})} type="date" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" />End</label>
+      </div>
+      <div className="flex items-center gap-3">
+        <button onClick={save} className="px-4 py-2 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Save Medication</button>
+        {!f.end_date && <span className="text-[11px] text-gray-400">End date blank = ongoing</span>}
+      </div>
     </div>}
     {loading ? <p className="text-xs text-gray-400">Loading...</p> : meds.length === 0 ? <p className="text-xs text-gray-400">No medications recorded</p> :
     <div className="overflow-x-auto"><table className="w-full text-xs"><thead><tr className="border-b border-gray-200 bg-gray-50">
