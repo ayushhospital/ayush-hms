@@ -41,6 +41,31 @@ const NewAdmissionPage: React.FC = () => {
     } catch { setPatientError('Search failed'); }
   };
 
+  const [showReg, setShowReg] = useState(false);
+  const [regName, setRegName] = useState('');
+  const [regGender, setRegGender] = useState('Male');
+  const [regAge, setRegAge] = useState('');
+  const [regPhone, setRegPhone] = useState('');
+  const [regErr, setRegErr] = useState('');
+  const [regSaving, setRegSaving] = useState(false);
+
+  const registerPatient = async () => {
+    setRegErr('');
+    if (!regName.trim() || !regPhone.trim() || !regAge) { setRegErr('Name, phone and age are required'); return; }
+    setRegSaving(true);
+    try {
+      const p = await patientsApi.create({
+        name: regName.trim(), gender: regGender,
+        age: parseInt(regAge, 10), phone_number: regPhone.trim(),
+      });
+      setSelectedPatient(p);
+      setSearchResults([p]);
+      setStep(2);
+    } catch (err: unknown) {
+      setRegErr(err instanceof Error ? err.message : 'Failed to create patient');
+    } finally { setRegSaving(false); }
+  };
+
   const submitAdmission = async () => {
     setError('');
     if (!selectedPatient || !admittingDoctorId || !reason.trim() || !attName.trim() || !attPhone.trim()) {
@@ -101,6 +126,37 @@ const NewAdmissionPage: React.FC = () => {
           <button onClick={() => { setSelectedPatient(p); setStep(2); }} className="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">Select</button>
         </div>
       ))}
+      <div className="border-t border-gray-100 pt-3 mt-1">
+        {searchResults.length === 0 && patientSearch.length >= 3 && !selectedPatient && (
+          <p className="text-xs text-gray-500 mb-1">No patient found with this {patientSearchMode === 'phone' ? 'phone number' : 'UHID'}. You can register a new patient below.</p>
+        )}
+        {!selectedPatient && (
+          <button onClick={() => { setShowReg(!showReg); if (!showReg) setRegPhone(patientSearch); }}
+            className="text-xs font-medium text-blue-600 hover:underline">
+            {showReg ? 'Cancel registration' : '+ Register a new patient'}
+          </button>
+        )}
+        {showReg && !selectedPatient && (
+          <div className="mt-2 bg-gray-50 rounded-lg border border-gray-200 p-3 space-y-2">
+            <p className="text-xs font-semibold text-gray-700">New Patient Registration</p>
+            <div className="flex gap-2">
+              <input type="text" value={regName} onChange={e => setRegName(e.target.value)} className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Full name *" />
+              <select value={regGender} onChange={e => setRegGender(e.target.value)} className="px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none bg-white">
+                <option>Male</option><option>Female</option><option>Other</option>
+              </select>
+              <input type="number" value={regAge} onChange={e => setRegAge(e.target.value)} className="w-20 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Age *" />
+            </div>
+            <input type="tel" value={regPhone} onChange={e => setRegPhone(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Phone number *" />
+            {regErr && <p className="text-xs text-red-600">{regErr}</p>}
+            <div className="flex gap-2 justify-end">
+              <button onClick={() => setShowReg(false)} className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">Cancel</button>
+              <button onClick={registerPatient} disabled={regSaving} className="px-4 py-1.5 text-xs font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 disabled:opacity-50">
+                {regSaving ? 'Creating...' : 'Create & Continue'}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
       <div className="flex gap-2 justify-end mt-4">
         <button onClick={() => navigate('/ipd')} className="px-4 py-2 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">Cancel</button>
         <button onClick={() => { if (selectedPatient) setStep(2); else setError('Please select a patient'); }} className="px-4 py-2 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Continue &rarr;</button>
