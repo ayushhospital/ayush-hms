@@ -115,7 +115,8 @@ const NewAdmissionPage: React.FC = () => {
           className="px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none bg-white">
           <option value="phone">Phone</option><option value="uhid">UHID</option></select>
         <input type="text" value={patientSearch} onChange={e => setPatientSearch(e.target.value)}
-          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Enter phone number or UHID" />
+          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Enter phone number or UHID"
+          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); searchPatients(); } }} />
         <button onClick={searchPatients} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Search</button>
       </div>
       {patientError && <div className="text-xs text-red-600 mb-2">{patientError}</div>}
