@@ -17,13 +17,14 @@ const IPDHomePage: React.FC = () => {
   const [dischargedTo, setDischargedTo] = useState('');
   const [doctors, setDoctors] = useState<Doctor[]>([]);
 
-  const loadAdmissions = async () => {
+  const loadAdmissions = async (modeOverride?: 'active' | 'history') => {
+    const useMode = modeOverride ?? mode;
     setLoading(true);
     setError('');
     try {
       const params: any = { limit: 200 };
       const q = searchQuery.trim();
-      if (mode === 'history') {
+      if (useMode === 'history') {
         params.status = 'discharged';
         if (q) params.search = q;
         if (admittedFrom) params.start_date = admittedFrom;
@@ -46,10 +47,8 @@ const IPDHomePage: React.FC = () => {
 
   const switchMode = (m: 'active' | 'history') => {
     setMode(m);
-    setTimeout(() => {
-      // re-run load with new mode (loadAdmissions reads current state via closure)
-      loadAdmissions();
-    }, 50);
+    // run load immediately with the explicit target mode (avoids stale closure)
+    loadAdmissions(m);
   };
 
   const clearOldFilters = () => {
@@ -109,7 +108,7 @@ const IPDHomePage: React.FC = () => {
             className={`flex-1 ${inp}`}
             placeholder={mode==='active' ? 'Search by admission ID, phone or name' : 'Search old discharges by admission ID, phone or name'}
             onKeyDown={e => { if (e.key === 'Enter') loadAdmissions(); }} />
-          <button onClick={loadAdmissions}
+          <button onClick={() => loadAdmissions()}
             className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Search</button>
         </div>
 
