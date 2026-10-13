@@ -31,7 +31,8 @@ const AdmissionWorkspacePage: React.FC = () => {
       doctorsApi.list().catch(() => [] as Doctor[]),
     ]).then(([adm, att, docs]) => {
       setAdmission(adm); setAttendant(att); setDoctors(docs);
-    }).catch(() => setError('Failed to reload admission'));
+    }).catch(() => setError('Failed to reload admission'))
+    .finally(() => setLoading(false));
   };
   useEffect(() => {
     if (!id) return;
