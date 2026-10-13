@@ -178,23 +178,24 @@ const NewAdmissionPage: React.FC = () => {
               {doctors.map(d => <option key={d.id} value={d.id}>{d.name} ({d.department})</option>)}
             </select></div>
         </div>
+        <p className="text-[10px] text-gray-400 -mt-1">Type: Planned = booked in advance (e.g. surgery) &bull; Emergency = urgent walk-in &bull; Referral = sent by another doctor/hospital</p>
         <textarea value={reason} onChange={e => setReason(e.target.value)} required rows={3}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Reason for admission *" />
         <textarea value={initialDiagnosis} onChange={e => setInitialDiagnosis(e.target.value)} rows={2}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Initial diagnosis (optional)" />
         <div className="flex gap-3">
-          <div className="flex-1"><label className="block text-xs font-medium text-gray-600 mb-0.5">Referral</label>
-            <select value={referralSource} onChange={e => setReferralSource(e.target.value)}
+          <div className="flex-1"><label className="block text-xs font-medium text-gray-600 mb-0.5">How did the patient arrive?</label>
+            <select value={referralSource} onChange={e => { setReferralSource(e.target.value); if (e.target.value === 'Self') setReferringProvider(''); }}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none bg-white">
-              <option value="Self">Self/Direct</option><option value="Doctor">Doctor</option><option value="Hospital">Hospital</option><option value="Other">Other</option></select></div>
+              <option value="Self">Walk-in / Self</option><option value="Doctor">Referred by a Doctor</option><option value="Hospital">Referred by another Hospital</option><option value="Other">Other</option></select></div>
           <div className="flex-1"><label className="block text-xs font-medium text-gray-600 mb-0.5">Dept</label>
             <input type="text" value={dept} onChange={e => setDept(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Department" /></div>
         </div>
         <div className="flex gap-3">
           <div className="flex-1"><label className="block text-xs font-medium text-gray-600 mb-0.5">Ward/Bed</label>
             <input type="text" value={wardBed} onChange={e => setWardBed(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="e.g. Ward A, Bed 12" /></div>
-          <div className="flex-1"><label className="block text-xs font-medium text-gray-600 mb-0.5">Referring Provider</label>
-            <input type="text" value={referringProvider} onChange={e => setReferringProvider(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="If referred" /></div>
+          {referralSource !== 'Self' && <div className="flex-1"><label className="block text-xs font-medium text-gray-600 mb-0.5">Referred by (name)</label>
+            <input type="text" value={referringProvider} onChange={e => setReferringProvider(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="e.g. Dr. Sharma Clinic / City Hospital" /></div>}
         </div>
       </div>
       <div className="flex gap-2 justify-end mt-4">
