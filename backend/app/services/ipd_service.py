@@ -38,7 +38,7 @@ def generate_refund_number(db: Session) -> str:
     result = db.execute(text("SELECT nextval('ipd_refund_seq')"))
     return f"RFN-{result.scalar():06d}"
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import func, text
+from sqlalchemy import func, text, or_, and_
 from datetime import datetime, date, timedelta
 import pytz
 from typing import Optional
@@ -128,26 +128,42 @@ def get_admission_by_id(db: Session, admission_id: int) -> Optional[IPDAdmission
     ).filter(IPDAdmission.id == admission_id).first()
 
 
-def list_admissions(db: Session, status_filter=None, search=None, start_date=None, end_date=None, limit=50, offset=0):
+def list_admissions(db: Session, status_filter=None, search=None, start_date=None, end_date=None,
+                    discharged_start=None, discharged_end=None, recent_days=None, view=None, limit=50, offset=0):
     query = db.query(IPDAdmission).options(
         joinedload(IPDAdmission.patient), joinedload(IPDAdmission.admitting_doctor))
-    if status_filter == 'open':
+    tz_now = datetime.now(pytz.timezone('Asia/Kolkata'))
+    if view == 'active':
+        week_ago = tz_now - timedelta(days=7)
+        query = query.filter(or_(
+            IPDAdmission.status == 'Open',
+            and_(IPDAdmission.status == 'Discharged', IPDAdmission.discharge_datetime >= week_ago)
+        ))
+    elif status_filter == 'open':
         query = query.filter(IPDAdmission.status == 'Open')
     elif status_filter == 'discharged':
         query = query.filter(IPDAdmission.status == 'Discharged')
+        if recent_days:
+            cutoff = tz_now - timedelta(days=recent_days)
+            query = query.filter(IPDAdmission.discharge_datetime >= cutoff)
     if start_date:
         sd = datetime.combine(start_date, datetime.min.time())
         query = query.filter(IPDAdmission.admission_datetime >= sd)
     if end_date:
         ed = datetime.combine(end_date + timedelta(days=1), datetime.min.time())
         query = query.filter(IPDAdmission.admission_datetime < ed)
+    if discharged_start:
+        ds = datetime.combine(discharged_start, datetime.min.time())
+        query = query.filter(IPDAdmission.discharge_datetime >= ds)
+    if discharged_end:
+        de = datetime.combine(discharged_end + timedelta(days=1), datetime.min.time())
+        query = query.filter(IPDAdmission.discharge_datetime < de)
     if search:
         st = f'%{search}%'
-        query = query.join(Patient).filter(
-            db.query(Patient).filter(
-                Patient.name.ilike(st) | Patient.uhid.ilike(st) | Patient.phone_number.ilike(st)
-            ).exists()
-        )
+        query = query.join(Patient).filter(or_(
+            Patient.name.ilike(st), Patient.uhid.ilike(st), Patient.phone_number.ilike(st),
+            IPDAdmission.admission_number.ilike(st)
+        ))
     total = query.count()
     tz = pytz.timezone('Asia/Kolkata')
     today_start = datetime.now(tz).replace(hour=0, minute=0, second=0, microsecond=0)
@@ -167,6 +183,7 @@ def list_admissions(db: Session, status_filter=None, search=None, start_date=Non
             patient_uhid=a.patient.uhid if a.patient else None,
             patient_phone=a.patient.phone_number if a.patient else None,
             admission_datetime=a.admission_datetime,
+            discharge_datetime=a.discharge_datetime,
             admitting_doctor_id=a.admitting_doctor_id,
             doctor_name=a.admitting_doctor.name if a.admitting_doctor else None,
             ward_bed=a.ward_bed, status=a.status,

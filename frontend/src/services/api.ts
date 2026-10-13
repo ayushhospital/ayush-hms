@@ -106,15 +106,22 @@ export const reportsApi = {
 };
 // IPD API
 export const ipdApi = {
-  list: (params?: { status?: string; search?: string; start_date?: string; end_date?: string }) => {
-    let q = '';
+  list: (params?: { status?: string; search?: string; start_date?: string; end_date?: string; discharged_start?: string; discharged_end?: string; view?: string; recent_days?: number; limit?: number }) => {
+    const qs: string[] = [];
     if (params) {
-      if (params.status) q += `&status=${params.status}`;
-      if (params.search) q += `&search=${encodeURIComponent(params.search)}`;
-      if (params.start_date) q += `&start_date=${params.start_date}`;
-      if (params.end_date) q += `&end_date=${params.end_date}`;
+      if (params.limit) qs.push(`limit=${params.limit}`); else qs.push('limit=100');
+      if (params.status) qs.push(`status=${params.status}`);
+      if (params.view) qs.push(`view=${params.view}`);
+      if (params.recent_days) qs.push(`recent_days=${params.recent_days}`);
+      if (params.search) qs.push(`search=${encodeURIComponent(params.search)}`);
+      if (params.start_date) qs.push(`start_date=${params.start_date}`);
+      if (params.end_date) qs.push(`end_date=${params.end_date}`);
+      if (params.discharged_start) qs.push(`discharged_start=${params.discharged_start}`);
+      if (params.discharged_end) qs.push(`discharged_end=${params.discharged_end}`);
+    } else {
+      qs.push('limit=100');
     }
-    return request<IPDAdmissionListResponse>(`/ipd/admissions?limit=100${q}`);
+    return request<IPDAdmissionListResponse>(`/ipd/admissions?${qs.join('&')}`);
   },
 
   get: (id: number) =>

@@ -27,8 +27,14 @@ from sqlalchemy import func, text
 def tz(): return pytz.timezone('Asia/Kolkata')
 
 @router.get('/admissions', response_model=IPDAdmissionListResponse)
-def get_admissions(status_filter: str = Query(None, alias='status'), search: str = Query(None), start_date: date = Query(None), end_date: date = Query(None), limit: int = Query(50, le=200), offset: int = Query(0, ge=0), db: Session = Depends(get_db)):
-    return list_admissions(db, status_filter, search, start_date, end_date, limit, offset)
+def get_admissions(status_filter: str = Query(None, alias='status'), search: str = Query(None),
+                   start_date: date = Query(None), end_date: date = Query(None),
+                   discharged_start: date = Query(None), discharged_end: date = Query(None),
+                   recent_days: int = Query(None), view: str = Query(None),
+                   limit: int = Query(100, le=200), offset: int = Query(0, ge=0),
+                   db: Session = Depends(get_db)):
+    return list_admissions(db, status_filter, search, start_date, end_date,
+                           discharged_start, discharged_end, recent_days, view, limit, offset)
 
 @router.post('/admissions', response_model=IPDAdmissionResponse, status_code=status.HTTP_201_CREATED)
 def create_new_admission(data: IPDAdmissionCreate, db: Session = Depends(get_db)):

@@ -62,6 +62,7 @@ class IPDAdmissionSummary(BaseModel):
     patient_uhid: Optional[str] = None
     patient_phone: Optional[str] = None
     admission_datetime: datetime
+    discharge_datetime: Optional[datetime] = None
     admitting_doctor_id: int
     doctor_name: Optional[str] = None
     ward_bed: Optional[str] = None

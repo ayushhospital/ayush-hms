@@ -148,6 +148,7 @@ export interface IPDAdmissionSummary {
   patient_uhid?: string | null;
   patient_phone?: string | null;
   admission_datetime: string;
+  discharge_datetime?: string | null;
   admitting_doctor_id: number;
   doctor_name?: string | null;
   ward_bed?: string | null;
