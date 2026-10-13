@@ -5,6 +5,7 @@ import type { IPDAdmissionResponse, IPDAttendantResponse, Doctor } from '../type
 import PaymentReceiptPrint from '../components/ipd/PaymentReceiptPrint';
 import BillPrintTemplate from '../components/ipd/BillPrintTemplate';
 import DischargePrintTemplate from '../components/ipd/DischargePrintTemplate';
+import PrintModal from '../components/ipd/PrintModal';
 
 type TabId = 'overview'|'tests'|'medications'|'insurance'|'billing'|'discharge'|'activity';
 
@@ -91,9 +92,9 @@ const AdmissionWorkspacePage: React.FC = () => {
     {tab === 'billing' && <BillingTab aid={aid} onPrintPayment={(p)=>setPrintPayment(p)} onPrintBill={(mode,c,p,b)=>{setPrintBill({mode,charges:c,payments:p,billing:b})}} />}
     {tab === 'discharge' && <DischargeTab aid={aid} doctors={doctors} admission={admission} onPrint={(ds)=>setPrintDischarge({ds})} />}
     {tab === 'activity' && <ActivityTab aid={aid} />}
-    {printPayment && <PaymentReceiptPrint payment={printPayment} onClose={()=>setPrintPayment(null)} />}
-    {printBill && <BillPrintTemplate admission={admission} charges={printBill.charges} payments={printBill.payments} billing={printBill.billing} mode={printBill.mode as any} onClose={()=>setPrintBill(null)} />}
-    {printDischarge && <DischargePrintTemplate discharge={printDischarge.ds} admission={admission} attendant={attendant} onClose={()=>setPrintDischarge(null)} />}
+    {printPayment && <PrintModal onClose={()=>setPrintPayment(null)}><PaymentReceiptPrint payment={printPayment} onClose={()=>setPrintPayment(null)} /></PrintModal>}
+    {printBill && <PrintModal onClose={()=>setPrintBill(null)}><BillPrintTemplate admission={admission} charges={printBill.charges} payments={printBill.payments} billing={printBill.billing} mode={printBill.mode as any} onClose={()=>setPrintBill(null)} /></PrintModal>}
+    {printDischarge && <PrintModal onClose={()=>setPrintDischarge(null)}><DischargePrintTemplate discharge={printDischarge.ds} admission={admission} attendant={attendant} onClose={()=>setPrintDischarge(null)} /></PrintModal>}
   </div>);
 };
 

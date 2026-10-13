@@ -33,7 +33,7 @@ const PaymentReceiptPrint: React.FC<Props> = ({ payment, onClose }) => {
         <p className="text-xs text-gray-500">A5 receipt (148x210 mm).</p>
       </div>
 
-      <div className="slip-container" style={{maxWidth:'520px', margin:'0 auto'}}>
+      <div className="slip-container print-template" style={{maxWidth:'520px', margin:'0 auto'}}>
         <div style={{textAlign:'center', borderBottom:'2px solid #1d4ed8', paddingBottom:'2.5mm', marginBottom:'2.5mm'}}>
           <h1 style={{fontSize:'14pt', fontWeight:700, margin:'0 0 0.5mm', color:'#1e3a5f'}}>Ayush Hospital</h1>
           <p style={{fontSize:'8pt', margin:'0 0 0.5mm', color:'#555'}}>KPHB, Hyderabad</p>

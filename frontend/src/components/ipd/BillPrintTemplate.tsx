@@ -31,7 +31,7 @@ const BillPrintTemplate: React.FC<Props> = ({ admission, charges, payments, bill
       <p className="text-xs text-gray-500">A4 document.</p>
     </div>
 
-    <div style={{maxWidth:'720px', margin:'0 auto', padding:'8mm', fontFamily:'serif'}}>
+    <div className="print-template" style={{maxWidth:'720px', margin:'0 auto', padding:'8mm', fontFamily:'serif'}}>
       <div style={{textAlign:'center', borderBottom:'2px solid #1d4ed8', paddingBottom:'3mm', marginBottom:'3mm'}}>
         <h1 style={{fontSize:'16pt', fontWeight:700, margin:'0 0 1mm', color:'#1e3a5f'}}>Ayush Hospital</h1>
         <p style={{fontSize:'9pt', margin:'0 0 0.5mm', color:'#555'}}>KPHB, Hyderabad</p>
