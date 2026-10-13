@@ -9,7 +9,7 @@ from app.services.ipd_service import (create_admission, get_admission_by_id, lis
     admission_to_response, update_attendant, generate_receipt_number, generate_refund_number,
     _log_activity)
 from app.schemas.ipd import (
-    IPDAdmissionCreate, IPDAdmissionResponse, IPDAdmissionListResponse, IPDAttendantResponse, IPDAttendantUpdate,
+    IPDAdmissionCreate, IPDAdmissionResponse, IPDAdmissionListResponse, IPDAdmissionUpdate, IPDAttendantResponse, IPDAttendantUpdate,
     IPDTestsCreate, IPDTestsResponse, IPDTestResultUpdate,
     IPDMedicationCreate, IPDMedicationResponse, IPDMedicationUpdate,
     IPDInsuranceCreate, IPDInsuranceUpdate, IPDInsuranceResponse,
@@ -37,6 +37,16 @@ def create_new_admission(data: IPDAdmissionCreate, db: Session = Depends(get_db)
         return admission_to_response(get_admission_by_id(db, adm.id))
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+@router.put('/admissions/{admission_id}', response_model=IPDAdmissionResponse)
+def update_admission(admission_id: int, data: IPDAdmissionUpdate, db: Session = Depends(get_db)):
+    adm = get_admission_by_id(db, admission_id)
+    if not adm: raise HTTPException(status_code=404, detail='Admission not found')
+    for k, v in data.model_dump(exclude_unset=True).items():
+        setattr(adm, k, v)
+    db.commit()
+    _log_activity(db, admission_id, "Admission Updated", "Overview", "Admission details updated")
+    return admission_to_response(get_admission_by_id(db, admission_id))
 
 @router.get('/admissions/{admission_id}', response_model=IPDAdmissionResponse)
 def get_admission(admission_id: int, db: Session = Depends(get_db)):

@@ -24,17 +24,18 @@ const AdmissionWorkspacePage: React.FC = () => {
   const [printBill, setPrintBill] = useState<{mode:string;charges:any[];payments:any[];billing:any}|null>(null);
   const [printDischarge, setPrintDischarge] = useState<any>(null);
 
-  useEffect(() => {
-    if (!id) return;
-    const aid = parseInt(id, 10);
+  const loadData = (aid: number) => {
     Promise.all([
       ipdApi.get(aid),
       ipdApi.getAttendant(aid).catch(() => null),
       doctorsApi.list().catch(() => [] as Doctor[]),
     ]).then(([adm, att, docs]) => {
       setAdmission(adm); setAttendant(att); setDoctors(docs);
-    }).catch(() => setError('Failed to load admission'))
-    .finally(() => setLoading(false));
+    }).catch(() => setError('Failed to reload admission'));
+  };
+  useEffect(() => {
+    if (!id) return;
+    loadData(parseInt(id, 10));
   }, [id]);
 
   const fmt = (s?: string) => {
@@ -85,7 +86,7 @@ const AdmissionWorkspacePage: React.FC = () => {
     {tabError && <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">{tabError}</div>}
     {tabSuccess && <div className="mb-3 p-2 bg-green-50 border border-green-200 rounded-lg text-xs text-green-700">{tabSuccess}</div>}
 
-    {tab === 'overview' && <OverviewTab admission={admission} attendant={attendant} aid={aid} />}
+    {tab === 'overview' && <OverviewTab admission={admission} attendant={attendant} aid={aid} doctors={doctors} onUpdated={()=>loadData(aid)} />}
     {tab === 'tests' && <TestsTab aid={aid} doctors={doctors} onError={(s:string)=>setTabError(s)} onSuccess={(s:string)=>setTabSuccess(s)} />}
     {tab === 'medications' && <MedicationsTab aid={aid} doctors={doctors} />}
     {tab === 'insurance' && <InsuranceTab aid={aid} />}
@@ -100,44 +101,165 @@ const AdmissionWorkspacePage: React.FC = () => {
 
 // ===== TAB COMPONENTS =====
 
-const OverviewTab: React.FC<{admission:IPDAdmissionResponse; attendant:IPDAttendantResponse|null; aid:number}> = ({admission, attendant, aid}) => {
+const OverviewTab: React.FC<{admission:IPDAdmissionResponse; attendant:IPDAttendantResponse|null; aid:number; doctors:Doctor[]; onUpdated:()=>void}> = ({admission, attendant, aid, doctors, onUpdated}) => {
   const [billing, setBilling] = useState<any>(null);
   const [activity, setActivity] = useState<any[]>([]);
+  const [editing, setEditing] = useState<'admission'|'attendant'|'reason'|null>(null);
+  const [msg, setMsg] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [a, setA] = useState<any>({});
+  const [at, setAt] = useState<any>({});
+  const [r, setR] = useState('');
+  const BASE = API_BASE;
   useEffect(() => {
     Promise.all([
       fetch(BASE + `/ipd/admissions/${aid}/billing-summary`).then(r => r.json()).catch(() => null),
       fetch(BASE + `/ipd/admissions/${aid}/activity`).then(r => r.json()).catch(() => []),
-    ]).then(([b, a]) => { setBilling(b); setActivity(Array.isArray(a) ? a : []); });
+    ]).then(([b, av]) => { setBilling(b); setActivity(Array.isArray(av) ? av : []); });
   }, [aid]);
   const fmt = (s?:string) => { if(!s) return '-'; const d=new Date(s); return `${('0'+d.getDate()).slice(-2)}-${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]}-${d.getFullYear()}`; };
-  const BASE = API_BASE;
+  const btn = (active:boolean) => `px-2.5 py-1 text-[11px] font-medium rounded-lg ${active?'text-gray-500 bg-gray-100':'text-blue-600 bg-blue-50 hover:bg-blue-100'}`;
+  const inp = 'w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none';
+  const lbl = 'block text-[11px] text-gray-500 mb-0.5';
+
+  const startEditAdmission = () => {
+    setA({admission_type:admission.admission_type, admitting_doctor_id:admission.admitting_doctor_id,
+      department:admission.department||'', ward_bed:admission.ward_bed||'', referral_source:admission.referral_source||'',
+      referring_provider:admission.referring_provider||'', reason_for_admission:admission.reason_for_admission, initial_diagnosis:admission.initial_diagnosis||''});
+    setMsg(''); setEditing('admission');
+  };
+  const saveAdmission = async () => {
+    setSaving(true); setMsg('');
+    try {
+      await ipdApi.update(aid, {
+        admission_type:a.admission_type,
+        admitting_doctor_id:a.admitting_doctor_id ? parseInt(a.admitting_doctor_id,10) : null,
+        department:a.department||null, ward_bed:a.ward_bed||null,
+        referral_source:a.referral_source||null, referring_provider:a.referring_provider||null,
+        reason_for_admission:a.reason_for_admission, initial_diagnosis:a.initial_diagnosis||null,
+      });
+      setEditing(null); setMsg('Admission updated'); onUpdated();
+    } catch { setMsg('Update failed'); } finally { setSaving(false); }
+  };
+
+  const startEditAttendant = () => {
+    if (!attendant) return;
+    setAt({name:attendant.name, relation:attendant.relation, phone_number:attendant.phone_number,
+      alternate_phone_number:attendant.alternate_phone_number||'', address:attendant.address||'', notes:attendant.notes||''});
+    setMsg(''); setEditing('attendant');
+  };
+  const saveAttendant = async () => {
+    if(!at.name||!at.relation||!at.phone_number) { setMsg('Name, relation and phone are required'); return; }
+    setSaving(true); setMsg('');
+    try {
+      const payloadAt: any = {name:at.name, relation:at.relation, phone_number:at.phone_number};
+      if(at.alternate_phone_number) payloadAt.alternate_phone_number = at.alternate_phone_number;
+      if(at.address) payloadAt.address = at.address;
+      if(at.notes) payloadAt.notes = at.notes;
+      await ipdApi.updateAttendant(aid, payloadAt);
+      setEditing(null); setMsg('Attendant updated'); onUpdated();
+    } catch { setMsg('Update failed'); } finally { setSaving(false); }
+  };
+
+  const startEditReason = () => { setR(admission.reason_for_admission); setMsg(''); setEditing('reason'); };
+  const saveReason = async () => {
+    if(!r.trim()) { setMsg('Reason cannot be empty'); return; }
+    setSaving(true); setMsg('');
+    try {
+      await ipdApi.update(aid, {reason_for_admission:r});
+      setEditing(null); setMsg('Reason updated'); onUpdated();
+    } catch { setMsg('Update failed'); } finally { setSaving(false); }
+  };
+
   return (<>
+    {msg && <div className={`mb-3 px-3 py-2 rounded-lg text-xs ${msg.includes('failed')||msg.includes('required')||msg.includes('cannot') ? 'bg-red-50 text-red-700' : 'bg-blue-50 text-blue-700'}`}>{msg}</div>}
     <div className="grid grid-cols-2 gap-4 mb-4">
       <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-        <h4 className="text-xs font-semibold text-gray-700 mb-2">Admission Details</h4>
-        <div className="text-xs text-gray-600 space-y-1.5">
-          <div><span className="font-medium inline-block w-28">Admission:</span>{admission.admission_number}</div>
-          <div><span className="font-medium inline-block w-28">Date:</span>{fmt(admission.admission_datetime)}</div>
-          <div><span className="font-medium inline-block w-28">Type:</span>{admission.admission_type}</div>
-          <div><span className="font-medium inline-block w-28">Doctor:</span>{admission.doctor_name}</div>
-          <div><span className="font-medium inline-block w-28">Dept:</span>{admission.department || '-'}</div>
-          <div><span className="font-medium inline-block w-28">Ward/Bed:</span>{admission.ward_bed || '-'}</div>
-          <div><span className="font-medium inline-block w-28">Status:</span>{admission.status}</div>
+        <div className="flex items-center justify-between mb-2">
+          <h4 className="text-xs font-semibold text-gray-700 m-0">Admission Details</h4>
+          <button onClick={editing==='admission'?()=>setEditing(null):startEditAdmission} className={btn(editing==='admission')}>{editing==='admission'?'Cancel':'Edit'}</button>
         </div>
+        {editing==='admission' ? (
+          <div className="space-y-2">
+            <div><label className={lbl}>Type</label>
+              <select value={a.admission_type||''} onChange={e=>setA({...a,admission_type:e.target.value})} className={inp+' bg-white'}>
+                <option>Planned</option><option>Emergency</option><option>Referral</option>
+              </select></div>
+            <div><label className={lbl}>Doctor</label>
+              <select value={a.admitting_doctor_id||''} onChange={e=>setA({...a,admitting_doctor_id:e.target.value})} className={inp+' bg-white'}>
+                <option value="">Select doctor...</option>
+                {doctors.map((doc:any) => <option key={doc.id} value={doc.id}>{doc.name}</option>)}
+              </select></div>
+            <div className="grid grid-cols-2 gap-2">
+              <div><label className={lbl}>Department</label><input value={a.department||''} onChange={e=>setA({...a,department:e.target.value})} className={inp} /></div>
+              <div><label className={lbl}>Ward/Bed</label><input value={a.ward_bed||''} onChange={e=>setA({...a,ward_bed:e.target.value})} className={inp} /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div><label className={lbl}>Referral Source</label>
+                <select value={a.referral_source||''} onChange={e=>setA({...a,referral_source:e.target.value})} className={inp+' bg-white'}>
+                  <option value="">-</option><option>Self</option><option>Doctor</option><option>Hospital</option><option>Other</option>
+                </select></div>
+              <div><label className={lbl}>Referring Provider</label><input value={a.referring_provider||''} onChange={e=>setA({...a,referring_provider:e.target.value})} className={inp} /></div>
+            </div>
+            <button onClick={saveAdmission} disabled={saving} className="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50">{saving?'Saving...':'Save'}</button>
+          </div>
+        ) : (
+          <div className="text-xs text-gray-600 space-y-1.5">
+            <div><span className="font-medium inline-block w-28">Admission:</span>{admission.admission_number}</div>
+            <div><span className="font-medium inline-block w-28">Date:</span>{fmt(admission.admission_datetime)}</div>
+            <div><span className="font-medium inline-block w-28">Type:</span>{admission.admission_type}</div>
+            <div><span className="font-medium inline-block w-28">Doctor:</span>{admission.doctor_name}</div>
+            <div><span className="font-medium inline-block w-28">Dept:</span>{admission.department || '-'}</div>
+            <div><span className="font-medium inline-block w-28">Ward/Bed:</span>{admission.ward_bed || '-'}</div>
+            <div><span className="font-medium inline-block w-28">Status:</span>{admission.status}</div>
+          </div>
+        )}
       </div>
       <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-        <h4 className="text-xs font-semibold text-gray-700 mb-2">Attendant</h4>
-        {attendant ? (<div className="text-xs text-gray-600 space-y-1.5">
-          <div><span className="font-medium inline-block w-28">Name:</span>{attendant.name}</div>
-          <div><span className="font-medium inline-block w-28">Relation:</span>{attendant.relation}</div>
-          <div><span className="font-medium inline-block w-28">Phone:</span>{attendant.phone_number}</div>
-          {attendant.alternate_phone_number && <div><span className="font-medium inline-block w-28">Alt:</span>{attendant.alternate_phone_number}</div>}
-        </div>) : <p className="text-xs text-gray-400">No attendant</p>}
+        <div className="flex items-center justify-between mb-2">
+          <h4 className="text-xs font-semibold text-gray-700 m-0">Attendant</h4>
+          {attendant && <button onClick={editing==='attendant'?()=>setEditing(null):startEditAttendant} className={btn(editing==='attendant')}>{editing==='attendant'?'Cancel':'Edit'}</button>}
+        </div>
+        {editing==='attendant' && attendant ? (
+          <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-2">
+              <div><label className={lbl}>Name *</label><input value={at.name||''} onChange={e=>setAt({...at,name:e.target.value})} className={inp} /></div>
+              <div><label className={lbl}>Relation *</label>
+                <select value={at.relation||''} onChange={e=>setAt({...at,relation:e.target.value})} className={inp+' bg-white'}>
+                  <option>Spouse</option><option>Parent</option><option>Child</option><option>Sibling</option><option>Relative</option><option>Friend</option><option>Other</option>
+                </select></div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div><label className={lbl}>Phone *</label><input value={at.phone_number||''} onChange={e=>setAt({...at,phone_number:e.target.value})} className={inp} /></div>
+              <div><label className={lbl}>Alt Phone</label><input value={at.alternate_phone_number||''} onChange={e=>setAt({...at,alternate_phone_number:e.target.value})} className={inp} /></div>
+            </div>
+            <div><label className={lbl}>Address</label><input value={at.address||''} onChange={e=>setAt({...at,address:e.target.value})} className={inp} /></div>
+            <div><label className={lbl}>Notes</label><input value={at.notes||''} onChange={e=>setAt({...at,notes:e.target.value})} className={inp} /></div>
+            <button onClick={saveAttendant} disabled={saving} className="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50">{saving?'Saving...':'Save'}</button>
+          </div>
+        ) : attendant ? (
+          <div className="text-xs text-gray-600 space-y-1.5">
+            <div><span className="font-medium inline-block w-28">Name:</span>{attendant.name}</div>
+            <div><span className="font-medium inline-block w-28">Relation:</span>{attendant.relation}</div>
+            <div><span className="font-medium inline-block w-28">Phone:</span>{attendant.phone_number}</div>
+            {attendant.alternate_phone_number && <div><span className="font-medium inline-block w-28">Alt:</span>{attendant.alternate_phone_number}</div>}
+          </div>
+        ) : <p className="text-xs text-gray-400">No attendant</p>}
       </div>
     </div>
     <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm mb-4">
-      <h4 className="text-xs font-semibold text-gray-700 mb-1">Reason</h4>
-      <p className="text-xs text-gray-600 whitespace-pre-wrap">{admission.reason_for_admission}</p>
+      <div className="flex items-center justify-between mb-1">
+        <h4 className="text-xs font-semibold text-gray-700 m-0">Reason</h4>
+        <button onClick={editing==='reason'?()=>setEditing(null):startEditReason} className={btn(editing==='reason')}>{editing==='reason'?'Cancel':'Edit'}</button>
+      </div>
+      {editing==='reason' ? (
+        <div className="space-y-2">
+          <textarea value={r} onChange={e=>setR(e.target.value)} rows={2} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" />
+          <button onClick={saveReason} disabled={saving} className="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50">{saving?'Saving...':'Save'}</button>
+        </div>
+      ) : (
+        <p className="text-xs text-gray-600 whitespace-pre-wrap">{admission.reason_for_admission}</p>
+      )}
     </div>
     {billing && <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm mb-4">
       <h4 className="text-xs font-semibold text-gray-700 mb-2">Financial Summary</h4>
@@ -151,12 +273,11 @@ const OverviewTab: React.FC<{admission:IPDAdmissionResponse; attendant:IPDAttend
     {activity.length > 0 && <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
       <h4 className="text-xs font-semibold text-gray-700 mb-2">Recent Activity</h4>
       <div className="text-xs text-gray-500 space-y-1 max-h-32 overflow-y-auto">
-        {activity.slice(0,8).map((a:any) => <div key={a.id}>{fmt(a.created_at)} &mdash; {a.action} {a.section ? '('+a.section+')' : ''}</div>)}
+        {activity.slice(0,8).map((av:any) => <div key={av.id}>{fmt(av.created_at)} &mdash; {av.action} {av.section ? '('+av.section+')' : ''}</div>)}
       </div>
     </div>}
   </>);
 };
-
 const TestsTab: React.FC<{aid:number; doctors:Doctor[]; onError:(s:string)=>void; onSuccess:(s:string)=>void}> = ({aid, doctors, onError, onSuccess}) => {
   const [tests, setTests] = useState<any[]>([]); const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);

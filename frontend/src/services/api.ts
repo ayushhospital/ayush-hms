@@ -120,6 +120,12 @@ export const ipdApi = {
   get: (id: number) =>
     request<IPDAdmissionResponse>(`/ipd/admissions/${id}`),
 
+  update: (id: number, data: any) =>
+    request<IPDAdmissionResponse>(`/ipd/admissions/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+
   create: (data: IPDAdmissionCreate) =>
     request<IPDAdmissionResponse>('/ipd/admissions', {
       method: 'POST',

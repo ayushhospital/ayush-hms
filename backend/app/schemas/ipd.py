@@ -78,6 +78,18 @@ class IPDAdmissionListResponse(BaseModel):
     discharged_today: int
 
 
+class IPDAdmissionUpdate(BaseModel):
+    admission_type: Optional[str] = Field(None, pattern="^(Planned|Emergency|Referral)$")
+    admitting_doctor_id: Optional[int] = None
+    department: Optional[str] = None
+    ward_bed: Optional[str] = None
+    reason_for_admission: Optional[str] = None
+    referral_source: Optional[str] = Field(None, pattern="^(Self|Doctor|Hospital|Other)$")
+    referring_provider: Optional[str] = None
+    admission_notes: Optional[str] = None
+    initial_diagnosis: Optional[str] = None
+
+
 # --- Attendant ---
 
 class IPDAttendantResponse(BaseModel):
