@@ -50,14 +50,20 @@ const DischargePrintTemplate: React.FC<Props> = ({ discharge, admission, attenda
 
         <hr style={{border:'none', borderTop:'1.5px solid #000', margin:'2mm 0'}} />
 
-        <div style={{fontSize:'9pt', lineHeight:1.6}}>
-          <div><b>Patient Name:</b> {admission.patient_name}</div>
-          <div><b>UHID:</b> {admission.patient_uhid}</div>
-          <div><b>Age:</b> {admission.patient_age} Years</div>
-          <div><b>Gender:</b> {admission.patient_gender}</div>
-          <div><b>Admission Date:</b> {fmt(admission.admission_datetime)}</div>
-          {discharge.discharge_datetime && <div><b>Discharge Date:</b> {fmt(discharge.discharge_datetime)}</div>}
-          <div><b>Admitting Doctor:</b> {admission.doctor_name}</div>
+        <div style={{fontSize:'9pt', lineHeight:1.7}}>
+          <div style={{display:'flex', justifyContent:'space-between', gap:'8mm'}}>
+            <div style={{flex:1}}>
+              <div><b>Patient Name:</b> {admission.patient_name}</div>
+              <div><b>Age:</b> {admission.patient_age} Years</div>
+              <div><b>Gender:</b> {admission.patient_gender}</div>
+              <div><b>Admitting Doctor:</b> {admission.doctor_name}</div>
+            </div>
+            <div style={{flex:1}}>
+              <div><b>UHID:</b> {admission.patient_uhid}</div>
+              <div><b>Admission Date:</b> {fmt(admission.admission_datetime)}</div>
+              <div><b>Discharge Date:</b> {fmt(discharge.discharge_datetime)}</div>
+            </div>
+          </div>
         </div>
 
         <hr style={{border:'none', borderTop:'1.5px solid #000', margin:'2mm 0'}} />
