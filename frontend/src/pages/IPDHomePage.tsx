@@ -9,7 +9,7 @@ const IPDHomePage: React.FC = () => {
   const [summary, setSummary] = useState({ total: 0, open_count: 0, today_admissions: 0, discharged_today: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [mode, setMode] = useState<'active' | 'old'>('active');
+  const [mode, setMode] = useState<'active' | 'history'>('active');
   const [searchQuery, setSearchQuery] = useState('');
   const [admittedFrom, setAdmittedFrom] = useState('');
   const [admittedTo, setAdmittedTo] = useState('');
@@ -23,7 +23,7 @@ const IPDHomePage: React.FC = () => {
     try {
       const params: any = { limit: 200 };
       const q = searchQuery.trim();
-      if (mode === 'old') {
+      if (mode === 'history') {
         params.status = 'discharged';
         if (q) params.search = q;
         if (admittedFrom) params.start_date = admittedFrom;
@@ -31,7 +31,7 @@ const IPDHomePage: React.FC = () => {
         if (dischargedFrom) params.discharged_start = dischargedFrom;
         if (dischargedTo) params.discharged_end = dischargedTo;
       } else {
-        params.view = 'active';
+        params.status = 'open';
         if (q) params.search = q;
       }
       const result = await ipdApi.list(params);
@@ -44,7 +44,7 @@ const IPDHomePage: React.FC = () => {
 
   useEffect(() => { loadAdmissions(); doctorsApi.list().then(d => setDoctors(d)).catch(() => {}); }, []);
 
-  const switchMode = (m: 'active' | 'old') => {
+  const switchMode = (m: 'active' | 'history') => {
     setMode(m);
     setTimeout(() => {
       // re-run load with new mode (loadAdmissions reads current state via closure)
@@ -98,7 +98,7 @@ const IPDHomePage: React.FC = () => {
         </div>
         <div className="bg-white rounded-xl border border-gray-200 px-4 py-3 shadow-sm">
           <p className="text-2xl font-bold m-0 text-gray-800">{summary.total}</p>
-          <p className="text-xs text-gray-500 mt-1">{mode==='active' ? 'Active Records' : 'Records Found'}</p>
+          <p className="text-xs text-gray-500 mt-1">{mode==='active' ? 'Active Records (Open)' : 'Old Records Found'}</p>
         </div>
       </div>
 
@@ -107,7 +107,7 @@ const IPDHomePage: React.FC = () => {
         <div className="flex items-center gap-3">
           <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
             className={`flex-1 ${inp}`}
-            placeholder={mode==='active' ? 'Search by patient name, phone, UHID or admission ID' : 'Search old discharges by patient name, phone, UHID or admission ID'}
+            placeholder={mode==='active' ? 'Search by admission ID, phone or name' : 'Search old discharges by admission ID, phone or name'}
             onKeyDown={e => { if (e.key === 'Enter') loadAdmissions(); }} />
           <button onClick={loadAdmissions}
             className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Search</button>
@@ -116,16 +116,16 @@ const IPDHomePage: React.FC = () => {
         <div className="flex flex-wrap items-center gap-3 mt-3">
           <div className="flex gap-2">
             <button onClick={() => switchMode('active')}
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg ${mode==='active' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>Active (Open + last 7 days)</button>
-            <button onClick={() => switchMode('old')}
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg ${mode==='old' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>Search Old Discharges</button>
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg ${mode==='active' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>Active (Open)</button>
+            <button onClick={() => switchMode('history')}
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg ${mode==='history' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>History / Old</button>
           </div>
           {mode === 'active' && (
-            <span className="text-[11px] text-gray-400">Shows all Open admissions + Discharged within the last 7 days</span>
+            <span className="text-[11px] text-gray-400">Shows only Open admissions</span>
           )}
         </div>
 
-        {mode === 'old' && (
+        {mode === 'history' && (
           <div className="grid grid-cols-4 gap-3 mt-3 border-t border-gray-100 pt-3">
             <div>
               <label className={lbl}>Admitted From</label>
@@ -154,13 +154,13 @@ const IPDHomePage: React.FC = () => {
       ) : admissions.length === 0 ? (
         <div className="text-center py-10 bg-white rounded-xl border border-gray-200 shadow-sm">
           <p className="text-gray-700 text-sm font-medium mb-2">No admissions found</p>
-          <p className="text-xs text-gray-500 mb-3">{mode==='old' ? 'Try changing the search criteria or date range.' : 'Create a new admission to get started.'}</p>
-          {mode !== 'old' && <button onClick={() => navigate('/ipd/new')} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">+ New Admission</button>}
+          <p className="text-xs text-gray-500 mb-3">{mode==='history' ? 'Try changing the search criteria or date range.' : 'No open admissions. Create a new admission to get started.'}</p>
+          {mode !== 'history' && <button onClick={() => navigate('/ipd/new')} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">+ New Admission</button>}
         </div>
       ) : (
         <>
           <p className="text-[11px] text-gray-500 mb-2">
-            {summary.total} record{summary.total===1?'':'s'} — {mode==='active' ? 'all Open admissions + discharged in the last 7 days' : 'discharged admissions matching your search'}
+            {summary.total} record{summary.total===1?'':'s'} — {mode==='active' ? 'Open admissions' : 'discharged (old) admissions matching your search'}
           </p>
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-x-auto">
             <table className="w-full text-xs border-collapse">
