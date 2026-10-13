@@ -89,7 +89,7 @@ const AdmissionWorkspacePage: React.FC = () => {
     {tab === 'tests' && <TestsTab aid={aid} doctors={doctors} onError={(s:string)=>setTabError(s)} onSuccess={(s:string)=>setTabSuccess(s)} />}
     {tab === 'medications' && <MedicationsTab aid={aid} doctors={doctors} />}
     {tab === 'insurance' && <InsuranceTab aid={aid} />}
-    {tab === 'billing' && <BillingTab aid={aid} onPrintPayment={(p)=>setPrintPayment(p)} onPrintBill={(mode,c,p,b)=>{setPrintBill({mode,charges:c,payments:p,billing:b})}} />}
+    {tab === 'billing' && <BillingTab aid={aid} onPrintPayment={(p)=>setPrintPayment({...p, patient_name: admission.patient_name, patient_uhid: admission.patient_uhid, admission_number: admission.admission_number})} onPrintBill={(mode,c,p,b)=>{setPrintBill({mode,charges:c,payments:p,billing:b})}} />}
     {tab === 'discharge' && <DischargeTab aid={aid} doctors={doctors} admission={admission} onPrint={(ds)=>setPrintDischarge({ds})} />}
     {tab === 'activity' && <ActivityTab aid={aid} />}
     {printPayment && <PrintModal onClose={()=>setPrintPayment(null)}><PaymentReceiptPrint payment={printPayment} onClose={()=>setPrintPayment(null)} /></PrintModal>}
