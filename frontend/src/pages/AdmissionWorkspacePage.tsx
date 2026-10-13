@@ -7,7 +7,7 @@ import BillPrintTemplate from '../components/ipd/BillPrintTemplate';
 import DischargePrintTemplate from '../components/ipd/DischargePrintTemplate';
 import PrintModal from '../components/ipd/PrintModal';
 
-type TabId = 'overview'|'tests'|'medications'|'insurance'|'billing'|'discharge'|'activity';
+type TabId = 'overview'|'tests'|'medications'|'insurance'|'billing'|'payments'|'discharge'|'activity';
 
 const AdmissionWorkspacePage: React.FC = () => {
   const { id } = useParams();
@@ -55,7 +55,8 @@ const AdmissionWorkspacePage: React.FC = () => {
     { id:'tests', label:'Tests & Reports' },
     { id:'medications', label:'Medications' },
     { id:'insurance', label:'Insurance' },
-    { id:'billing', label:'Payments & Billing' },
+    { id:'billing', label:'Billing' },
+    { id:'payments', label:'Payments' },
     { id:'discharge', label:'Discharge Summary' },
     { id:'activity', label:'Activity' }];
 
@@ -90,7 +91,8 @@ const AdmissionWorkspacePage: React.FC = () => {
     {tab === 'tests' && <TestsTab aid={aid} doctors={doctors} onError={(s:string)=>setTabError(s)} onSuccess={(s:string)=>setTabSuccess(s)} />}
     {tab === 'medications' && <MedicationsTab aid={aid} doctors={doctors} />}
     {tab === 'insurance' && <InsuranceTab aid={aid} />}
-    {tab === 'billing' && <BillingTab aid={aid} onPrintPayment={(p)=>setPrintPayment({...p, patient_name: admission.patient_name, patient_uhid: admission.patient_uhid, admission_number: admission.admission_number})} onPrintBill={(mode,c,p,b)=>{setPrintBill({mode,charges:c,payments:p,billing:b})}} />}
+    {tab === 'billing' && <BillingTab aid={aid} onPrintBill={(mode,c,p,b)=>{setPrintBill({mode,charges:c,payments:p,billing:b})}} />}
+    {tab === 'payments' && <PaymentsTab aid={aid} onPrintPayment={(p)=>setPrintPayment({...p, patient_name: admission.patient_name, patient_uhid: admission.patient_uhid, admission_number: admission.admission_number})} />}
     {tab === 'discharge' && <DischargeTab aid={aid} doctors={doctors} admission={admission} onPrint={(ds)=>setPrintDischarge({ds})} />}
     {tab === 'activity' && <ActivityTab aid={aid} />}
     {printPayment && <PrintModal onClose={()=>setPrintPayment(null)}><PaymentReceiptPrint payment={printPayment} onClose={()=>setPrintPayment(null)} /></PrintModal>}
@@ -415,11 +417,12 @@ const InsuranceTab: React.FC<{aid:number}> = ({aid}) => {
   </div>);
 };
 
-const BillingTab: React.FC<{aid:number; onPrintPayment:(p:any)=>void; onPrintBill:(mode:string,c:any[],p:any[],b:any)=>void}> = ({aid, onPrintPayment, onPrintBill}) => {
-  const [charges, setCharges] = useState<any[]>([]); const [payments, setPayments] = useState<any[]>([]);
+const BillingTab: React.FC<{aid:number; onPrintBill:(mode:string,c:any[],p:any[],b:any)=>void}> = ({aid, onPrintBill}) => {
+  const [charges, setCharges] = useState<any[]>([]);
+  const [payments, setPayments] = useState<any[]>([]);
   const [billing, setBilling] = useState<any>(null); const [loading, setLoading] = useState(true);
-  const [showCharge, setShowCharge] = useState(false); const [showPayment, setShowPayment] = useState(false);
-  const [c, setC] = useState<any>({}); const [p, setP] = useState<any>({payment_mode:'Cash'});
+  const [showCharge, setShowCharge] = useState(false);
+  const [c, setC] = useState<any>({});
   const BASE = API_BASE;
   const load = async () => {
     Promise.all([
@@ -436,15 +439,16 @@ const BillingTab: React.FC<{aid:number; onPrintPayment:(p:any)=>void; onPrintBil
     await fetch(BASE+`/ipd/admissions/${aid}/charges`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({description:c.description, unit_price:parseFloat(c.unit_price), quantity:c.quantity?parseInt(c.quantity):1, category:c.category, charge_date:c.charge_date||new Date().toISOString().substring(0,10)})});
     setShowCharge(false); setC({}); load();
   };
-  const addPayment = async () => {
-    if(!p.amount||!p.payment_mode) return;
-    await fetch(BASE+`/ipd/admissions/${aid}/payments`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({amount:parseFloat(p.amount), payment_mode:p.payment_mode, transaction_reference:p.transaction_reference})});
-    setShowPayment(false); setP({payment_mode:'Cash'}); load();
-  };
   const fmt=(s?:string)=>{if(!s)return'-';const d=new Date(s);return `${('0'+d.getDate()).slice(-2)}-${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]}-${d.getFullYear()}`;};
   return (<div className="space-y-4">
     {billing && <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-      <h4 className="text-xs font-semibold text-gray-700 mb-2">Financial Summary</h4>
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+        <h4 className="text-xs font-semibold text-gray-700 m-0">Financial Summary</h4>
+        {charges.length>0 && <div className="flex gap-2">
+          <button onClick={()=>onPrintBill('final', charges, payments, billing)} className="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Final Bill</button>
+          <button onClick={()=>onPrintBill('detailed', charges, payments, billing)} className="px-3 py-1.5 text-xs font-medium text-white bg-gray-600 rounded-lg hover:bg-gray-700">Detailed Bill</button>
+        </div>}
+      </div>
       <div className="grid grid-cols-4 gap-3 text-xs">
         <div className="p-2 bg-gray-50 rounded-lg"><span className="text-gray-500">Total Charges</span><p className="font-semibold text-gray-800 m-0 mt-0.5">INR {billing.total_charges?.toFixed(0)}</p></div>
         <div className="p-2 bg-emerald-50 rounded-lg"><span className="text-emerald-600">Payments</span><p className="font-semibold text-emerald-700 m-0 mt-0.5">INR {billing.total_payments?.toFixed(0)}</p></div>
@@ -452,15 +456,11 @@ const BillingTab: React.FC<{aid:number; onPrintPayment:(p:any)=>void; onPrintBil
         <div className="p-2 bg-blue-50 rounded-lg"><span className="text-blue-600">Balance</span><p className="font-semibold text-blue-700 m-0 mt-0.5">INR {billing.outstanding_balance?.toFixed(0)}</p></div>
       </div>
     </div>}
-    {billing && <div className="flex gap-2 mt-3 mb-1">
-      <button onClick={()=>onPrintBill('final', charges, payments, billing)} className="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Final Bill</button>
-      <button onClick={()=>onPrintBill('detailed', charges, payments, billing)} className="px-3 py-1.5 text-xs font-medium text-white bg-gray-600 rounded-lg hover:bg-gray-700">Detailed Bill</button>
-    </div>}
 
     <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
       <div className="flex items-center justify-between mb-2">
         <h4 className="text-xs font-semibold text-gray-700 m-0">Charges</h4>
-        <button onClick={()=>{setShowCharge(!showCharge);setShowPayment(false)}} className="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">{showCharge?'Cancel':'+ Add Charge'}</button>
+        <button onClick={()=>setShowCharge(!showCharge)} className="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">{showCharge?'Cancel':'+ Add Charge'}</button>
       </div>
       {showCharge && <div className="bg-gray-50 rounded-lg p-3 mb-3 space-y-2">
         <input value={c.description||''} onChange={e=>setC({...c,description:e.target.value})} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Description *" />
@@ -493,18 +493,50 @@ const BillingTab: React.FC<{aid:number; onPrintPayment:(p:any)=>void; onPrintBil
         <button onClick={addCharge} className="px-4 py-2 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Add Charge</button>
       </div>}
       {loading ? <p className="text-xs text-gray-400">Loading...</p> : charges.length===0 ? <p className="text-xs text-gray-400">No charges added</p> :
-      <div className="overflow-x-auto"><table className="w-full text-xs"><thead><tr className="border-b border-gray-200 bg-gray-50">
+      <div className="overflow-x-auto"><div className="max-h-[380px] overflow-y-auto rounded-lg border border-gray-200"><table className="w-full text-xs"><thead><tr className="border-b border-gray-200 bg-gray-50 sticky top-0">
         <th className="py-1.5 px-2 text-left font-medium text-gray-600">Date</th><th className="py-1.5 px-2 text-left font-medium text-gray-600">Description</th><th className="py-1.5 px-2 text-left font-medium text-gray-600">Category</th><th className="py-1.5 px-2 text-right font-medium text-gray-600">Qty</th><th className="py-1.5 px-2 text-right font-medium text-gray-600">Rate</th><th className="py-1.5 px-2 text-right font-medium text-gray-600">Total</th>
       </tr></thead><tbody>{charges.map((ch:any) => <tr key={ch.id} className="border-b border-gray-100">
         <td className="py-1.5 px-2 whitespace-nowrap">{fmt(ch.charge_date||ch.charge_datetime)}</td><td className="py-1.5 px-2">{ch.description}</td><td className="py-1.5 px-2 text-gray-500">{ch.category||'-'}</td>
         <td className="py-1.5 px-2 text-right">{ch.quantity}</td><td className="py-1.5 px-2 text-right">{ch.unit_price}</td><td className="py-1.5 px-2 text-right font-medium">{ch.total_amount}</td>
-      </tr>)}</tbody></table></div>}
+      </tr>)}</tbody></table></div><p className="text-[11px] text-gray-400 mt-1.5">{charges.length} charge{charges.length===1?'':'s'}</p></div>}
     </div>
+  </div>);
+};
 
+const PaymentsTab: React.FC<{aid:number; onPrintPayment:(p:any)=>void}> = ({aid, onPrintPayment}) => {
+  const [payments, setPayments] = useState<any[]>([]);
+  const [billing, setBilling] = useState<any>(null); const [loading, setLoading] = useState(true);
+  const [showPayment, setShowPayment] = useState(false);
+  const [p, setP] = useState<any>({payment_mode:'Cash'});
+  const BASE = API_BASE;
+  const load = async () => {
+    Promise.all([
+      fetch(BASE+`/ipd/admissions/${aid}/payments`).then(r=>r.json()),
+      fetch(BASE+`/ipd/admissions/${aid}/billing-summary`).then(r=>r.json()),
+    ]).then(([pa, bi]) => {
+      setPayments(Array.isArray(pa)?pa:[]); setBilling(bi);
+    }).catch(()=>{}).finally(()=>setLoading(false));
+  };
+  useEffect(() => { load(); }, [aid]);
+  const addPayment = async () => {
+    if(!p.amount||!p.payment_mode) return;
+    await fetch(BASE+`/ipd/admissions/${aid}/payments`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({amount:parseFloat(p.amount), payment_mode:p.payment_mode, transaction_reference:p.transaction_reference})});
+    setShowPayment(false); setP({payment_mode:'Cash'}); load();
+  };
+  const fmt=(s?:string)=>{if(!s)return'-';const d=new Date(s);return `${('0'+d.getDate()).slice(-2)}-${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]}-${d.getFullYear()}`;};
+  return (<div className="space-y-4">
+    {billing && <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+      <h4 className="text-xs font-semibold text-gray-700 mb-2">Payment Summary</h4>
+      <div className="grid grid-cols-3 gap-3 text-xs">
+        <div className="p-2 bg-emerald-50 rounded-lg"><span className="text-emerald-600">Total Paid</span><p className="font-semibold text-emerald-700 m-0 mt-0.5">INR {billing.total_payments?.toFixed(0)}</p></div>
+        <div className="p-2 bg-amber-50 rounded-lg"><span className="text-amber-600">Refunds</span><p className="font-semibold text-amber-700 m-0 mt-0.5">INR {billing.total_refunds?.toFixed(0)}</p></div>
+        <div className="p-2 bg-blue-50 rounded-lg"><span className="text-blue-600">Balance</span><p className="font-semibold text-blue-700 m-0 mt-0.5">INR {billing.outstanding_balance?.toFixed(0)}</p></div>
+      </div>
+    </div>}
     <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
       <div className="flex items-center justify-between mb-2">
         <h4 className="text-xs font-semibold text-gray-700 m-0">Payments</h4>
-        <button onClick={()=>{setShowPayment(!showPayment);setShowCharge(false);setP({payment_mode:'Cash'})}} className="px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700">{showPayment?'Cancel':'+ Record Payment'}</button>
+        <button onClick={()=>{setShowPayment(!showPayment);setP({payment_mode:'Cash'})}} className="px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700">{showPayment?'Cancel':'+ Record Payment'}</button>
       </div>
       {showPayment && <div className="bg-gray-50 rounded-lg p-3 mb-3 space-y-2">
         <div className="flex gap-3"><input value={p.amount||''} onChange={e=>setP({...p,amount:e.target.value})} type="number" step="0.01" className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Amount *" />
@@ -513,7 +545,7 @@ const BillingTab: React.FC<{aid:number; onPrintPayment:(p:any)=>void; onPrintBil
         <button onClick={addPayment} className="px-4 py-2 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Record Payment</button>
       </div>}
       {loading ? <p className="text-xs text-gray-400">Loading...</p> : payments.length===0 ? <p className="text-xs text-gray-400">No payments recorded</p> :
-      <div className="overflow-x-auto"><table className="w-full text-xs"><thead><tr className="border-b border-gray-200 bg-gray-50">
+      <div className="overflow-x-auto"><div className="max-h-[380px] overflow-y-auto rounded-lg border border-gray-200"><table className="w-full text-xs"><thead><tr className="border-b border-gray-200 bg-gray-50 sticky top-0">
         <th className="py-1.5 px-2 text-left font-medium text-gray-600">Receipt</th><th className="py-1.5 px-2 text-left font-medium text-gray-600">Date</th><th className="py-1.5 px-2 text-right font-medium text-gray-600">Amount</th><th className="py-1.5 px-2 text-left font-medium text-gray-600">Mode</th><th className="py-1.5 px-2 text-left font-medium text-gray-600">Ref</th><th className="py-1.5 px-2 text-center font-medium text-gray-600">Status</th><th className="py-1.5 px-2 text-center font-medium text-gray-600">Print</th>
       </tr></thead><tbody>{payments.map((pm:any) => <tr key={pm.id} className="border-b border-gray-100">
         <td className="py-1.5 px-2 font-mono">{pm.receipt_number}</td><td className="py-1.5 px-2 whitespace-nowrap">{fmt(pm.payment_datetime)}</td>
@@ -521,7 +553,7 @@ const BillingTab: React.FC<{aid:number; onPrintPayment:(p:any)=>void; onPrintBil
         <td className="py-1.5 px-2 text-gray-500">{pm.transaction_reference||'-'}</td>
         <td className="py-1.5 px-2 text-center">{pm.status==='Successful'?<span className="text-green-600">Paid</span>:<span className="text-gray-500">{pm.status}</span>}</td>
         <td className="py-1.5 px-2 text-center"><button onClick={()=>onPrintPayment(pm)} className="px-2 py-1 text-[10px] font-medium text-blue-600 bg-blue-50 rounded hover:bg-blue-100">Print</button></td>
-      </tr>)}</tbody></table></div>}
+      </tr>)}</tbody></table></div><p className="text-[11px] text-gray-400 mt-1.5">{payments.length} payment{payments.length===1?'':'s'}</p></div>}
     </div>
   </div>);
 };
