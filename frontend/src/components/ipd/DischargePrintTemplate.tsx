@@ -44,18 +44,17 @@ const DischargePrintTemplate: React.FC<Props> = ({ discharge, admission, attenda
         {discharge.status !== 'Finalized' && <p style={{textAlign:'center', fontSize:'10pt', fontWeight:700, color:'#d00'}}>DRAFT — NOT FINALIZED</p>}
 
         <div style={{display:'flex', justifyContent:'space-between', fontSize:'9pt', marginBottom:'2mm'}}>
-          <b>Admission No:</b> {admission.admission_number}
-          <b>Date:</b> {fmt(discharge.created_at)}
+          <span><b>Admission No:</b> {admission.admission_number}</span>
+          <span><b>Date:</b> {fmt(new Date().toISOString())}</span>
         </div>
 
         <hr style={{border:'none', borderTop:'1.5px solid #000', margin:'2mm 0'}} />
 
         <div style={{fontSize:'9pt', lineHeight:1.6}}>
           <div><b>Patient Name:</b> {admission.patient_name}</div>
-          <div style={{display:'flex', justifyContent:'space-between'}}>
-            <span><b>UHID:</b> {admission.patient_uhid}</span>
-            <span><b>Age/Gender:</b> {admission.patient_age}/{admission.patient_gender}</span>
-          </div>
+          <div><b>UHID:</b> {admission.patient_uhid}</div>
+          <div><b>Age:</b> {admission.patient_age} Years</div>
+          <div><b>Gender:</b> {admission.patient_gender}</div>
           <div><b>Admission Date:</b> {fmt(admission.admission_datetime)}</div>
           {discharge.discharge_datetime && <div><b>Discharge Date:</b> {fmt(discharge.discharge_datetime)}</div>}
           <div><b>Admitting Doctor:</b> {admission.doctor_name}</div>
