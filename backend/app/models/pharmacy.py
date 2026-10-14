@@ -78,6 +78,7 @@ class PharmacySale(Base):
     patient_name = Column(String(200), nullable=True)
     phone_number = Column(String(20), nullable=True)
     doctor_name = Column(String(100), nullable=True)
+    reference_no = Column(String(100), nullable=True)  # consultation no / IP no / manual
     discount_type = Column(String(20), nullable=True)  # percentage / cash / null
     discount_value = Column(Numeric(10, 2), nullable=True, default=0)
     total_amount = Column(Numeric(12, 2), nullable=False)

@@ -127,6 +127,7 @@ def create_sale(db: Session, data) -> PharmacySale:
         sale_number=sale_number, customer_type=data.customer_type,
         patient_id=data.patient_id, patient_name=data.patient_name,
         phone_number=data.phone_number, doctor_name=data.doctor_name,
+        reference_no=data.reference_no,
         discount_type=data.discount_type, discount_value=disc,
         total_amount=round(total_amount, 2), net_amount=round(net, 2),
     )

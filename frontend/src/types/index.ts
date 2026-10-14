@@ -393,6 +393,7 @@ export interface PharmacySaleCreatePayload {
   patient_name?: string;
   phone_number?: string;
   doctor_name?: string;
+  reference_no?: string;
   discount_type?: 'percentage' | 'cash';
   discount_value: number;
   items: PharmacySaleItemInput[];
@@ -414,6 +415,7 @@ export interface PharmacySaleResponse {
   patient_name: string | null;
   phone_number: string | null;
   doctor_name: string | null;
+  reference_no: string | null;
   discount_type: string | null;
   discount_value: number;
   total_amount: number;

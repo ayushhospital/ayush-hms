@@ -205,9 +205,9 @@ const PurchasesTab: React.FC = () => {
     <div>
       {msg && <div className="mb-3 p-2 bg-emerald-50 border border-emerald-200 rounded-lg text-xs text-emerald-700">{msg}</div>}
       {error && <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">{error}</div>}
-      <div className="grid grid-cols-1 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         {/* LEFT — invoice details + drug lines */}
-        <div className="lg:col-span-4 hms-card p-4">
+        <div className="lg:col-span-9 hms-card p-4">
           <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">Invoice Details</h4>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
             <select value={vendorId} onChange={e=>setVendorId(parseInt(e.target.value))} className="px-2.5 py-2 border border-slate-300 rounded-lg text-xs outline-none bg-white">
@@ -230,18 +230,18 @@ const PurchasesTab: React.FC = () => {
           <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">Drug Items</h4>
           <div className="space-y-2 max-h-64 overflow-y-auto">
             {items.map((it,i)=>(
-              <div key={i} className="flex gap-1.5 items-center border border-slate-100 rounded-lg p-1.5 overflow-x-auto">
-                <select value={it.drug_type||'Tablet'} onChange={e=>updItem(i,'drug_type',e.target.value)} className="w-22 shrink-0 px-2 py-1.5 border border-slate-300 rounded text-xs outline-none bg-white">
+              <div key={i} className="flex gap-1.5 items-center border border-slate-100 rounded-lg p-1.5">
+                <select value={it.drug_type||'Tablet'} onChange={e=>updItem(i,'drug_type',e.target.value)} className="w-24 shrink-0 px-1.5 py-1.5 border border-slate-300 rounded text-xs outline-none bg-white">
                   <option>Tablet</option><option>Capsule</option><option>Syrup</option><option>Powder</option><option>Injection</option><option>Drops</option><option>Cream</option><option>Ointment</option><option>Other</option>
                 </select>
-                <input value={it.drug_name} onChange={e=>updItem(i,'drug_name',e.target.value)} placeholder="Drug name *" className="w-32 shrink-0 px-2 py-1.5 border border-slate-300 rounded text-xs outline-none" />
-                <input value={it.strength} onChange={e=>updItem(i,'strength',e.target.value)} placeholder="Strength" className="w-14 shrink-0 px-2 py-1.5 border border-slate-300 rounded text-xs outline-none" />
-                <input value={it.batch} onChange={e=>updItem(i,'batch',e.target.value)} placeholder="Batch" className="w-18 shrink-0 px-2 py-1.5 border border-slate-300 rounded text-xs outline-none" />
+                <input value={it.drug_name} onChange={e=>updItem(i,'drug_name',e.target.value)} placeholder="Drug name *" className="w-44 shrink-0 px-2 py-1.5 border border-slate-300 rounded text-xs outline-none" />
+                <input value={it.strength} onChange={e=>updItem(i,'strength',e.target.value)} placeholder="Strength" className="w-16 shrink-0 px-2 py-1.5 border border-slate-300 rounded text-xs outline-none" />
+                <input value={it.batch} onChange={e=>updItem(i,'batch',e.target.value)} placeholder="Batch" className="w-20 shrink-0 px-2 py-1.5 border border-slate-300 rounded text-xs outline-none" />
                 <span className="text-[10px] text-slate-500 shrink-0">Exp:</span>
-                <input type="date" value={it.expiry} onChange={e=>updItem(i,'expiry',e.target.value)} className="w-24 shrink-0 px-2 py-1.5 border border-slate-300 rounded text-xs outline-none" />
+                <input type="date" value={it.expiry} onChange={e=>updItem(i,'expiry',e.target.value)} className="w-32 shrink-0 px-2 py-1.5 border border-slate-300 rounded text-xs outline-none" />
                 <input value={it.qty} onChange={e=>updItem(i,'qty',e.target.value)} placeholder="Qty" type="number" className="w-14 shrink-0 px-1 py-1.5 border border-slate-300 rounded text-xs outline-none" />
-                <input value={it.pprice} onChange={e=>updItem(i,'pprice',e.target.value)} placeholder="PP(Buy)" type="number" className="w-18 shrink-0 px-1 py-1.5 border border-slate-300 rounded text-xs outline-none" />
-                <input value={it.sprice} onChange={e=>updItem(i,'sprice',e.target.value)} placeholder="SP(Sell)" type="number" className="w-18 shrink-0 px-1 py-1.5 border border-slate-300 rounded text-xs outline-none" />
+                <input value={it.pprice} onChange={e=>updItem(i,'pprice',e.target.value)} placeholder="PP(Buy)" type="number" className="w-20 shrink-0 px-1 py-1.5 border border-slate-300 rounded text-xs outline-none" />
+                <input value={it.sprice} onChange={e=>updItem(i,'sprice',e.target.value)} placeholder="SP(Sell)" type="number" className="w-20 shrink-0 px-1 py-1.5 border border-slate-300 rounded text-xs outline-none" />
                 <button onClick={()=>rmItem(i)} className="shrink-0 px-2 py-1.5 text-[10px] font-medium text-red-600 bg-red-50 rounded hover:bg-red-100">x</button>
               </div>
             ))}
@@ -250,7 +250,7 @@ const PurchasesTab: React.FC = () => {
         </div>
 
         {/* RIGHT — summary & save */}
-        <div className="lg:col-span-2 hms-card p-4 flex flex-col justify-between">
+        <div className="lg:col-span-3 hms-card p-4 flex flex-col justify-between">
           <div>
             <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">Summary</h4>
             <div className="space-y-2 text-xs">
@@ -286,6 +286,7 @@ const PosTab: React.FC = () => {
   const [patResults, setPatResults] = useState<any[]>([]);
   const [selectedPat, setSelectedPat] = useState<any>(null);
   const [patInfo, setPatInfo] = useState<string>('');
+  const [refNo, setRefNo] = useState('');
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [docId, setDocId] = useState(0);
   const [docCustom, setDocCustom] = useState('');
@@ -303,20 +304,19 @@ const PosTab: React.FC = () => {
 
   const fetchPatient = async () => {
     if (patQ.length < 2) return;
-    setSelectedPat(null); setPatInfo('');
+    setSelectedPat(null); setPatInfo(''); setRefNo('');
     try {
       const res = await patientsApi.search(patQ);
-      if (res.patients.length > 0) {
-        setPatResults(res.patients.map((r:any)=>r.patient));
-        const p = res.patients[0].patient;
-        setSelectedPat(p);
-        setPatInfo(`${p.name} | ${p.gender} | ${p.uhid} | ${p.phone_number}`);
-        setPatName(p.name);
-      } else {
-        setPatResults([]);
-        setPatInfo('No patient found');
-      }
+      setPatResults(res.patients.map((r:any)=>r.patient));
+      if (res.patients.length === 0) setPatInfo('No patient found');
     } catch { setPatInfo('Search failed'); }
+  };
+
+  const pickPatient = (p: any) => {
+    setSelectedPat(p);
+    setPatInfo(`${p.name} | ${p.gender} | Age ${p.age} | ${p.uhid}`);
+    setPatName(p.name);
+    setPatResults([]);
   };
 
   const docName = doctors.find(d => d.id === docId)?.name || docCustom;
@@ -343,6 +343,7 @@ const PosTab: React.FC = () => {
         patient_name: custType === 'walkin' ? (patName || 'Walk-in') : selectedPat?.name,
         phone_number: custType === 'walkin' ? patPhone : (selectedPat?.phone_number || patPhone),
         doctor_name: docName || undefined,
+        reference_no: refNo || undefined,
         discount_type: discType || undefined,
         discount_value: parseFloat(discVal||'0'),
         items: cart.map(c => ({drug_id: c.drug.id, quantity: c.qty, unit_price: c.sp})),
@@ -398,8 +399,28 @@ const PosTab: React.FC = () => {
                 {docId === -1 && <input value={docCustom} onChange={e=>setDocCustom(e.target.value)} placeholder="Doctor name" className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />}
               </div>
             )}
+            {custType === 'patient' && patResults.length > 0 && (
+              <div className="mt-3 border border-slate-200 rounded-lg divide-y divide-slate-100 max-h-44 overflow-y-auto">
+                <p className="px-3 py-1.5 text-[10px] font-semibold text-slate-500 uppercase tracking-wider bg-slate-50">{patResults.length} patient(s) found — select one</p>
+                {patResults.map((p:any) => (
+                  <button key={p.id} onClick={() => pickPatient(p)}
+                    className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-blue-50 transition-colors">
+                    <span className="text-xs font-medium text-slate-800">{p.name} <span className="text-slate-400">({p.gender}, Age {p.age})</span></span>
+                    <span className="text-[10px] text-slate-500 font-mono">{p.uhid}</span>
+                  </button>
+                ))}
+              </div>
+            )}
             {custType === 'patient' && patInfo && (
               <div className="mt-2 p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700">{patInfo}</div>
+            )}
+            {custType === 'patient' && selectedPat && (
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <span className="text-xs text-slate-500 shrink-0">Ref No:</span>
+                <input value={refNo} onChange={e=>setRefNo(e.target.value)}
+                  placeholder="Consultation No / IP No / any reference"
+                  className="flex-1 min-w-[200px] px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />
+              </div>
             )}
             {custType === 'patient' && selectedPat && doctors.length > 0 && (
               <div className="mt-3 flex items-center gap-2">
@@ -534,6 +555,7 @@ const BillView: React.FC<{ sale: PharmacySaleResponse; onBack: () => void }> = (
           <p className="m-0"><span className="font-semibold">Customer:</span> {sale.patient_name || 'Walk-in'}</p>
           {sale.phone_number && <p className="m-0 text-slate-500">Ph: {sale.phone_number}</p>}
           {sale.doctor_name && <p className="m-0 text-slate-500">Dr: {sale.doctor_name}</p>}
+          {sale.reference_no && <p className="m-0 text-slate-500">Ref: {sale.reference_no}</p>}
           <p className="m-0 text-slate-500">{new Date(sale.created_at).toLocaleString('en-IN')}</p>
         </div>
         <table className="w-full text-xs border-collapse">
