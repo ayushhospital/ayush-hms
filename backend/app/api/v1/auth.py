@@ -7,6 +7,8 @@ from app.services.auth_service import (
     issue_login,
     logout_session,
     get_current_user,
+    verify_password,
+    hash_password,
 )
 from app.models.user import User
 
