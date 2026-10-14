@@ -1,18 +1,21 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '../components/ui/PageHeader';
+import { useAuth } from '../contexts/AuthContext';
 
 const stroke = { stroke: 'currentColor', strokeWidth: 1.7, fill: 'none', strokeLinecap: 'round', strokeLinejoin: 'round' } as const;
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
+  const { hasModule, isSuper } = useAuth();
 
-  const modules = [
+  const allModules = [
     {
       title: 'OPD',
       description: 'Outpatient — manage visits, consultations, and printing',
       badge: 'OUTPATIENT',
       tint: 'bg-blue-50 text-blue-600',
+      show: hasModule('opd'),
       onClick: () => navigate('/opd'),
       icon: (
         <svg viewBox="0 0 24 24" width="22" height="22" {...stroke}>
@@ -27,6 +30,7 @@ const HomePage: React.FC = () => {
       description: 'Inpatient — admissions, wards, bed management',
       badge: 'INPATIENT',
       tint: 'bg-emerald-50 text-emerald-600',
+      show: hasModule('ipd'),
       onClick: () => navigate('/ipd'),
       icon: (
         <svg viewBox="0 0 24 24" width="22" height="22" {...stroke}>
@@ -37,10 +41,26 @@ const HomePage: React.FC = () => {
       ),
     },
     {
+      title: 'Pharmacy',
+      description: 'Vendors, drug inventory & point-of-sale',
+      badge: 'PHARMACY',
+      tint: 'bg-teal-50 text-teal-600',
+      show: hasModule('pharmacy'),
+      onClick: () => navigate('/pharmacy'),
+      icon: (
+        <svg viewBox="0 0 24 24" width="22" height="22" {...stroke}>
+          <rect x="4" y="2" width="16" height="20" rx="2" />
+          <path d="M9 8h6M12 5v6" />
+          <path d="M9 16l2 2 4-4" />
+        </svg>
+      ),
+    },
+    {
       title: 'Reports',
       description: 'Revenue, doctor summaries, patient lists',
       badge: 'ANALYTICS',
       tint: 'bg-violet-50 text-violet-600',
+      show: hasModule('reports'),
       onClick: () => navigate('/reports'),
       icon: (
         <svg viewBox="0 0 24 24" width="22" height="22" {...stroke}>
@@ -48,12 +68,29 @@ const HomePage: React.FC = () => {
         </svg>
       ),
     },
+    {
+      title: 'Users',
+      description: 'Create & manage users, roles and access',
+      badge: 'ADMIN',
+      tint: 'bg-amber-50 text-amber-600',
+      show: isSuper,
+      onClick: () => navigate('/users'),
+      icon: (
+        <svg viewBox="0 0 24 24" width="22" height="22" {...stroke}>
+          <circle cx="9" cy="8" r="3.5" />
+          <path d="M2.5 20v-1a6.5 6.5 0 0 1 13 0v1" />
+          <path d="M15 5.2a3.5 3.5 0 0 1 0 5.6M18.5 20a6.5 6.5 0 0 0-3.5-5.8" />
+        </svg>
+      ),
+    },
   ];
+
+  const modules = allModules.filter((m) => m.show);
 
   return (
     <div>
       <PageHeader title="Dashboard" subtitle="Ayush HMS — Hospital Management System" />
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {modules.map((mod) => (
           <button key={mod.title} onClick={mod.onClick}
             className="hms-card p-6 text-left hover:shadow-md hover:border-blue-200 transition-all cursor-pointer">

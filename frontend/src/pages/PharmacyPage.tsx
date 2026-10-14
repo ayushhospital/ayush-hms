@@ -287,6 +287,7 @@ const PosTab: React.FC = () => {
   const [selectedPat, setSelectedPat] = useState<any>(null);
   const [patInfo, setPatInfo] = useState<string>('');
   const [refNo, setRefNo] = useState('');
+  const [refOptions, setRefOptions] = useState<{label: string; value: string}[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [docId, setDocId] = useState(0);
   const [docCustom, setDocCustom] = useState('');
@@ -317,6 +318,23 @@ const PosTab: React.FC = () => {
     setPatInfo(`${p.name} | ${p.gender} | Age ${p.age} | ${p.uhid}`);
     setPatName(p.name);
     setPatResults([]);
+    setRefNo('');
+    setRefOptions([]);
+    // Fetch this patient's consultation numbers & IP admission numbers for the Ref No dropdown
+    Promise.all([
+      patientsApi.getConsultations(p.id).catch(() => []),
+      ipdApi.list({ search: p.phone_number, limit: 100 }).catch(() => ({ admissions: [] })),
+    ]).then(([cons, adm]: any) => {
+      const opts: {label: string; value: string}[] = [];
+      (Array.isArray(cons) ? cons : []).forEach((c: any) => {
+        if (c.consultation_number) opts.push({ label: `Consultation: ${c.consultation_number}`, value: c.consultation_number });
+      });
+      ((adm?.admissions) || []).forEach((a: any) => {
+        if (a.patient_id === p.id && a.admission_number) opts.push({ label: `IP Admission: ${a.admission_number}`, value: a.admission_number });
+      });
+      setRefOptions(opts);
+      if (opts.length > 0) setRefNo(opts[0].value); // pre-select the latest
+    });
   };
 
   const docName = doctors.find(d => d.id === docId)?.name || docCustom;
@@ -417,9 +435,21 @@ const PosTab: React.FC = () => {
             {custType === 'patient' && selectedPat && (
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <span className="text-xs text-slate-500 shrink-0">Ref No:</span>
-                <input value={refNo} onChange={e=>setRefNo(e.target.value)}
-                  placeholder="Consultation No / IP No / any reference"
-                  className="flex-1 min-w-[200px] px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />
+                {refOptions.length > 0 ? (
+                  <select value={refOptions.some(o => o.value === refNo) ? refNo : ''} onChange={e => setRefNo(e.target.value)}
+                    className="flex-1 min-w-[200px] px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none bg-white">
+                    {refOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    <option value="">Other / none</option>
+                  </select>
+                ) : (
+                  <input value={refNo} onChange={e=>setRefNo(e.target.value)}
+                    placeholder="Consultation No / IP No / any reference"
+                    className="flex-1 min-w-[200px] px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />
+                )}
+                {refOptions.length > 0 && !refOptions.some(o => o.value === refNo) && (
+                  <input value={refNo} onChange={e=>setRefNo(e.target.value)} placeholder="Enter manually"
+                    className="w-40 px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />
+                )}
               </div>
             )}
             {custType === 'patient' && selectedPat && doctors.length > 0 && (

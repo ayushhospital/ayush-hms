@@ -55,17 +55,6 @@ const NAV_ITEMS: NavItem[] = [
     ),
   },
   {
-    to: '/reports',
-    label: 'Reports',
-    prefix: ['/reports'],
-    module: 'reports',
-    icon: (
-      <svg viewBox="0 0 24 24" width="18" height="18" {...stroke}>
-        <path d="M4 20V10M10 20V4M16 20v-8M21 20H3" />
-      </svg>
-    ),
-  },
-  {
     to: '/pharmacy',
     label: 'Pharmacy',
     prefix: ['/pharmacy'],
@@ -75,6 +64,17 @@ const NAV_ITEMS: NavItem[] = [
         <rect x="4" y="2" width="16" height="20" rx="2" />
         <path d="M9 8h6M12 5v6" />
         <path d="M9 16l2 2 4-4" />
+      </svg>
+    ),
+  },
+  {
+    to: '/reports',
+    label: 'Reports',
+    prefix: ['/reports'],
+    module: 'reports',
+    icon: (
+      <svg viewBox="0 0 24 24" width="18" height="18" {...stroke}>
+        <path d="M4 20V10M10 20V4M16 20v-8M21 20H3" />
       </svg>
     ),
   },

@@ -249,8 +249,8 @@ const MobileNav: React.FC = () => {
   const items: { to: string; label: string; show: boolean }[] = [
     { to: '/opd', label: 'OPD', show: hasModule('opd') },
     { to: '/ipd', label: 'IPD', show: hasModule('ipd') },
-    { to: '/reports', label: 'Reports', show: hasModule('reports') },
     { to: '/pharmacy', label: 'Pharmacy', show: hasModule('pharmacy') },
+    { to: '/reports', label: 'Reports', show: hasModule('reports') },
     { to: '/users', label: 'Users', show: isSuper },
   ];
   return (
