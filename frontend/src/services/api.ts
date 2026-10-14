@@ -30,6 +30,21 @@ export const setToken = (token: string | null) => {
   else localStorage.removeItem(TOKEN_KEY);
 };
 
+/** fetch() with the Authorization header attached (for raw server calls). */
+export async function apiFetch(url: string, options?: RequestInit): Promise<Response> {
+  const token = getToken();
+  const headers: Record<string, string> = {
+    ...(options?.headers as Record<string, string> | undefined),
+  };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const response = await fetch(url, { ...options, headers });
+  if (response.status === 401 && token) {
+    setToken(null);
+    window.location.href = '/login';
+  }
+  return response;
+}
+
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const token = getToken();
   const headers: Record<string, string> = {

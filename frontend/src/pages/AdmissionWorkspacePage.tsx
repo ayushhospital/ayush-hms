@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ipdApi, doctorsApi, API_BASE } from '../services/api';
+import { ipdApi, doctorsApi, API_BASE, apiFetch } from '../services/api';
 import type { IPDAdmissionResponse, IPDAttendantResponse, Doctor } from '../types';
 import PaymentReceiptPrint from '../components/ipd/PaymentReceiptPrint';
 import BillPrintTemplate from '../components/ipd/BillPrintTemplate';
@@ -118,8 +118,8 @@ const OverviewTab: React.FC<{admission:IPDAdmissionResponse; attendant:IPDAttend
   const BASE = API_BASE;
   useEffect(() => {
     Promise.all([
-      fetch(BASE + `/ipd/admissions/${aid}/billing-summary`).then(r => r.json()).catch(() => null),
-      fetch(BASE + `/ipd/admissions/${aid}/activity`).then(r => r.json()).catch(() => []),
+      apiFetch(BASE + `/ipd/admissions/${aid}/billing-summary`).then(r => r.json()).catch(() => null),
+      apiFetch(BASE + `/ipd/admissions/${aid}/activity`).then(r => r.json()).catch(() => []),
     ]).then(([b, av]) => { setBilling(b); setActivity(Array.isArray(av) ? av : []); });
   }, [aid]);
   const fmt = (s?:string) => { if(!s) return '-'; const d=new Date(s); return `${('0'+d.getDate()).slice(-2)}-${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]}-${d.getFullYear()}`; };
@@ -289,17 +289,17 @@ const TestsTab: React.FC<{aid:number; doctors:Doctor[]; onError:(s:string)=>void
   const [fName, setFName] = useState(''); const [fCat, setFCat] = useState(''); const [fNotes, setFNotes] = useState('');
   const [fResText, setFResText] = useState(''); const [fResId, setFResId] = useState<number|null>(null);
   const BASE = API_BASE;
-  useEffect(() => { fetch(BASE+`/ipd/admissions/${aid}/tests`).then(r=>r.json()).then(d=>setTests(Array.isArray(d)?d:[])).catch(()=>{}).finally(()=>setLoading(false)); }, [aid]);
+  useEffect(() => { apiFetch(BASE+`/ipd/admissions/${aid}/tests`).then(r=>r.json()).then(d=>setTests(Array.isArray(d)?d:[])).catch(()=>{}).finally(()=>setLoading(false)); }, [aid]);
   const addTest = async () => {
     if(!fName.trim()) return;
-    const r = await fetch(BASE+`/ipd/admissions/${aid}/tests`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({test_name:fName.trim(), category:fCat, notes:fNotes})});
-    if(r.ok) { setShowForm(false); setFName(''); setFCat(''); setFNotes(''); onSuccess('Test added'); const d=await fetch(BASE+`/ipd/admissions/${aid}/tests`).then(r=>r.json()); setTests(Array.isArray(d)?d:[]); }
+    const r = await apiFetch(BASE+`/ipd/admissions/${aid}/tests`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({test_name:fName.trim(), category:fCat, notes:fNotes})});
+    if(r.ok) { setShowForm(false); setFName(''); setFCat(''); setFNotes(''); onSuccess('Test added'); const d=await apiFetch(BASE+`/ipd/admissions/${aid}/tests`).then(r=>r.json()); setTests(Array.isArray(d)?d:[]); }
     else { const e=await r.json(); onError(e.detail||'Error'); }
   };
   const recordResult = async (tid:number) => {
     if(!fResText.trim()) return;
-    const r = await fetch(BASE+`/ipd/tests/${tid}/result`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({result_text:fResText.trim()})});
-    if(r.ok) { setFResId(null); setFResText(''); onSuccess('Result recorded'); const d=await fetch(BASE+`/ipd/admissions/${aid}/tests`).then(r=>r.json()); setTests(Array.isArray(d)?d:[]); }
+    const r = await apiFetch(BASE+`/ipd/tests/${tid}/result`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({result_text:fResText.trim()})});
+    if(r.ok) { setFResId(null); setFResText(''); onSuccess('Result recorded'); const d=await apiFetch(BASE+`/ipd/admissions/${aid}/tests`).then(r=>r.json()); setTests(Array.isArray(d)?d:[]); }
     else { const e=await r.json(); onError(e.detail||'Error'); }
   };
   const fmt=(s?:string)=>{if(!s)return'-';const d=new Date(s);return `${('0'+d.getDate()).slice(-2)}-${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]}-${d.getFullYear()}`;};
@@ -333,13 +333,13 @@ const MedicationsTab: React.FC<{aid:number; doctors:Doctor[]}> = ({aid, doctors}
   const [showForm, setShowForm] = useState(false);
   const [f, setF] = useState<any>({});
   const BASE = API_BASE;
-  useEffect(() => { fetch(BASE+`/ipd/admissions/${aid}/medications`).then(r=>r.json()).then(d=>setMeds(Array.isArray(d)?d:[])).catch(()=>{}).finally(()=>setLoading(false)); }, [aid]);
+  useEffect(() => { apiFetch(BASE+`/ipd/admissions/${aid}/medications`).then(r=>r.json()).then(d=>setMeds(Array.isArray(d)?d:[])).catch(()=>{}).finally(()=>setLoading(false)); }, [aid]);
   const save = async () => {
     if(!f.medicine_name||!f.dose||!f.route||!f.frequency||!f.start_date) return;
     const payload:any = {medicine_name:f.medicine_name, strength:f.strength||null, dose:f.dose, route:f.route, frequency:f.frequency, start_date:f.start_date};
     if(f.end_date) payload.end_date = f.end_date;
-    const r = await fetch(BASE+`/ipd/admissions/${aid}/medications`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
-    if(r.ok) { setShowForm(false); setF({}); const d=await fetch(BASE+`/ipd/admissions/${aid}/medications`).then(r=>r.json()); setMeds(Array.isArray(d)?d:[]); }
+    const r = await apiFetch(BASE+`/ipd/admissions/${aid}/medications`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+    if(r.ok) { setShowForm(false); setF({}); const d=await apiFetch(BASE+`/ipd/admissions/${aid}/medications`).then(r=>r.json()); setMeds(Array.isArray(d)?d:[]); }
   };
   const fmt=(s?:string)=>{if(!s)return'-';const d=new Date(s);return `${('0'+d.getDate()).slice(-2)}-${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]}-${d.getFullYear()}`;};
   return (<div className="hms-card p-4 shadow-sm">
@@ -393,11 +393,11 @@ const InsuranceTab: React.FC<{aid:number}> = ({aid}) => {
   const [policies, setPolicies] = useState<any[]>([]); const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false); const [f, setF] = useState<any>({provider:'',policy_number:'',policyholder_name:'',claim_status:'Not Submitted'});
   const BASE = API_BASE;
-  useEffect(() => { fetch(BASE+`/ipd/admissions/${aid}/insurance`).then(r=>r.json()).then(d=>setPolicies(Array.isArray(d)?d:[])).catch(()=>{}).finally(()=>setLoading(false)); }, [aid]);
+  useEffect(() => { apiFetch(BASE+`/ipd/admissions/${aid}/insurance`).then(r=>r.json()).then(d=>setPolicies(Array.isArray(d)?d:[])).catch(()=>{}).finally(()=>setLoading(false)); }, [aid]);
   const save = async () => {
     if(!f.provider) return;
-    const r = await fetch(BASE+`/ipd/admissions/${aid}/insurance`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(f)});
-    if(r.ok) { setShowForm(false); setF({provider:'',policy_number:'',policyholder_name:'',claim_status:'Not Submitted'}); const d=await fetch(BASE+`/ipd/admissions/${aid}/insurance`).then(r=>r.json()); setPolicies(Array.isArray(d)?d:[]); }
+    const r = await apiFetch(BASE+`/ipd/admissions/${aid}/insurance`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(f)});
+    if(r.ok) { setShowForm(false); setF({provider:'',policy_number:'',policyholder_name:'',claim_status:'Not Submitted'}); const d=await apiFetch(BASE+`/ipd/admissions/${aid}/insurance`).then(r=>r.json()); setPolicies(Array.isArray(d)?d:[]); }
   };
   return (<div className="hms-card p-4 shadow-sm">
     <div className="flex items-center justify-between mb-3">
@@ -429,9 +429,9 @@ const BillingTab: React.FC<{aid:number; onPrintBill:(mode:string,c:any[],p:any[]
   const BASE = API_BASE;
   const load = async () => {
     Promise.all([
-      fetch(BASE+`/ipd/admissions/${aid}/charges`).then(r=>r.json()),
-      fetch(BASE+`/ipd/admissions/${aid}/payments`).then(r=>r.json()),
-      fetch(BASE+`/ipd/admissions/${aid}/billing-summary`).then(r=>r.json()),
+      apiFetch(BASE+`/ipd/admissions/${aid}/charges`).then(r=>r.json()),
+      apiFetch(BASE+`/ipd/admissions/${aid}/payments`).then(r=>r.json()),
+      apiFetch(BASE+`/ipd/admissions/${aid}/billing-summary`).then(r=>r.json()),
     ]).then(([ch, pa, bi]) => {
       setCharges(Array.isArray(ch)?ch:[]); setPayments(Array.isArray(pa)?pa:[]); setBilling(bi);
     }).catch(()=>{}).finally(()=>setLoading(false));
@@ -439,7 +439,7 @@ const BillingTab: React.FC<{aid:number; onPrintBill:(mode:string,c:any[],p:any[]
   useEffect(() => { load(); }, [aid]);
   const addCharge = async () => {
     if(!c.description||!c.unit_price) return;
-    await fetch(BASE+`/ipd/admissions/${aid}/charges`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({description:c.description, unit_price:parseFloat(c.unit_price), quantity:c.quantity?parseInt(c.quantity):1, category:c.category, charge_date:c.charge_date||new Date().toISOString().substring(0,10)})});
+    await apiFetch(BASE+`/ipd/admissions/${aid}/charges`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({description:c.description, unit_price:parseFloat(c.unit_price), quantity:c.quantity?parseInt(c.quantity):1, category:c.category, charge_date:c.charge_date||new Date().toISOString().substring(0,10)})});
     setShowCharge(false); setC({}); load();
   };
   const fmt=(s?:string)=>{if(!s)return'-';const d=new Date(s);return `${('0'+d.getDate()).slice(-2)}-${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]}-${d.getFullYear()}`;};
@@ -514,8 +514,8 @@ const PaymentsTab: React.FC<{aid:number; onPrintPayment:(p:any)=>void}> = ({aid,
   const BASE = API_BASE;
   const load = async () => {
     Promise.all([
-      fetch(BASE+`/ipd/admissions/${aid}/payments`).then(r=>r.json()),
-      fetch(BASE+`/ipd/admissions/${aid}/billing-summary`).then(r=>r.json()),
+      apiFetch(BASE+`/ipd/admissions/${aid}/payments`).then(r=>r.json()),
+      apiFetch(BASE+`/ipd/admissions/${aid}/billing-summary`).then(r=>r.json()),
     ]).then(([pa, bi]) => {
       setPayments(Array.isArray(pa)?pa:[]); setBilling(bi);
     }).catch(()=>{}).finally(()=>setLoading(false));
@@ -523,7 +523,7 @@ const PaymentsTab: React.FC<{aid:number; onPrintPayment:(p:any)=>void}> = ({aid,
   useEffect(() => { load(); }, [aid]);
   const addPayment = async () => {
     if(!p.amount||!p.payment_mode) return;
-    await fetch(BASE+`/ipd/admissions/${aid}/payments`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({amount:parseFloat(p.amount), payment_mode:p.payment_mode, transaction_reference:p.transaction_reference})});
+    await apiFetch(BASE+`/ipd/admissions/${aid}/payments`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({amount:parseFloat(p.amount), payment_mode:p.payment_mode, transaction_reference:p.transaction_reference})});
     setShowPayment(false); setP({payment_mode:'Cash'}); load();
   };
   const fmt=(s?:string)=>{if(!s)return'-';const d=new Date(s);return `${('0'+d.getDate()).slice(-2)}-${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]}-${d.getFullYear()}`;};
@@ -566,20 +566,20 @@ const DischargeTab: React.FC<{aid:number; doctors:Doctor[]; admission:IPDAdmissi
   const [f, setF] = useState<any>({});
   const BASE = API_BASE;
   useEffect(() => {
-    fetch(BASE+`/ipd/admissions/${aid}/discharge-summary`).then(r=>r.ok?r.json():null).then(d => {
+    apiFetch(BASE+`/ipd/admissions/${aid}/discharge-summary`).then(r=>r.ok?r.json():null).then(d => {
       if(d) { setDs(d); setF(d); } else setF({status:'Draft'});
     }).catch(()=>{}).finally(()=>setLoading(false));
   }, [aid]);
   const save = async () => {
     setSaving(true);
-    const r = await fetch(BASE+`/ipd/admissions/${aid}/discharge-summary`, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(f)});
+    const r = await apiFetch(BASE+`/ipd/admissions/${aid}/discharge-summary`, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(f)});
     if(r.ok) { const d=await r.json(); setDs(d); setF(d); }
     setSaving(false);
   };
   const finalize = async () => {
     if(!f.condition_at_discharge||!f.discharging_doctor_id) { setFinError('Condition at discharge and discharging doctor required'); return; }
     await save();
-    const r = await fetch(BASE+`/ipd/admissions/${aid}/discharge-summary/finalize`, {method:'POST'});
+    const r = await apiFetch(BASE+`/ipd/admissions/${aid}/discharge-summary/finalize`, {method:'POST'});
     if(r.ok) { const d=await r.json(); setDs(d); setF(d); window.location.reload(); }
     else { const e=await r.json(); setFinError(e.detail||'Error'); }
   };
@@ -620,7 +620,7 @@ const DischargeTab: React.FC<{aid:number; doctors:Doctor[]; admission:IPDAdmissi
 const ActivityTab: React.FC<{aid:number}> = ({aid}) => {
   const [logs, setLogs] = useState<any[]>([]); const [loading, setLoading] = useState(true);
   const BASE = API_BASE;
-  useEffect(() => { fetch(BASE+`/ipd/admissions/${aid}/activity`).then(r=>r.json()).then(d=>setLogs(Array.isArray(d)?d:[])).catch(()=>{}).finally(()=>setLoading(false)); }, [aid]);
+  useEffect(() => { apiFetch(BASE+`/ipd/admissions/${aid}/activity`).then(r=>r.json()).then(d=>setLogs(Array.isArray(d)?d:[])).catch(()=>{}).finally(()=>setLoading(false)); }, [aid]);
   const fmt=(s:string)=>{const d=new Date(s);return `${('0'+d.getDate()).slice(-2)}-${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]}-${d.getFullYear()} ${('0'+d.getHours()).slice(-2)}:${('0'+d.getMinutes()).slice(-2)}`;};
   return (<div className="hms-card p-4 shadow-sm">
     <h4 className="text-xs font-semibold text-gray-700 mb-3">Activity History</h4>
