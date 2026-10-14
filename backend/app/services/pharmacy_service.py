@@ -80,7 +80,7 @@ def create_purchase(db: Session, data) -> PharmacyPurchase:
             PharmacyDrug.vendor_id == data.vendor_id,
         ).first()
         if existing:
-            existing.quantity_in_stock += item.quantity
+            existing.quantity_in_stock = float(existing.quantity_in_stock or 0) + float(item.quantity)
             existing.purchase_price = item.purchase_price
             existing.selling_price = item.selling_price
         else:
@@ -109,14 +109,14 @@ def create_sale(db: Session, data) -> PharmacySale:
         drug = get_drug(db, item.drug_id)
         if not drug:
             raise ValueError(f"Drug #{item.drug_id} not found")
-        if drug.quantity_in_stock < item.quantity:
+        if float(drug.quantity_in_stock or 0) < float(item.quantity):
             raise ValueError(f"Insufficient stock for '{drug.name}'")
         lt = item.quantity * item.unit_price
         total_amount += lt
         items_data.append({"drug_id": item.drug_id, "drug_name": drug.name,
             "strength": drug.strength, "quantity": item.quantity,
             "unit_price": item.unit_price, "line_total": lt})
-        drug.quantity_in_stock -= item.quantity
+        drug.quantity_in_stock = float(drug.quantity_in_stock or 0) - float(item.quantity)
     disc = data.discount_value or 0
     net = total_amount
     if data.discount_type == "percentage":
