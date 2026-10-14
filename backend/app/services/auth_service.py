@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models.user import User, UserSession
 
-MODULES = ["opd", "ipd", "reports"]
+MODULES = ["opd", "ipd", "reports", "pharmacy"]
 
 
 def hash_password(password: str) -> str:

@@ -66,6 +66,19 @@ const NAV_ITEMS: NavItem[] = [
     ),
   },
   {
+    to: '/pharmacy',
+    label: 'Pharmacy',
+    prefix: ['/pharmacy'],
+    module: 'pharmacy',
+    icon: (
+      <svg viewBox="0 0 24 24" width="18" height="18" {...stroke}>
+        <rect x="4" y="2" width="16" height="20" rx="2" />
+        <path d="M9 8h6M12 5v6" />
+        <path d="M9 16l2 2 4-4" />
+      </svg>
+    ),
+  },
+  {
     to: '/users',
     label: 'Users',
     prefix: ['/users'],

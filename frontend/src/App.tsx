@@ -11,6 +11,7 @@ import AdmissionWorkspacePage from './pages/AdmissionWorkspacePage';
 import ReportsPage from './pages/ReportsPage';
 import PatientConsultationsPage from './pages/PatientConsultationsPage';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import PharmacyPage from './pages/PharmacyPage';
 import { authApi } from './services/api';
 
 const Protected: React.FC<{ module?: string; superOnly?: boolean; children: React.ReactNode }> = ({
@@ -132,6 +133,7 @@ function AppRoutes() {
                 <Route path="/ipd/admissions/:id" element={<Protected module="ipd"><AdmissionWorkspacePage /></Protected>} />
                 <Route path="/reports" element={<Protected module="reports"><ReportsPage /></Protected>} />
                 <Route path="/users" element={<Protected superOnly><UsersPage /></Protected>} />
+                <Route path="/pharmacy" element={<Protected module="pharmacy"><PharmacyPage /></Protected>} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </div>
@@ -248,6 +250,7 @@ const MobileNav: React.FC = () => {
     { to: '/opd', label: 'OPD', show: hasModule('opd') },
     { to: '/ipd', label: 'IPD', show: hasModule('ipd') },
     { to: '/reports', label: 'Reports', show: hasModule('reports') },
+    { to: '/pharmacy', label: 'Pharmacy', show: hasModule('pharmacy') },
     { to: '/users', label: 'Users', show: isSuper },
   ];
   return (

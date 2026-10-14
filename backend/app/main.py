@@ -38,8 +38,10 @@ app.include_router(doctors_router, prefix="/api/v1")
 app.include_router(users_router, prefix="/api/v1")
 app.include_router(reports_router, prefix="/api/v1")
 from app.api.v1.ipd import router as ipd_router
+from app.api.v1.pharmacy import router as pharmacy_router
 
 app.include_router(ipd_router, prefix="/api/v1")
+app.include_router(pharmacy_router, prefix="/api/v1")
 
 
 DEFAULT_DOCTORS = [

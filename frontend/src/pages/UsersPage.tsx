@@ -8,6 +8,7 @@ const MODULES: { key: ModuleKey; label: string; desc: string }[] = [
   { key: 'opd', label: 'OPD', desc: 'Outpatient management' },
   { key: 'ipd', label: 'IPD', desc: 'Inpatient admissions & billing' },
   { key: 'reports', label: 'Reports', desc: 'Revenue & operational reports' },
+  { key: 'pharmacy', label: 'Pharmacy', desc: 'Vendors, drug inventory & sales' },
 ];
 
 interface FormState {

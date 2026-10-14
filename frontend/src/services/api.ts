@@ -19,6 +19,13 @@ import type {
   AuthUser,
   UserCreatePayload,
   UserUpdatePayload,
+  PharmacyVendor,
+  PharmacyVendorCreatePayload,
+  PharmacyVendorUpdatePayload,
+  PharmacyDrug,
+  PharmacyPurchaseCreatePayload,
+  PharmacySaleCreatePayload,
+  PharmacySaleResponse,
 } from '../types';
 
 export const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
@@ -174,6 +181,27 @@ export const usersApi = {
     request<AuthUser>(`/users/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   remove: (id: number) =>
     request<void>(`/users/${id}`, { method: 'DELETE' }),
+};
+
+// Pharmacy API
+export const pharmacyApi = {
+  vendors: {
+    list: () => request<PharmacyVendor[]>('/pharmacy/vendors'),
+    create: (d: PharmacyVendorCreatePayload) => request<PharmacyVendor>('/pharmacy/vendors', { method: 'POST', body: JSON.stringify(d) }),
+    update: (id: number, d: PharmacyVendorUpdatePayload) => request<PharmacyVendor>(`/pharmacy/vendors/${id}`, { method: 'PUT', body: JSON.stringify(d) }),
+    remove: (id: number) => request<void>(`/pharmacy/vendors/${id}`, { method: 'DELETE' }),
+  },
+  drugs: {
+    list: (q: string = '') => request<PharmacyDrug[]>(`/pharmacy/drugs?q=${encodeURIComponent(q)}`),
+  },
+  purchases: {
+    create: (d: PharmacyPurchaseCreatePayload) => request<any>('/pharmacy/purchases', { method: 'POST', body: JSON.stringify(d) }),
+  },
+  sales: {
+    create: (d: PharmacySaleCreatePayload) => request<PharmacySaleResponse>('/pharmacy/sales', { method: 'POST', body: JSON.stringify(d) }),
+    get: (id: number) => request<PharmacySaleResponse>(`/pharmacy/sales/${id}`),
+    list: () => request<PharmacySaleResponse[]>('/pharmacy/sales'),
+  },
 };
 
 // IPD API
