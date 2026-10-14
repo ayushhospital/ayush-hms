@@ -159,14 +159,21 @@ const PurchasesTab: React.FC = () => {
   const [discType, setDiscType] = useState('cash');
   const [disc, setDisc] = useState('');
   const [grossAmt, setGrossAmt] = useState('');
-  const [items, setItems] = useState<any[]>([{drug_name:'',strength:'',batch:'',expiry:'',qty:1,pprice:'',sprice:''}]);
+
+  // Auto-calculate gross amount
+  const computedGross = discType === 'percentage'
+    ? (parseFloat(invAmt||'0') - (parseFloat(invAmt||'0') * (parseFloat(disc||'0')) / 100))
+    : discType === 'cash'
+    ? Math.max(0, parseFloat(invAmt||'0') - (parseFloat(disc||'0')))
+    : parseFloat(invAmt||'0');
+  const [items, setItems] = useState<any[]>([{drug_type:'Tablet', drug_name:'', strength:'', batch:'', expiry:'', qty:1, pprice:'', sprice:'',}]);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
   const [error, setError] = useState('');
 
   useEffect(() => { pharmacyApi.vendors.list().then(setVendors).catch(()=>{}); }, []);
 
-  const addItem = () => setItems([...items,{drug_name:'',strength:'',batch:'',expiry:'',qty:1,pprice:'',sprice:''}]);
+  const addItem = () => setItems([...items,{drug_type:'Tablet', drug_name:'', strength:'', batch:'', expiry:'', qty:1, pprice:'', sprice:'',}]);
   const rmItem = (i: number) => items.length > 1 && setItems(items.filter((_,idx)=>idx!==i));
   const updItem = (i: number, k: string, v: any) => {
     const c = [...items]; c[i][k] = v; setItems(c);
@@ -181,9 +188,9 @@ const PurchasesTab: React.FC = () => {
         vendor_id: vendorId, invoice_number: invNo, invoice_date: invDate,
         invoice_amount: parseFloat(invAmt)||0, pay_type: payType,
         discount_type: discType, discount: parseFloat(disc)||0,
-        gross_amount: parseFloat(grossAmt)||0,
+        gross_amount: computedGross,
         items: items.map(i => ({
-          drug_name: i.drug_name, strength: i.strength, batch_number: i.batch,
+          drug_name: i.drug_name, drug_type: i.drug_type, strength: i.strength, batch_number: i.batch,
           expiry_date: i.expiry || undefined,
           quantity: parseInt(i.qty)||0, purchase_price: parseFloat(i.pprice)||0,
           selling_price: parseFloat(i.sprice)||0,
@@ -216,21 +223,25 @@ const PurchasesTab: React.FC = () => {
               <option value="cash">Discount (Cash)</option><option value="percentage">Discount (%)</option>
             </select>
             <input value={disc} onChange={e=>setDisc(e.target.value)} placeholder="Discount" type="number" className="px-2.5 py-2 border border-slate-300 rounded-lg text-xs outline-none" />
-            <input value={grossAmt} onChange={e=>setGrossAmt(e.target.value)} placeholder="Gross Amount" type="number" className="px-2.5 py-2 border border-slate-300 rounded-lg text-xs outline-none" />
+            <div className="px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700">Gross: ₹{computedGross.toLocaleString()}</div>
           </div>
 
           <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">Drug Items</h4>
           <div className="space-y-2 max-h-64 overflow-y-auto">
             {items.map((it,i)=>(
-              <div key={i} className="flex flex-wrap gap-1.5 items-end border border-slate-100 rounded-lg p-2">
-                <input value={it.drug_name} onChange={e=>updItem(i,'drug_name',e.target.value)} placeholder="Drug name *" className="flex-1 min-w-[120px] px-2 py-1.5 border border-slate-300 rounded text-xs outline-none" />
-                <input value={it.strength} onChange={e=>updItem(i,'strength',e.target.value)} placeholder="Strength" className="w-20 px-2 py-1.5 border border-slate-300 rounded text-xs outline-none" />
-                <input value={it.batch} onChange={e=>updItem(i,'batch',e.target.value)} placeholder="Batch" className="w-24 px-2 py-1.5 border border-slate-300 rounded text-xs outline-none" />
-                <input type="date" value={it.expiry} onChange={e=>updItem(i,'expiry',e.target.value)} className="w-28 px-2 py-1.5 border border-slate-300 rounded text-xs outline-none" />
-                <input value={it.qty} onChange={e=>updItem(i,'qty',e.target.value)} placeholder="Qty" type="number" className="w-16 px-2 py-1.5 border border-slate-300 rounded text-xs outline-none" />
-                <input value={it.pprice} onChange={e=>updItem(i,'pprice',e.target.value)} placeholder="PP" type="number" className="w-20 px-2 py-1.5 border border-slate-300 rounded text-xs outline-none" />
-                <input value={it.sprice} onChange={e=>updItem(i,'sprice',e.target.value)} placeholder="SP" type="number" className="w-20 px-2 py-1.5 border border-slate-300 rounded text-xs outline-none" />
-                <button onClick={()=>rmItem(i)} className="px-2 py-1.5 text-[10px] font-medium text-red-600 bg-red-50 rounded hover:bg-red-100">x</button>
+              <div key={i} className="flex gap-1.5 items-center border border-slate-100 rounded-lg p-1.5 overflow-x-auto">
+                <select value={it.drug_type||'Tablet'} onChange={e=>updItem(i,'drug_type',e.target.value)} className="w-22 shrink-0 px-2 py-1.5 border border-slate-300 rounded text-xs outline-none bg-white">
+                  <option>Tablet</option><option>Capsule</option><option>Syrup</option><option>Powder</option><option>Injection</option><option>Drops</option><option>Cream</option><option>Ointment</option><option>Other</option>
+                </select>
+                <input value={it.drug_name} onChange={e=>updItem(i,'drug_name',e.target.value)} placeholder="Drug name *" className="w-32 shrink-0 px-2 py-1.5 border border-slate-300 rounded text-xs outline-none" />
+                <input value={it.strength} onChange={e=>updItem(i,'strength',e.target.value)} placeholder="Strength" className="w-14 shrink-0 px-2 py-1.5 border border-slate-300 rounded text-xs outline-none" />
+                <input value={it.batch} onChange={e=>updItem(i,'batch',e.target.value)} placeholder="Batch" className="w-18 shrink-0 px-2 py-1.5 border border-slate-300 rounded text-xs outline-none" />
+                <span className="text-[10px] text-slate-500 shrink-0">Exp:</span>
+                <input type="date" value={it.expiry} onChange={e=>updItem(i,'expiry',e.target.value)} className="w-24 shrink-0 px-2 py-1.5 border border-slate-300 rounded text-xs outline-none" />
+                <input value={it.qty} onChange={e=>updItem(i,'qty',e.target.value)} placeholder="Qty" type="number" className="w-14 shrink-0 px-1 py-1.5 border border-slate-300 rounded text-xs outline-none" />
+                <input value={it.pprice} onChange={e=>updItem(i,'pprice',e.target.value)} placeholder="PP(Buy)" type="number" className="w-18 shrink-0 px-1 py-1.5 border border-slate-300 rounded text-xs outline-none" />
+                <input value={it.sprice} onChange={e=>updItem(i,'sprice',e.target.value)} placeholder="SP(Sell)" type="number" className="w-18 shrink-0 px-1 py-1.5 border border-slate-300 rounded text-xs outline-none" />
+                <button onClick={()=>rmItem(i)} className="shrink-0 px-2 py-1.5 text-[10px] font-medium text-red-600 bg-red-50 rounded hover:bg-red-100">x</button>
               </div>
             ))}
           </div>
@@ -244,7 +255,7 @@ const PurchasesTab: React.FC = () => {
             <div className="space-y-2 text-xs">
               <div className="flex justify-between"><span className="text-slate-500">Invoice Amt</span><span className="font-semibold">₹{parseFloat(invAmt||'0').toLocaleString()}</span></div>
               <div className="flex justify-between"><span className="text-slate-500">Discount</span><span className="font-semibold">{discType==='percentage'?disc+'%':'₹'+(parseFloat(disc||'0').toLocaleString())}</span></div>
-              <div className="flex justify-between text-sm font-bold border-t border-slate-200 pt-2"><span>Gross Amount</span><span>₹{parseFloat(grossAmt||'0').toLocaleString()}</span></div>
+              <div className="flex justify-between text-sm font-bold border-t border-slate-200 pt-2"><span>Gross Amount</span><span>₹{computedGross.toLocaleString()}</span></div>
               <div className="flex justify-between text-xs text-slate-500"><span>Items</span><span>{items.length}</span></div>
             </div>
           </div>

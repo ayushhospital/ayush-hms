@@ -26,6 +26,7 @@ class PharmacyDrug(Base):
     __tablename__ = "pharmacy_drugs"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(300), nullable=False, index=True)
+    drug_type = Column(String(50), nullable=True)
     strength = Column(String(100), nullable=True)
     manufacturer = Column(String(200), nullable=True)
     batch_number = Column(String(100), nullable=True)
@@ -58,6 +59,7 @@ class PharmacyPurchaseItem(Base):
     id = Column(Integer, primary_key=True, index=True)
     purchase_id = Column(Integer, ForeignKey("pharmacy_purchases.id"), nullable=False, index=True)
     drug_name = Column(String(300), nullable=False)
+    drug_type = Column(String(50), nullable=True)
     strength = Column(String(100), nullable=True)
     batch_number = Column(String(100), nullable=True)
     expiry_date = Column(Date, nullable=True)

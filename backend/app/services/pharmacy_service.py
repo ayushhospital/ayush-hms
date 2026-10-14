@@ -68,6 +68,7 @@ def create_purchase(db: Session, data) -> PharmacyPurchase:
     for item in data.items:
         pi = PharmacyPurchaseItem(
             purchase_id=purchase.id, drug_name=item.drug_name,
+            drug_type=item.drug_type,
             strength=item.strength, batch_number=item.batch_number,
             expiry_date=item.expiry_date, quantity=item.quantity,
             purchase_price=item.purchase_price, selling_price=item.selling_price,
@@ -84,7 +85,7 @@ def create_purchase(db: Session, data) -> PharmacyPurchase:
             existing.selling_price = item.selling_price
         else:
             db.add(PharmacyDrug(
-                name=item.drug_name, strength=item.strength,
+                name=item.drug_name, drug_type=item.drug_type, strength=item.strength,
                 batch_number=item.batch_number, expiry_date=item.expiry_date,
                 purchase_price=item.purchase_price, selling_price=item.selling_price,
                 quantity_in_stock=item.quantity, vendor_id=data.vendor_id,

@@ -57,6 +57,7 @@ class PharmacyVendorResponse(BaseModel):
 class PharmacyDrugResponse(BaseModel):
     id: int
     name: str
+    drug_type: Optional[str] = None
     strength: Optional[str] = None
     manufacturer: Optional[str] = None
     batch_number: Optional[str] = None
@@ -72,6 +73,8 @@ class PharmacyDrugResponse(BaseModel):
 # === Purchase Items (within a purchase entry) ===
 class PharmacyPurchaseItemInput(BaseModel):
     drug_name: str = Field(..., min_length=1)
+    drug_type: Optional[str] = None
+    drug_type: Optional[str] = None
     strength: Optional[str] = None
     batch_number: Optional[str] = None
     expiry_date: Optional[date] = None
@@ -127,6 +130,7 @@ class PharmacySaleCreate(BaseModel):
 
 class PharmacySaleItemResponse(BaseModel):
     id: int
+    drug_type: Optional[str] = None
     drug_name: str
     strength: Optional[str] = None
     quantity: float
