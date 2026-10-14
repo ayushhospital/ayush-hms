@@ -385,38 +385,46 @@ const PosTab: React.FC = () => {
           {/* Customer section */}
           <div className="hms-card p-4">
             <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">Customer</h4>
-            <div className="flex flex-wrap items-center gap-2">
+
+            {/* Row 1: type + search/fetch (aligned grid) */}
+            <div className="grid grid-cols-[150px_1fr_auto] gap-2 items-center">
               <select value={custType} onChange={e => { setCustType(e.target.value as any); setSelectedPat(null); setPatInfo(''); }}
-                className="px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none bg-white">
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none bg-white">
                 <option value="walkin">Walk-in</option>
                 <option value="patient">Registered Patient</option>
               </select>
 
               {custType === 'walkin' ? (
-                <>
-                  <input value={patName} onChange={e=>setPatName(e.target.value)} placeholder="Name" className="flex-1 min-w-[120px] px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />
-                  <input value={patPhone} onChange={e=>setPatPhone(e.target.value)} placeholder="Phone number" className="w-40 px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />
-                </>
+                <div className="grid grid-cols-[1fr_170px] gap-2">
+                  <input value={patName} onChange={e=>setPatName(e.target.value)} placeholder="Name" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />
+                  <input value={patPhone} onChange={e=>setPatPhone(e.target.value)} placeholder="Phone number" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />
+                </div>
               ) : (
                 <>
-                  <input value={patQ} onChange={e => setPatQ(e.target.value)}
-                    placeholder="Search by phone / UHID / admission no" className="flex-1 min-w-[160px] px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />
-                  <button onClick={fetchPatient} className="px-3 py-2 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Fetch</button>
+                  <input value={patQ} onChange={e => setPatQ(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') fetchPatient(); }}
+                    placeholder="Search by phone / UHID / admission no" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />
+                  <button onClick={fetchPatient} className="px-4 py-2 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 whitespace-nowrap">Fetch</button>
                 </>
               )}
             </div>
+
+            {/* Walk-in: doctor row */}
             {custType === 'walkin' && doctors.length > 0 && (
-              <div className="mt-3 flex items-center gap-2">
-                <span className="text-xs text-slate-500 shrink-0">Doctor:</span>
-                <select value={docId} onChange={e => { setDocId(parseInt(e.target.value)); setDocCustom(''); }}
-                  className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none bg-white">
-                  <option value={0}>Select doctor</option>
-                  {doctors.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                  <option value={-1}>Other (type below)</option>
-                </select>
-                {docId === -1 && <input value={docCustom} onChange={e=>setDocCustom(e.target.value)} placeholder="Doctor name" className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />}
+              <div className="mt-2 grid grid-cols-[150px_1fr] gap-2 items-center">
+                <span className="text-xs font-medium text-slate-600 text-right pr-2">Doctor</span>
+                <div className="flex gap-2">
+                  <select value={docId} onChange={e => { setDocId(parseInt(e.target.value)); setDocCustom(''); }}
+                    className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none bg-white">
+                    <option value={0}>Select doctor</option>
+                    {doctors.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                    <option value={-1}>Other</option>
+                  </select>
+                  {docId === -1 && <input value={docCustom} onChange={e=>setDocCustom(e.target.value)} placeholder="Doctor name" className="w-44 px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />}
+                </div>
               </div>
             )}
+
+            {/* Registered: matching patients list */}
             {custType === 'patient' && patResults.length > 0 && (
               <div className="mt-3 border border-slate-200 rounded-lg divide-y divide-slate-100 max-h-44 overflow-y-auto">
                 <p className="px-3 py-1.5 text-[10px] font-semibold text-slate-500 uppercase tracking-wider bg-slate-50">{patResults.length} patient(s) found — select one</p>
@@ -429,40 +437,45 @@ const PosTab: React.FC = () => {
                 ))}
               </div>
             )}
+
+            {/* Registered: selected patient info */}
             {custType === 'patient' && patInfo && (
-              <div className="mt-2 p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700">{patInfo}</div>
+              <div className="mt-3 p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700">{patInfo}</div>
             )}
+            {/* Registered: Ref No + Doctor side by side */}
             {custType === 'patient' && selectedPat && (
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <span className="text-xs text-slate-500 shrink-0">Ref No:</span>
-                {refOptions.length > 0 ? (
-                  <select value={refOptions.some(o => o.value === refNo) ? refNo : ''} onChange={e => setRefNo(e.target.value)}
-                    className="flex-1 min-w-[200px] px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none bg-white">
-                    {refOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                    <option value="">Other / none</option>
-                  </select>
-                ) : (
-                  <input value={refNo} onChange={e=>setRefNo(e.target.value)}
-                    placeholder="Consultation No / IP No / any reference"
-                    className="flex-1 min-w-[200px] px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />
-                )}
-                {refOptions.length > 0 && !refOptions.some(o => o.value === refNo) && (
-                  <input value={refNo} onChange={e=>setRefNo(e.target.value)} placeholder="Enter manually"
-                    className="w-40 px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />
-                )}
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Ref No</label>
+                  {refOptions.length > 0 ? (
+                    <select value={refOptions.some(o => o.value === refNo) ? refNo : ''} onChange={e => setRefNo(e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none bg-white">
+                      {refOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                      <option value="">Other / none</option>
+                    </select>
+                  ) : (
+                    <input value={refNo} onChange={e=>setRefNo(e.target.value)}
+                      placeholder="Consultation / IP No"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />
+                  )}
+                </div>
+                <div>
+                  <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Doctor</label>
+                  <div className="flex gap-2">
+                    <select value={docId} onChange={e => { setDocId(parseInt(e.target.value)); setDocCustom(''); }}
+                      className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none bg-white">
+                      <option value={0}>Select doctor</option>
+                      {doctors.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                      <option value={-1}>Other</option>
+                    </select>
+                    {docId === -1 && <input value={docCustom} onChange={e=>setDocCustom(e.target.value)} placeholder="Name" className="w-28 px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />}
+                  </div>
+                </div>
               </div>
             )}
-            {custType === 'patient' && selectedPat && doctors.length > 0 && (
-              <div className="mt-3 flex items-center gap-2">
-                <span className="text-xs text-slate-500 shrink-0">Doctor:</span>
-                <select value={docId} onChange={e => { setDocId(parseInt(e.target.value)); setDocCustom(''); }}
-                  className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none bg-white">
-                  <option value={0}>Select doctor</option>
-                  {doctors.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                  <option value={-1}>Other</option>
-                </select>
-                {docId === -1 && <input value={docCustom} onChange={e=>setDocCustom(e.target.value)} placeholder="Doctor name" className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />}
-              </div>
+            {custType === 'patient' && selectedPat && refOptions.length > 0 && !refOptions.some(o => o.value === refNo) && (
+              <input value={refNo} onChange={e=>setRefNo(e.target.value)} placeholder="Enter reference number manually"
+                className="mt-2 w-full px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />
             )}
           </div>
 
