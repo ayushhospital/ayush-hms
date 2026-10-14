@@ -2,6 +2,12 @@ from datetime import datetime
 from typing import Optional
 import json
 from pydantic import BaseModel, Field, model_validator
+from app.services.auth_service import hash_password, verify_password
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str = Field(..., min_length=1)
+    new_password: str = Field(..., min_length=4)
 
 
 class LoginRequest(BaseModel):

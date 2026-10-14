@@ -128,8 +128,23 @@ const Sidebar: React.FC = () => {
         })}
       </nav>
 
-      {/* Footer — signed-in user + sign out */}
-      <div className="px-5 py-4 border-t border-slate-800 space-y-3">
+      {/* Footer — user + date/time/day + actions */}
+      <div className="px-5 py-3.5 border-t border-slate-800 space-y-3">
+        {/* Date / time / day — prominently visible */}
+        <div className="bg-slate-800/50 border border-slate-700/50 rounded-lg px-3 py-2.5">
+          <div className="flex items-center gap-2">
+            <svg viewBox="0 0 24 24" width="14" height="14" className="text-blue-400 shrink-0" stroke="currentColor" strokeWidth="1.7" fill="none" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="4" width="18" height="17" rx="2" />
+              <path d="M8 2v4M16 2v4M3 9h18" />
+            </svg>
+            <span className="text-white text-sm font-bold m-0 leading-tight">{new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+          </div>
+          <p className="text-slate-400 text-[10px] m-0 mt-1 leading-tight">
+            {new Date().toLocaleDateString('en-IN', { weekday: 'long' })} · {new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}
+          </p>
+        </div>
+
+        {/* Signed-in user */}
         <div className="flex items-center gap-2 px-1">
           <div className="w-7 h-7 rounded-full bg-blue-600/20 border border-blue-500/40 flex items-center justify-center shrink-0">
             <span className="text-[10px] font-bold text-blue-300 uppercase">{user?.username?.slice(0, 2)}</span>
@@ -139,14 +154,27 @@ const Sidebar: React.FC = () => {
             <p className="text-slate-500 text-[10px] m-0 uppercase tracking-wider">{user?.role}</p>
           </div>
         </div>
-        <button onClick={logout}
-          className="w-full flex items-center justify-center gap-2 text-[11px] font-medium text-slate-400 bg-slate-800/60 hover:bg-slate-800 hover:text-white border border-slate-700/50 rounded-lg px-3 py-2 transition-colors">
-          <svg viewBox="0 0 24 24" width="13" height="13" {...stroke}>
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-            <path d="M16 17l5-5-5-5M21 12H9" />
-          </svg>
-          Sign out
-        </button>
+
+        {/* Actions */}
+        <div className="space-y-1.5">
+          <button onClick={() => { (window as any).__openChangePw && (window as any).__openChangePw(); }}
+            className="w-full flex items-center justify-center gap-2 text-[11px] font-medium text-slate-400 bg-slate-800/30 hover:bg-slate-800 hover:text-white border border-slate-700/30 rounded-lg px-3 py-2 transition-colors">
+            <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" strokeWidth="1.7" fill="none" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="11" width="18" height="10" rx="2" />
+              <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+              <circle cx="12" cy="16" r="1" />
+            </svg>
+            Change Password
+          </button>
+          <button onClick={logout}
+            className="w-full flex items-center justify-center gap-2 text-[11px] font-medium text-slate-400 bg-slate-800/60 hover:bg-slate-800 hover:text-white border border-slate-700/50 rounded-lg px-3 py-2 transition-colors">
+            <svg viewBox="0 0 24 24" width="13" height="13" {...stroke}>
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <path d="M16 17l5-5-5-5M21 12H9" />
+            </svg>
+            Sign out
+          </button>
+        </div>
       </div>
     </aside>
   );
