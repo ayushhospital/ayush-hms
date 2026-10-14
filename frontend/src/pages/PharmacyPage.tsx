@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import PageHeader from '../components/ui/PageHeader';
-import { pharmacyApi, patientsApi, ipdApi } from '../services/api';
+import { pharmacyApi, patientsApi, doctorsApi, ipdApi } from '../services/api';
 import type {
   PharmacyVendor, PharmacyDrug, PharmacySaleResponse,
+  Doctor,
 } from '../types';
 
 type TabId = 'vendors' | 'purchases' | 'pos';
@@ -204,9 +205,9 @@ const PurchasesTab: React.FC = () => {
     <div>
       {msg && <div className="mb-3 p-2 bg-emerald-50 border border-emerald-200 rounded-lg text-xs text-emerald-700">{msg}</div>}
       {error && <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">{error}</div>}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-6 gap-4">
         {/* LEFT — invoice details + drug lines */}
-        <div className="lg:col-span-3 hms-card p-4">
+        <div className="lg:col-span-4 hms-card p-4">
           <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">Invoice Details</h4>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
             <select value={vendorId} onChange={e=>setVendorId(parseInt(e.target.value))} className="px-2.5 py-2 border border-slate-300 rounded-lg text-xs outline-none bg-white">
@@ -273,12 +274,21 @@ const PurchasesTab: React.FC = () => {
  * 3. POS — SALES COUNTER TAB
  * ===================================================== */
 
+/* =======================================================
+ * 3. POS — SALES COUNTER TAB (revised)
+ * ===================================================== */
+
 const PosTab: React.FC = () => {
-  const [custType, setCustType] = useState<'patient'|'self'>('self');
-  const [phoneQ, setPhoneQ] = useState('');
-  const [patients, setPatients] = useState<any[]>([]);
-  const [selectedP, setSelectedP] = useState<any>(null);
-  const [docName, setDocName] = useState('');
+  const [custType, setCustType] = useState<'patient'|'walkin'>('walkin');
+  const [patPhone, setPatPhone] = useState('');
+  const [patName, setPatName] = useState('');
+  const [patQ, setPatQ] = useState('');
+  const [patResults, setPatResults] = useState<any[]>([]);
+  const [selectedPat, setSelectedPat] = useState<any>(null);
+  const [patInfo, setPatInfo] = useState<string>('');
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [docId, setDocId] = useState(0);
+  const [docCustom, setDocCustom] = useState('');
   const [searchQ, setSearchQ] = useState('');
   const [drugs, setDrugs] = useState<PharmacyDrug[]>([]);
   const [cart, setCart] = useState<{drug:PharmacyDrug; qty:number; sp:number}[]>([]);
@@ -289,22 +299,33 @@ const PosTab: React.FC = () => {
   const [lastSale, setLastSale] = useState<PharmacySaleResponse|null>(null);
   const [showBill, setShowBill] = useState(false);
 
-  const searchPatients = async () => {
-    if (phoneQ.length < 3) return;
+  useEffect(() => { doctorsApi.list().then(setDoctors).catch(()=>{}); }, []);
+
+  const fetchPatient = async () => {
+    if (patQ.length < 2) return;
+    setSelectedPat(null); setPatInfo('');
     try {
-      const res = await patientsApi.search(phoneQ);
-      setPatients(res.patients.map((r:any)=>r.patient));
-    } catch { setPatients([]); }
+      const res = await patientsApi.search(patQ);
+      if (res.patients.length > 0) {
+        setPatResults(res.patients.map((r:any)=>r.patient));
+        const p = res.patients[0].patient;
+        setSelectedPat(p);
+        setPatInfo(`${p.name} | ${p.gender} | ${p.uhid} | ${p.phone_number}`);
+        setPatName(p.name);
+      } else {
+        setPatResults([]);
+        setPatInfo('No patient found');
+      }
+    } catch { setPatInfo('Search failed'); }
   };
+
+  const docName = doctors.find(d => d.id === docId)?.name || docCustom;
 
   useEffect(() => {
     if (searchQ) pharmacyApi.drugs.list(searchQ).then(setDrugs).catch(()=>{});
     else setDrugs([]);
   }, [searchQ]);
 
-  const addToCart = (drug: PharmacyDrug) => {
-    setCart([...cart, {drug, qty: 1, sp: drug.selling_price || 0}]);
-  };
   const rmCart = (i: number) => setCart(cart.filter((_,idx) => idx !== i));
 
   const total = cart.reduce((s,i) => s + i.qty * i.sp, 0);
@@ -313,21 +334,20 @@ const PosTab: React.FC = () => {
   else if (discType === 'cash' && discVal) netTotal = Math.max(0, total - parseFloat(discVal));
 
   const submit = async () => {
-    if (cart.length === 0) { setError('Add at least one item to cart'); return; }
+    if (cart.length === 0) { setError('Add at least one item'); return; }
     setSaving(true); setError('');
     try {
       const sale = await pharmacyApi.sales.create({
-        customer_type: custType,
-        patient_id: selectedP?.id || undefined,
-        patient_name: selectedP?.name || (custType==='self' ? 'Walk-in' : undefined),
-        phone_number: phoneQ || undefined,
+        customer_type: custType === 'walkin' ? 'self' : 'patient',
+        patient_id: selectedPat?.id || undefined,
+        patient_name: custType === 'walkin' ? (patName || 'Walk-in') : selectedPat?.name,
+        phone_number: custType === 'walkin' ? patPhone : (selectedPat?.phone_number || patPhone),
         doctor_name: docName || undefined,
         discount_type: discType || undefined,
         discount_value: parseFloat(discVal||'0'),
         items: cart.map(c => ({drug_id: c.drug.id, quantity: c.qty, unit_price: c.sp})),
       });
-      setLastSale(sale);
-      setShowBill(true);
+      setLastSale(sale); setShowBill(true);
     } catch (err: any) { setError(err.message); } finally { setSaving(false); }
   };
 
@@ -339,100 +359,154 @@ const PosTab: React.FC = () => {
     <div>
       {error && <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">{error}</div>}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        {/* Customer + Drug search */}
-        <div className="lg:col-span-3 space-y-3">
-          {/* Customer panel */}
+
+        {/* LEFT — Customer + Drug search */}
+        <div className="lg:col-span-3 space-y-4">
+
+          {/* Customer section */}
           <div className="hms-card p-4">
             <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">Customer</h4>
-            <div className="flex flex-wrap items-end gap-2">
-              <select value={custType} onChange={e => setCustType(e.target.value as any)}
+            <div className="flex flex-wrap items-center gap-2">
+              <select value={custType} onChange={e => { setCustType(e.target.value as any); setSelectedPat(null); setPatInfo(''); }}
                 className="px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none bg-white">
-                <option value="self">Walk-in / Self</option>
+                <option value="walkin">Walk-in</option>
                 <option value="patient">Registered Patient</option>
               </select>
-              {custType === 'patient' && (
+
+              {custType === 'walkin' ? (
                 <>
-                  <input value={phoneQ} onChange={e=>{setPhoneQ(e.target.value); if(e.target.value.length>=3) setTimeout(searchPatients, 200)}}
-                    placeholder="Phone number" className="flex-1 min-w-[140px] px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />
-                  <select size={patients.length > 0 ? 3 : 1}
-                    onChange={e => { const p = patients[parseInt(e.target.value)]; setSelectedP(p); }}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none bg-white max-h-24" style={{display: patients.length > 0 ? 'block' : 'none'}}>
-                    <option value="">Select patient</option>
-                    {patients.map((p,i) => <option key={p.id} value={i}>{p.name} - {p.uhid} - {p.phone_number}</option>)}
-                  </select>
+                  <input value={patName} onChange={e=>setPatName(e.target.value)} placeholder="Name" className="flex-1 min-w-[120px] px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />
+                  <input value={patPhone} onChange={e=>setPatPhone(e.target.value)} placeholder="Phone number" className="w-40 px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />
+                </>
+              ) : (
+                <>
+                  <input value={patQ} onChange={e => setPatQ(e.target.value)}
+                    placeholder="Search by phone / UHID / admission no" className="flex-1 min-w-[160px] px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />
+                  <button onClick={fetchPatient} className="px-3 py-2 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Fetch</button>
                 </>
               )}
-              <input value={selectedP?.name||''} onChange={e=>setDocName(e.target.value)}
-                placeholder="Doctor name" className="flex-1 min-w-[140px] px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />
             </div>
+            {custType === 'walkin' && doctors.length > 0 && (
+              <div className="mt-3 flex items-center gap-2">
+                <span className="text-xs text-slate-500 shrink-0">Doctor:</span>
+                <select value={docId} onChange={e => { setDocId(parseInt(e.target.value)); setDocCustom(''); }}
+                  className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none bg-white">
+                  <option value={0}>Select doctor</option>
+                  {doctors.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                  <option value={-1}>Other (type below)</option>
+                </select>
+                {docId === -1 && <input value={docCustom} onChange={e=>setDocCustom(e.target.value)} placeholder="Doctor name" className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />}
+              </div>
+            )}
+            {custType === 'patient' && patInfo && (
+              <div className="mt-2 p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700">{patInfo}</div>
+            )}
+            {custType === 'patient' && selectedPat && doctors.length > 0 && (
+              <div className="mt-3 flex items-center gap-2">
+                <span className="text-xs text-slate-500 shrink-0">Doctor:</span>
+                <select value={docId} onChange={e => { setDocId(parseInt(e.target.value)); setDocCustom(''); }}
+                  className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none bg-white">
+                  <option value={0}>Select doctor</option>
+                  {doctors.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                  <option value={-1}>Other</option>
+                </select>
+                {docId === -1 && <input value={docCustom} onChange={e=>setDocCustom(e.target.value)} placeholder="Doctor name" className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />}
+              </div>
+            )}
           </div>
 
-          {/* Drug search & picker */}
+          {/* Drug search */}
           <div className="hms-card p-4">
             <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">Search Drugs</h4>
             <input value={searchQ} onChange={e => setSearchQ(e.target.value)}
               placeholder="Type drug name to search…" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />
-            {searchQ && drugs.length === 0 && (
-              <div className="py-4 text-center text-xs text-slate-400">No drugs found matching "{searchQ}"</div>
-            )}
-            {drugs.length > 0 && (
-              <div className="mt-2 max-h-48 overflow-y-auto divide-y divide-slate-100 border border-slate-200 rounded-lg">
-                {drugs.map(d => (
-                  <div key={d.id} className="flex items-center justify-between px-3 py-2 hover:bg-slate-50">
-                    <div className="min-w-0">
-                      <p className="text-xs font-medium text-slate-800 m-0">{d.name} <span className="text-slate-400">{d.strength}</span></p>
-                      <p className="text-[10px] text-slate-500 m-0">Stock: {d.quantity_in_stock} · ₹{d.selling_price?.toLocaleString()}/{d.purchase_price?.toLocaleString()}</p>
-                    </div>
-                    <button onClick={() => addToCart(d)} disabled={d.quantity_in_stock <= 0}
-                      className="px-2.5 py-1.5 text-[10px] font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-40 shrink-0 ml-2">
-                      + Add
-                    </button>
-                  </div>
-                ))}
+            {searchQ && drugs.length > 0 && (
+              <div className="mt-3 overflow-x-auto">
+                <table className="hms-table text-xs">
+                  <thead><tr>
+                    <th className="w-8">#</th><th>Drug Name</th><th>Strength</th><th>Stock</th>
+                    <th className="text-right">Rate</th><th className="w-16 text-center">Qty</th><th className="w-20"></th>
+                  </tr></thead>
+                  <tbody>
+                    {drugs.filter(d => d.quantity_in_stock > 0).map((d,i) => (
+                      <tr key={d.id}>
+                        <td className="text-slate-400">{i+1}</td>
+                        <td className="font-medium">{d.name}</td>
+                        <td>{d.strength || '-'}</td>
+                        <td>{d.quantity_in_stock}</td>
+                        <td className="text-right">₹{d.selling_price?.toLocaleString()}</td>
+                        <td className="text-center">
+                          <input type="number" id={`qty-${d.id}`} defaultValue={1} min={1} max={d.quantity_in_stock}
+                            className="w-14 px-1 py-1 border border-slate-300 rounded text-xs outline-none text-center" />
+                        </td>
+                        <td className="text-center">
+                          <button onClick={() => {
+                            const qtyInput = document.getElementById(`qty-${d.id}`) as HTMLInputElement;
+                            const qty = parseInt(qtyInput?.value || '1');
+                            const exists = cart.find(c => c.drug.id === d.id);
+                            if (exists) setCart(cart.map(c => c.drug.id === d.id ? {...c, qty: c.qty + qty} : c));
+                            else setCart([...cart, {drug:d, qty, sp: d.selling_price || 0}]);
+                          }} className="px-2.5 py-1 text-[10px] font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">Add</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>
         </div>
 
-        {/* Cart & billing */}
+        {/* RIGHT — Cart & billing */}
         <div className="lg:col-span-2 hms-card p-4 flex flex-col">
           <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">Cart ({cart.length})</h4>
-          <div className="flex-1 max-h-64 overflow-y-auto space-y-1.5 mb-3">
-            {cart.length === 0 && <div className="py-6 text-center text-xs text-slate-400">Cart is empty. Add drugs from the left panel.</div>}
-            {cart.map((c,i) => (
-              <div key={i} className="flex items-center gap-1.5 bg-slate-50 rounded-lg px-2.5 py-2">
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-slate-800 m-0 truncate">{c.drug.name}</p>
-                  <p className="text-[10px] text-slate-500 m-0">Stock: {c.drug.quantity_in_stock}  Rate: ₹{c.sp}</p>
-                </div>
-                <input type="number" value={c.qty} onChange={e => {
-                  const cart2 = [...cart]; cart2[i].qty = parseInt(e.target.value) || 0; setCart(cart2);
-                }} min={1} max={c.drug.quantity_in_stock}
-                  className="w-14 px-1.5 py-1 border border-slate-300 rounded text-xs outline-none text-center" />
-                <span className="text-xs font-semibold text-slate-800 w-16 text-right">₹{(c.qty * c.sp).toLocaleString()}</span>
-                <button onClick={() => rmCart(i)} className="text-red-500 hover:text-red-700 text-xs font-bold">x</button>
-              </div>
-            ))}
-          </div>
 
-          {/* Discount */}
-          <div className="flex gap-2 mb-2">
-            <select value={discType} onChange={e => setDiscType(e.target.value as any)}
-              className="flex-1 px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs outline-none bg-white">
-              <option value="">No Discount</option>
-              <option value="percentage">Discount (%)</option>
-              <option value="cash">Discount (₹)</option>
-            </select>
-            {discType && (
-              <input type="number" value={discVal} onChange={e => setDiscVal(e.target.value)}
-                placeholder="Value" min={0} className="w-24 px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs outline-none" />
-            )}
-          </div>
+          {cart.length > 0 ? (
+            <div className="overflow-x-auto mb-3">
+              <table className="hms-table text-xs">
+                <thead><tr>
+                  <th>#</th><th>Drug</th><th className="text-center">Qty</th><th className="text-right">Rate</th><th className="text-right">Total</th><th></th>
+                </tr></thead>
+                <tbody>
+                  {cart.map((c,i) => (
+                    <tr key={i}>
+                      <td className="text-slate-400">{i+1}</td>
+                      <td className="font-medium">{c.drug.name}</td>
+                      <td className="text-center">
+                        <input type="number" value={c.qty} onChange={e => {
+                          const c2 = [...cart]; c2[i].qty = parseInt(e.target.value) || 0; setCart(c2);
+                        }} min={1} max={c.drug.quantity_in_stock} className="w-12 px-1 py-0.5 border border-slate-300 rounded text-xs text-center" />
+                      </td>
+                      <td className="text-right">{c.sp}</td>
+                      <td className="text-right font-medium">₹{(c.qty * c.sp).toLocaleString()}</td>
+                      <td><button onClick={() => rmCart(i)} className="text-red-500 hover:text-red-700 text-xs font-bold">x</button></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="flex-1 py-8 text-center text-xs text-slate-400">Cart empty</div>
+          )}
 
+          {/* Totals */}
           <div className="border-t border-slate-200 pt-3 space-y-1 text-xs mb-3">
-            <div className="flex justify-between"><span className="text-slate-500">Total</span><span className="font-semibold">₹{total.toLocaleString()}</span></div>
-            <div className="flex justify-between"><span className="text-slate-500">Discount</span><span className="font-semibold">{discType==='percentage'?discVal+'%':discType==='cash'?'₹'+parseFloat(discVal||'0').toLocaleString():'-'}</span></div>
-            <div className="flex justify-between text-sm font-bold border-t border-slate-200 pt-2"><span>Net Total</span><span>₹{Math.round(netTotal).toLocaleString()}</span></div>
+            <div className="flex justify-between"><span className="text-slate-500">Sub Total</span><span className="font-semibold">₹{total.toLocaleString()}</span></div>
+            <div className="flex items-center gap-2 mt-2">
+              <select value={discType} onChange={e => setDiscType(e.target.value as any)}
+                className="flex-1 px-2 py-1.5 border border-slate-300 rounded-lg text-xs outline-none bg-white">
+                <option value="">No Discount</option>
+                <option value="percentage">%</option>
+                <option value="cash">₹</option>
+              </select>
+              {discType && (
+                <input type="number" value={discVal} onChange={e => setDiscVal(e.target.value)}
+                  placeholder="Value" min={0} className="w-20 px-2 py-1.5 border border-slate-300 rounded-lg text-xs outline-none" />
+              )}
+            </div>
+            <div className="flex justify-between text-sm font-bold border-t border-slate-200 pt-2">
+              <span>Net Total</span><span>₹{Math.round(netTotal).toLocaleString()}</span>
+            </div>
           </div>
 
           <button onClick={submit} disabled={saving || cart.length === 0}
@@ -444,11 +518,6 @@ const PosTab: React.FC = () => {
     </div>
   );
 };
-
-/* =======================================================
- * BILL VIEW / PRINT
- * ===================================================== */
-
 const BillView: React.FC<{ sale: PharmacySaleResponse; onBack: () => void }> = ({ sale, onBack }) => {
   return (
     <div className="max-w-md mx-auto">
