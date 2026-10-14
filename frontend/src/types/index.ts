@@ -241,3 +241,43 @@ export interface DailySummaryReport {
   grand_total_upi: number;
   grand_total: number;
 }
+
+// IPD Reports
+export interface IPDAdmissionsRow {
+  date: string;
+  total_admissions: number;
+  open_count: number;
+  discharged_count: number;
+  planned: number;
+  emergency: number;
+  referral: number;
+}
+
+export interface IPDAdmissionsReport {
+  start_date: string;
+  end_date: string;
+  rows: IPDAdmissionsRow[];
+  grand_total: number;
+  grand_open: number;
+  grand_discharged: number;
+}
+
+export interface IPDBillingRow {
+  admission_number: string;
+  admission_date: string;
+  patient_name: string;
+  patient_uhid: string;
+  ward_bed: string | null;
+  total_charges: number;
+  total_paid: number;
+  outstanding: number;
+}
+
+export interface IPDBillingReport {
+  start_date: string;
+  end_date: string;
+  rows: IPDBillingRow[];
+  grand_charges: number;
+  grand_paid: number;
+  grand_outstanding: number;
+}

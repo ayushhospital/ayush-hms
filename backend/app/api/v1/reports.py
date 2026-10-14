@@ -7,11 +7,15 @@ from app.services.report_service import (
     get_daily_summary_report,
     get_doctor_summary_report,
     get_patient_list_report,
+    get_ipd_admissions_report,
+    get_ipd_billing_report,
 )
 from app.schemas.schemas import (
     DailySummaryReport,
     DoctorSummaryReport,
     PatientListReport,
+    IPDAdmissionsReport,
+    IPDBillingReport,
 )
 
 router = APIRouter(prefix="/reports", tags=["reports"])
@@ -48,3 +52,25 @@ def patient_list_report(
     if start_date > end_date:
         raise HTTPException(status_code=400, detail="start_date must be before or equal to end_date")
     return get_patient_list_report(db, start_date, end_date)
+
+
+@router.get("/ipd-admissions-summary", response_model=IPDAdmissionsReport)
+def ipd_admissions_summary_report(
+    start_date: date = Query(...),
+    end_date: date = Query(...),
+    db: Session = Depends(get_db),
+):
+    if start_date > end_date:
+        raise HTTPException(status_code=400, detail="start_date must be before or equal to end_date")
+    return get_ipd_admissions_report(db, start_date, end_date)
+
+
+@router.get("/ipd-billing", response_model=IPDBillingReport)
+def ipd_billing_report(
+    start_date: date = Query(...),
+    end_date: date = Query(...),
+    db: Session = Depends(get_db),
+):
+    if start_date > end_date:
+        raise HTTPException(status_code=400, detail="start_date must be before or equal to end_date")
+    return get_ipd_billing_report(db, start_date, end_date)

@@ -9,6 +9,8 @@ import type {
   DailySummaryReport,
   DoctorSummaryReport,
   PatientListReport,
+  IPDAdmissionsReport,
+  IPDBillingReport,
   IPDAdmissionListResponse,
   IPDAdmissionResponse,
   IPDAdmissionCreate,
@@ -103,6 +105,12 @@ export const reportsApi = {
 
   patientList: (startDate: string, endDate: string) =>
     request<PatientListReport>(`/reports/patient-list?start_date=${startDate}&end_date=${endDate}`),
+
+  ipdAdmissionsSummary: (startDate: string, endDate: string) =>
+    request<IPDAdmissionsReport>(`/reports/ipd-admissions-summary?start_date=${startDate}&end_date=${endDate}`),
+
+  ipdBilling: (startDate: string, endDate: string) =>
+    request<IPDBillingReport>(`/reports/ipd-billing?start_date=${startDate}&end_date=${endDate}`),
 };
 // IPD API
 export const ipdApi = {
