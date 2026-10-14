@@ -41,22 +41,11 @@ const NAV_ITEMS: NavItem[] = [
     to: '/ipd',
     label: 'IPD',
     prefix: ['/ipd'],
-    exclude: ['/ipd/new'],
     icon: (
       <svg viewBox="0 0 24 24" width="18" height="18" {...stroke}>
         <path d="M4 5h16v14H4z" />
         <path d="M4 9.5h16" />
         <path d="M8 14.5h5" />
-      </svg>
-    ),
-  },
-  {
-    to: '/ipd/new',
-    label: 'New Admission',
-    prefix: ['/ipd/new'],
-    icon: (
-      <svg viewBox="0 0 24 24" width="18" height="18" {...stroke}>
-        <path d="M12 5v14M5 12h14" />
       </svg>
     ),
   },
@@ -80,9 +69,10 @@ const Sidebar: React.FC = () => {
     return item.prefix.some((p) => (p === '/' ? pathname === '/' : pathname.startsWith(p)));
   };
 
-  const dateStr = new Date().toLocaleDateString('en-IN', {
-    weekday: 'short', year: 'numeric', month: 'short', day: 'numeric',
-  });
+  const now = new Date();
+  const weekday = now.toLocaleDateString('en-IN', { weekday: 'short' });
+  const dateMain = now.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
 
   return (
     <aside className="no-print hidden lg:flex flex-col w-60 shrink-0 bg-slate-900 text-slate-300 border-r border-slate-800 sticky top-0 h-screen">
@@ -117,10 +107,18 @@ const Sidebar: React.FC = () => {
         })}
       </nav>
 
-      {/* Footer */}
+      {/* Footer — today's date, prominently visible */}
       <div className="px-5 py-4 border-t border-slate-800">
-        <div className="text-[11px] text-slate-400 px-1 py-1.5 bg-slate-800/60 rounded-md text-center">
-          {dateStr}
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-2 text-center">Today</p>
+        <div className="flex items-center gap-2 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5">
+          <svg viewBox="0 0 24 24" width="16" height="16" className="text-blue-400 shrink-0" {...stroke}>
+            <rect x="3" y="4" width="18" height="17" rx="2" />
+            <path d="M8 2v4M16 2v4M3 9h18" />
+          </svg>
+          <div className="min-w-0">
+            <p className="text-white text-sm font-bold m-0 leading-tight">{dateMain}</p>
+            <p className="text-slate-400 text-[11px] m-0 leading-tight mt-0.5">{weekday} &middot; {timeStr}</p>
+          </div>
         </div>
       </div>
     </aside>
