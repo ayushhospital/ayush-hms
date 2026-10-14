@@ -579,46 +579,57 @@ const BillView: React.FC<{ sale: PharmacySaleResponse; onBack: () => void }> = (
       <div className="bg-white border border-slate-200 rounded-xl p-6 print:p-4 print:shadow-none print:border-0" style={{fontSize:'11pt'}}>
         <div className="text-center border-b-2 border-dashed border-slate-300 pb-3 mb-3">
           <h2 className="text-lg font-bold m-0">Ayush Hospital Pharmacy</h2>
-          <p className="text-xs text-slate-500 m-0 mt-1">{sale.sale_number}</p>
+          <p className="text-xs text-slate-500 m-0 mt-1">Bill No: <span className="font-semibold">{sale.sale_number}</span></p>
         </div>
-        <div className="text-xs mb-3 space-y-0.5">
-          <p className="m-0"><span className="font-semibold">Customer:</span> {sale.patient_name || 'Walk-in'}</p>
-          {sale.phone_number && <p className="m-0 text-slate-500">Ph: {sale.phone_number}</p>}
-          {sale.doctor_name && <p className="m-0 text-slate-500">Dr: {sale.doctor_name}</p>}
-          {sale.reference_no && <p className="m-0 text-slate-500">Ref: {sale.reference_no}</p>}
-          <p className="m-0 text-slate-500">{new Date(sale.created_at).toLocaleString('en-IN')}</p>
+
+        {/* Patient info (left) + Date (right) */}
+        <div className="flex justify-between items-start mb-3 gap-4">
+          <div className="text-xs space-y-0.5">
+            <p className="m-0"><span className="font-semibold">Patient:</span> {sale.patient_name || 'Walk-in'}</p>
+            {sale.phone_number && <p className="m-0 text-slate-500">Phone: {sale.phone_number}</p>}
+            {sale.doctor_name && <p className="m-0"><span className="font-semibold">Doctor:</span> {sale.doctor_name}</p>}
+            {sale.reference_no && <p className="m-0 text-slate-500">Ref No: {sale.reference_no}</p>}
+          </div>
+          <div className="text-xs text-right shrink-0">
+            <p className="m-0 text-slate-500">Date</p>
+            <p className="m-0 font-semibold">{new Date(sale.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+            <p className="m-0 text-slate-500 text-[10px]">{new Date(sale.created_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}</p>
+          </div>
         </div>
+
         <table className="w-full text-xs border-collapse">
-          <thead><tr className="border-b border-slate-200">
-            <th className="py-1.5 text-left font-semibold text-slate-600">Item</th>
-            <th className="py-1.5 text-center font-semibold text-slate-600">Qty</th>
-            <th className="py-1.5 text-right font-semibold text-slate-600">Rate</th>
-            <th className="py-1.5 text-right font-semibold text-slate-600">Total</th>
+          <thead><tr className="border-b border-slate-200 bg-slate-50">
+            <th className="py-1.5 px-1 text-center font-semibold text-slate-600 w-8">S.No</th>
+            <th className="py-1.5 px-1 text-left font-semibold text-slate-600">Item</th>
+            <th className="py-1.5 px-1 text-center font-semibold text-slate-600">Qty</th>
+            <th className="py-1.5 px-1 text-right font-semibold text-slate-600">Rate</th>
+            <th className="py-1.5 px-1 text-right font-semibold text-slate-600">Total</th>
           </tr></thead>
           <tbody>
             {sale.items.map((it,i) => (
               <tr key={i} className="border-b border-slate-100">
-                <td className="py-1.5">{it.drug_name} {it.strength ? '('+it.strength+')' : ''}</td>
-                <td className="py-1.5 text-center">{it.quantity}</td>
-                <td className="py-1.5 text-right">₹{it.unit_price}</td>
-                <td className="py-1.5 text-right font-medium">₹{it.line_total}</td>
+                <td className="py-1.5 px-1 text-center text-slate-500">{i+1}</td>
+                <td className="py-1.5 px-1">{it.drug_name} {it.strength ? '('+it.strength+')' : ''}</td>
+                <td className="py-1.5 px-1 text-center">{it.quantity}</td>
+                <td className="py-1.5 px-1 text-right">₹{it.unit_price}</td>
+                <td className="py-1.5 px-1 text-right font-medium">₹{it.line_total}</td>
               </tr>
             ))}
           </tbody>
           <tfoot>
             <tr className="font-semibold">
-              <td colSpan={3} className="py-2 text-right">Total</td>
-              <td className="py-2 text-right">₹{sale.total_amount}</td>
+              <td colSpan={4} className="py-2 px-1 text-right">Total</td>
+              <td className="py-2 px-1 text-right">₹{sale.total_amount}</td>
             </tr>
             {sale.discount_type && sale.discount_value > 0 && (
               <tr className="text-slate-500">
-                <td colSpan={3} className="py-1 text-right">Discount ({sale.discount_type})</td>
-                <td className="py-1 text-right">- {sale.discount_type === 'percentage' ? sale.discount_value+'%' : '₹'+sale.discount_value}</td>
+                <td colSpan={4} className="py-1 px-1 text-right">Discount ({sale.discount_type === 'percentage' ? '%' : '₹'})</td>
+                <td className="py-1 px-1 text-right">- {sale.discount_type === 'percentage' ? sale.discount_value+'%' : '₹'+sale.discount_value}</td>
               </tr>
             )}
             <tr className="font-bold text-sm border-t-2 border-slate-800">
-              <td colSpan={3} className="py-2 text-right">Net Amount</td>
-              <td className="py-2 text-right">₹{sale.net_amount}</td>
+              <td colSpan={4} className="py-2 px-1 text-right">Net Amount</td>
+              <td className="py-2 px-1 text-right">₹{sale.net_amount}</td>
             </tr>
           </tfoot>
         </table>
