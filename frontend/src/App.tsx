@@ -38,12 +38,15 @@ function AppRoutes() {
 
       {/* Mobile top bar (desktop sidebar is hidden on small screens) */}
       {user && (
-        <div className="no-print lg:hidden sticky top-0 z-40 bg-slate-900 text-white px-4 py-3 flex items-center justify-between">
+        <div className="no-print lg:hidden sticky top-0 z-40 bg-slate-900 text-white px-4 py-2.5 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 no-underline text-white">
-            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-xs font-bold">AH</div>
+            <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center text-[10px] font-bold">AH</div>
             <span className="text-sm font-bold">Ayush HMS</span>
           </Link>
-          <MobileNav />
+          <div className="flex items-center gap-2">
+            <MobileDate />
+            <MobileNav />
+          </div>
         </div>
       )}
 
@@ -60,7 +63,7 @@ function AppRoutes() {
                   </button>
                 </div>
               </div>
-            <div className="max-w-7xl mx-auto px-6 lg:px-8 py-6">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
               <Routes>
                 <Route path="/login" element={<Navigate to="/" replace />} />
                 <Route path="/" element={<Protected><HomePage /></Protected>} />
@@ -102,6 +105,16 @@ const TopBarDate: React.FC = () => {
       <span className="text-sm font-bold text-slate-800">{dateMain}</span>
       <span className="text-[11px] font-medium text-slate-400 tabular-nums">{timeStr}</span>
     </div>
+  );
+};
+
+/* Compact mobile date chip */
+const MobileDate: React.FC = () => {
+  const now = new Date();
+  const d = now.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  const t = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+  return (
+    <span className="text-[10px] text-slate-400 whitespace-nowrap">{d} · {t}</span>
   );
 };
 
