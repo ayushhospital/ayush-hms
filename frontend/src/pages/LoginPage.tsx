@@ -33,7 +33,7 @@ const LoginPage: React.FC = () => {
   return (
     <div className="min-h-screen flex bg-slate-100">
       {/* Branding panel (desktop) */}
-      <div className="hidden lg:flex flex-col justify-between w-[46%] bg-slate-900 text-white p-12">
+      <div className="hidden lg:flex flex-col justify-between w-[46%] bg-blue-950 text-white p-12">
         <div className="flex items-center gap-3">
           <div className="w-11 h-11 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-900/40">
             <span className="text-white text-base font-bold tracking-tight">AH</span>

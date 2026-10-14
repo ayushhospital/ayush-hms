@@ -96,9 +96,9 @@ const Sidebar: React.FC = () => {
   });
 
   return (
-    <aside className="no-print hidden lg:flex flex-col w-60 shrink-0 bg-gradient-to-b from-blue-900 via-blue-950 to-slate-950 text-blue-100/80 border-r border-blue-950/40 sticky top-0 h-screen">
+    <aside className="no-print hidden lg:flex flex-col w-60 shrink-0 bg-blue-950 text-blue-100/80 border-r border-blue-900/60 sticky top-0 h-screen">
       {/* App header inside the sidebar — click to go home */}
-      <div className="px-5 pt-6 pb-5 border-b border-blue-950/60">
+      <div className="px-5 pt-6 pb-5 border-b border-blue-900/60">
         <NavLink to="/" className="flex items-center gap-3 cursor-pointer w-full text-left no-underline text-blue-100/80 hover:text-white transition-colors">
           <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-900/60 ring-2 ring-blue-400/30 shrink-0">
             <span className="text-white text-sm font-bold tracking-tight">AH</span>
@@ -119,7 +119,7 @@ const Sidebar: React.FC = () => {
               key={item.to}
               to={item.to}
               className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium transition-colors no-underline
-                ${active ? 'bg-blue-500 text-white shadow-lg shadow-blue-950/50' : 'text-blue-100/80 hover:bg-blue-800/60 hover:text-white'}`}
+                ${active ? 'bg-blue-600 text-white shadow' : 'text-blue-100/80 hover:bg-blue-900/70 hover:text-white'}`}
             >
               <span className={active ? 'text-white' : 'text-blue-300'}>{item.icon}</span>
               {item.label}

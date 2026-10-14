@@ -100,7 +100,7 @@ function AppRoutes() {
 
       {/* Mobile top bar (desktop sidebar is hidden on small screens) */}
       {user && (
-        <div className="no-print lg:hidden sticky top-0 z-40 bg-gradient-to-r from-blue-900 via-blue-950 to-slate-950 text-white px-4 py-2.5 flex items-center justify-between">
+        <div className="no-print lg:hidden sticky top-0 z-40 bg-blue-950 text-white px-4 py-2.5 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 no-underline text-white">
             <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center text-[10px] font-bold">AH</div>
             <span className="text-sm font-bold">Ayush HMS</span>
