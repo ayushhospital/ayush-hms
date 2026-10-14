@@ -4,8 +4,13 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models.doctor import Doctor
 from app.schemas.schemas import DoctorCreate, DoctorResponse
+from app.services.auth_service import get_current_user
 
-router = APIRouter(prefix="/doctors", tags=["doctors"])
+router = APIRouter(
+    prefix="/doctors",
+    tags=["doctors"],
+    dependencies=[Depends(get_current_user)],  # reference data: any authenticated user
+)
 
 
 @router.get("", response_model=list[DoctorResponse])

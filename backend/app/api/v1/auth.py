@@ -1,0 +1,34 @@
+from fastapi import APIRouter, Depends, HTTPException, Header, status
+from sqlalchemy.orm import Session
+
+from app.core.database import get_db
+from app.schemas.user import LoginRequest, TokenResponse, UserResponse
+from app.services.auth_service import (
+    issue_login,
+    logout_session,
+    get_current_user,
+)
+from app.models.user import User
+
+router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+@router.post("/login", response_model=TokenResponse)
+def login(data: LoginRequest, db: Session = Depends(get_db)):
+    user, token = issue_login(db, data.username, data.password)
+    return TokenResponse(token=token, user=user)
+
+
+@router.get("/me", response_model=UserResponse)
+def me(current_user: User = Depends(get_current_user)):
+    return current_user
+
+
+@router.post("/logout", status_code=status.HTTP_200_OK)
+def logout(
+    authorization: str = Header(None),
+    db: Session = Depends(get_db),
+):
+    if authorization and authorization.startswith("Bearer "):
+        logout_session(db, authorization[7:].strip())
+    return {"status": "logged_out"}

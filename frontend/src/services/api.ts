@@ -15,24 +15,46 @@ import type {
   IPDAdmissionResponse,
   IPDAdmissionCreate,
   IPDAttendantResponse,
+  LoginResponse,
+  AuthUser,
+  UserCreatePayload,
+  UserUpdatePayload,
 } from '../types';
 
 export const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
 
+const TOKEN_KEY = 'hms_token';
+export const getToken = () => localStorage.getItem(TOKEN_KEY);
+export const setToken = (token: string | null) => {
+  if (token) localStorage.setItem(TOKEN_KEY, token);
+  else localStorage.removeItem(TOKEN_KEY);
+};
+
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
+  const token = getToken();
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options?.headers as Record<string, string> | undefined),
+  };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
   const response = await fetch(`${API_BASE}${url}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
     ...options,
+    headers,
   });
+
+  if (response.status === 401 && token && !url.startsWith('/auth/login')) {
+    setToken(null);
+    window.location.href = '/login';
+    throw new Error('Session expired, please login again');
+  }
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: response.statusText }));
     throw new Error(error.detail || `HTTP ${response.status}`);
   }
 
+  if (response.status === 204) return undefined as T;
   return response.json();
 }
 
@@ -112,6 +134,28 @@ export const reportsApi = {
   ipdBilling: (startDate: string, endDate: string) =>
     request<IPDBillingReport>(`/reports/ipd-billing?start_date=${startDate}&end_date=${endDate}`),
 };
+// Auth API
+export const authApi = {
+  login: (username: string, password: string) =>
+    request<LoginResponse>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ username, password }),
+    }),
+  me: () => request<AuthUser>('/auth/me'),
+  logout: () => request<{ status: string }>('/auth/logout', { method: 'POST' }),
+};
+
+// Users API (super users only)
+export const usersApi = {
+  list: () => request<AuthUser[]>('/users'),
+  create: (data: UserCreatePayload) =>
+    request<AuthUser>('/users', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id: number, data: UserUpdatePayload) =>
+    request<AuthUser>(`/users/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  remove: (id: number) =>
+    request<void>(`/users/${id}`, { method: 'DELETE' }),
+};
+
 // IPD API
 export const ipdApi = {
   list: (params?: { status?: string; search?: string; start_date?: string; end_date?: string; discharged_start?: string; discharged_end?: string; view?: string; recent_days?: number; limit?: number }) => {

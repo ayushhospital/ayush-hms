@@ -8,8 +8,13 @@ from app.models.patient import Patient
 from app.models.consultation import Consultation
 from app.schemas.schemas import PatientCreate, PatientUpdate, PatientResponse, PatientSearchResponse
 from app.services.patient_service import register_patient, search_patients_by_phone, get_patient_by_id, update_patient_info
+from app.services.auth_service import require_modules
 
-router = APIRouter(prefix="/patients", tags=["patients"])
+router = APIRouter(
+    prefix="/patients",
+    tags=["patients"],
+    dependencies=[Depends(require_modules("opd", "ipd"))],  # patient registry is shared by OPD & IPD
+)
 
 # Static routes MUST come before parameterized routes
 

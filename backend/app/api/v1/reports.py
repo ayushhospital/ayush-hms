@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from datetime import date
 from app.core.database import get_db
+from app.services.auth_service import require_modules
 
 from app.services.report_service import (
     get_daily_summary_report,
@@ -18,7 +19,7 @@ from app.schemas.schemas import (
     IPDBillingReport,
 )
 
-router = APIRouter(prefix="/reports", tags=["reports"])
+router = APIRouter(prefix="/reports", tags=["reports"], dependencies=[Depends(require_modules("reports"))])
 
 
 @router.get("/daily-summary", response_model=DailySummaryReport)

@@ -6,8 +6,13 @@ from app.core.database import get_db
 from app.schemas.schemas import ConsultationCreate, ConsultationResponse
 from app.services.consultation_service import create_consultation, get_consultation_by_id, consultation_to_response
 from app.services.patient_service import get_patient_by_id
+from app.services.auth_service import require_modules
 
-router = APIRouter(prefix="/consultations", tags=["consultations"])
+router = APIRouter(
+    prefix="/consultations",
+    tags=["consultations"],
+    dependencies=[Depends(require_modules("opd"))],
+)
 
 
 @router.post("", response_model=ConsultationResponse, status_code=status.HTTP_201_CREATED)

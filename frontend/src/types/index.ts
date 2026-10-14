@@ -281,3 +281,34 @@ export interface IPDBillingReport {
   grand_paid: number;
   grand_outstanding: number;
 }
+
+// Auth & Users
+export type ModuleKey = 'opd' | 'ipd' | 'reports';
+
+export interface AuthUser {
+  id: number;
+  username: string;
+  role: 'super' | 'normal';
+  modules: ModuleKey[];
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface LoginResponse {
+  token: string;
+  user: AuthUser;
+}
+
+export interface UserCreatePayload {
+  username: string;
+  password: string;
+  role: 'super' | 'normal';
+  modules: ModuleKey[];
+}
+
+export interface UserUpdatePayload {
+  password?: string;
+  role?: 'super' | 'normal';
+  modules?: ModuleKey[];
+  is_active?: boolean;
+}
