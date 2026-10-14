@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ipdApi, doctorsApi } from '../services/api';
 import type { IPDAdmissionSummary, Doctor } from '../types';
+import PageHeader from '../components/ui/PageHeader';
 
 const IPDHomePage: React.FC = () => {
   const navigate = useNavigate();
@@ -72,37 +73,34 @@ const IPDHomePage: React.FC = () => {
 
   return (
     <div className="max-w-5xl mx-auto">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h2 className="text-lg font-bold text-gray-900 m-0">Inpatient Department</h2>
-          <p className="text-xs text-gray-500 mt-0.5">Manage admissions, inpatient care, billing and discharge.</p>
-        </div>
-        <button onClick={() => navigate('/ipd/new')}
-          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">+ New Admission</button>
-      </div>
+      <PageHeader
+        title="Inpatient Department"
+        subtitle="Manage admissions, inpatient care, billing and discharge."
+        actions={<button onClick={() => navigate('/ipd/new')} className="hms-btn-primary">+ New Admission</button>}
+      />
 
       {/* Summary cards */}
       <div className="grid grid-cols-4 gap-3 mb-5">
-        <div className="bg-white rounded-xl border border-gray-200 px-4 py-3 shadow-sm">
+        <div className="hms-card px-4 py-3 shadow-sm">
           <p className="text-2xl font-bold m-0 text-emerald-600">{summary.open_count}</p>
           <p className="text-xs text-gray-500 mt-1">Open Admissions</p>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200 px-4 py-3 shadow-sm">
+        <div className="hms-card px-4 py-3 shadow-sm">
           <p className="text-2xl font-bold m-0 text-blue-600">{summary.today_admissions}</p>
           <p className="text-xs text-gray-500 mt-1">Today's Admissions</p>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200 px-4 py-3 shadow-sm">
+        <div className="hms-card px-4 py-3 shadow-sm">
           <p className="text-2xl font-bold m-0 text-gray-600">{summary.discharged_today}</p>
           <p className="text-xs text-gray-500 mt-1">Discharged Today</p>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200 px-4 py-3 shadow-sm">
+        <div className="hms-card px-4 py-3 shadow-sm">
           <p className="text-2xl font-bold m-0 text-gray-800">{summary.total}</p>
           <p className="text-xs text-gray-500 mt-1">{mode==='active' ? 'Active Records (Open)' : 'Old Records Found'}</p>
         </div>
       </div>
 
       {/* Search and filters */}
-      <div className="bg-white rounded-xl border border-gray-200 px-4 py-3 mb-4">
+      <div className="hms-card px-4 py-3 mb-4">
         <div className="flex items-center gap-3">
           <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
             className={`flex-1 ${inp}`}
@@ -151,7 +149,7 @@ const IPDHomePage: React.FC = () => {
       {loading ? (
         <div className="text-center py-8 text-xs text-gray-400">Loading...</div>
       ) : admissions.length === 0 ? (
-        <div className="text-center py-10 bg-white rounded-xl border border-gray-200 shadow-sm">
+        <div className="text-center py-10 hms-card shadow-sm">
           <p className="text-gray-700 text-sm font-medium mb-2">No admissions found</p>
           <p className="text-xs text-gray-500 mb-3">{mode==='history' ? 'Try changing the search criteria or date range.' : 'No open admissions. Create a new admission to get started.'}</p>
           {mode !== 'history' && <button onClick={() => navigate('/ipd/new')} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">+ New Admission</button>}
@@ -161,8 +159,8 @@ const IPDHomePage: React.FC = () => {
           <p className="text-[11px] text-gray-500 mb-2">
             {summary.total} record{summary.total===1?'':'s'} — {mode==='active' ? 'Open admissions' : 'discharged (old) admissions matching your search'}
           </p>
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-x-auto">
-            <table className="w-full text-xs border-collapse">
+          <div className="hms-card shadow-sm overflow-x-auto">
+            <table className="hms-table">
               <thead><tr className="border-b border-gray-200 bg-gray-50">
                 <th className="py-2.5 px-3 text-left font-semibold text-gray-600">Admission ID</th>
                 <th className="py-2.5 px-3 text-left font-semibold text-gray-600">Patient</th>

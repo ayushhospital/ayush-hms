@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { patientsApi, doctorsApi, ipdApi } from '../services/api';
 import type { Patient, Doctor } from '../types';
+import PageHeader from '../components/ui/PageHeader';
 
 const NewAdmissionPage: React.FC = () => {
   const navigate = useNavigate();
@@ -96,9 +97,9 @@ const NewAdmissionPage: React.FC = () => {
     } finally { setSubmitting(false); }
   };
 
-  return (<div className="max-w-2xl mx-auto">
-    <button onClick={() => navigate('/ipd')} className="mb-4 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">&larr; Back to IPD</button>
-    <h2 className="text-base font-semibold text-gray-900 m-0 mb-2">New IPD Admission</h2>
+  return (<div className="max-w-3xl mx-auto">
+    <PageHeader title="New IPD Admission" subtitle="Register a patient and create an inpatient admission"
+      actions={<button onClick={() => navigate('/ipd')} className="px-4 py-2 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">&larr; Back to IPD</button>} />
 
     <div className="flex gap-2 mb-4">
       {['Select Patient', 'Admission Details', 'Attendant & Confirm'].map((l, i) => (

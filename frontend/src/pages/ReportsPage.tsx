@@ -5,6 +5,7 @@ import type {
   DoctorSummaryReport,
   PatientListReport,
 } from '../types';
+import PageHeader from '../components/ui/PageHeader';
 
 type ReportTab = 'dailysummary' | 'doctor' | 'patientlist';
 
@@ -54,12 +55,9 @@ const ReportsPage: React.FC = () => {
 
   return (
     <div>
-      <div className="mb-6">
-        <h2 className="text-lg font-bold text-gray-900 m-0">Reports</h2>
-        <p className="text-xs text-gray-500 mt-0.5">Daily revenue, footfall, doctor and patient summaries</p>
-      </div>
+      <PageHeader title="Reports" subtitle="Daily revenue, footfall, doctor and patient summaries" />
 
-      <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
+      <div className="hms-card p-4 mb-6">
         <div className="flex flex-wrap items-end gap-4">
           <div><label className="block text-xs font-medium text-gray-600 mb-0.5">Start</label>
             <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)}
@@ -86,9 +84,9 @@ const ReportsPage: React.FC = () => {
 
       {/* Daily Summary */}
       {activeTab === 'dailysummary' && daily && (
-        <div className="bg-white rounded-xl border border-gray-200 p-5 overflow-x-auto">
+        <div className="hms-card p-5 overflow-x-auto">
           <h3 className="text-sm font-semibold text-gray-800 mb-3">Daily Summary</h3>
-          <table className="w-full text-xs border-collapse">
+          <table className="hms-table">
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">
                 <th className="py-2 px-3 text-left font-semibold text-gray-600">Date</th>
@@ -131,9 +129,9 @@ const ReportsPage: React.FC = () => {
 
       {/* Doctor Summary */}
       {activeTab === 'doctor' && doctorSummary && (
-        <div className="bg-white rounded-xl border border-gray-200 p-5 overflow-x-auto">
+        <div className="hms-card p-5 overflow-x-auto">
           <h3 className="text-sm font-semibold text-gray-800 mb-3">Doctor-wise Summary</h3>
-          <table className="w-full text-xs border-collapse">
+          <table className="hms-table">
             <thead><tr className="border-b border-gray-200 bg-gray-50">
               <th className="py-2 px-3 text-left font-semibold text-gray-600">Doctor</th>
               <th className="py-2 px-3 text-left font-semibold text-gray-600">Department</th>
@@ -165,11 +163,11 @@ const ReportsPage: React.FC = () => {
 
       {/* Patient List */}
       {activeTab === 'patientlist' && patientList && (
-        <div className="bg-white rounded-xl border border-gray-200 p-5 overflow-x-auto">
+        <div className="hms-card p-5 overflow-x-auto">
           <h3 className="text-sm font-semibold text-gray-800 mb-2">Patient Visit List</h3>
           <p className="text-xs text-gray-500 mb-3">{patientList.total_count} visits</p>
           <div className="max-h-96 overflow-y-auto">
-            <table className="w-full text-xs border-collapse">
+            <table className="hms-table">
               <thead><tr className="border-b border-gray-200 bg-gray-50">
                 <th className="py-2 px-3 text-left font-semibold text-gray-600">Date</th>
                 <th className="py-2 px-3 text-left font-semibold text-gray-600">Patient</th>

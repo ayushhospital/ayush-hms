@@ -62,13 +62,15 @@ const AdmissionWorkspacePage: React.FC = () => {
     { id:'activity', label:'Activity' }];
 
   return (<div className="max-w-5xl mx-auto">
-    <div className="flex items-center justify-between mb-3">
-      <div><p className="text-xs text-gray-500">IPD / Admissions / {admission.admission_number}</p>
-        <h2 className="text-base font-semibold text-gray-900 m-0 mt-1">{admission.admission_number}</h2></div>
-      <button onClick={() => navigate('/ipd')} className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">Back</button>
+    <div className="mb-4 flex items-end justify-between gap-3">
+      <div>
+        <p className="text-xs text-slate-500 m-0">IPD / Admissions / {admission.admission_number}</p>
+        <h1 className="text-xl font-bold text-slate-900 m-0 mt-0.5 tracking-tight">{admission.admission_number}</h1>
+      </div>
+      <button onClick={() => navigate('/ipd')} className="no-print px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">Back</button>
     </div>
 
-    <div className="bg-white rounded-xl border border-gray-200 px-5 py-3 shadow-sm mb-3 flex items-center justify-between">
+    <div className="hms-card px-5 py-3 shadow-sm mb-3 flex items-center justify-between">
       <div className="flex-1">
         <h4 className="text-sm font-semibold text-gray-900 m-0">{admission.patient_name} <span className="text-xs text-gray-500 ml-2">{admission.patient_uhid}</span></h4>
         <p className="text-[11px] text-gray-500 mt-0.5">{admission.patient_gender}, Age {admission.patient_age} | {admission.patient_phone} | Dr. {admission.doctor_name} | {fmt(admission.admission_datetime)}</p>
@@ -177,7 +179,7 @@ const OverviewTab: React.FC<{admission:IPDAdmissionResponse; attendant:IPDAttend
   return (<>
     {msg && <div className={`mb-3 px-3 py-2 rounded-lg text-xs ${msg.includes('failed')||msg.includes('required')||msg.includes('cannot') ? 'bg-red-50 text-red-700' : 'bg-blue-50 text-blue-700'}`}>{msg}</div>}
     <div className="grid grid-cols-2 gap-4 mb-4">
-      <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+      <div className="hms-card p-4 shadow-sm">
         <div className="flex items-center justify-between mb-2">
           <h4 className="text-xs font-semibold text-gray-700 m-0">Admission Details</h4>
           <button onClick={editing==='admission'?()=>setEditing(null):startEditAdmission} className={btn(editing==='admission')}>{editing==='admission'?'Cancel':'Edit'}</button>
@@ -218,7 +220,7 @@ const OverviewTab: React.FC<{admission:IPDAdmissionResponse; attendant:IPDAttend
           </div>
         )}
       </div>
-      <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+      <div className="hms-card p-4 shadow-sm">
         <div className="flex items-center justify-between mb-2">
           <h4 className="text-xs font-semibold text-gray-700 m-0">Attendant</h4>
           {attendant && <button onClick={editing==='attendant'?()=>setEditing(null):startEditAttendant} className={btn(editing==='attendant')}>{editing==='attendant'?'Cancel':'Edit'}</button>}
@@ -250,7 +252,7 @@ const OverviewTab: React.FC<{admission:IPDAdmissionResponse; attendant:IPDAttend
         ) : <p className="text-xs text-gray-400">No attendant</p>}
       </div>
     </div>
-    <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm mb-4">
+    <div className="hms-card p-4 shadow-sm mb-4">
       <div className="flex items-center justify-between mb-1">
         <h4 className="text-xs font-semibold text-gray-700 m-0">Reason</h4>
         <button onClick={editing==='reason'?()=>setEditing(null):startEditReason} className={btn(editing==='reason')}>{editing==='reason'?'Cancel':'Edit'}</button>
@@ -264,7 +266,7 @@ const OverviewTab: React.FC<{admission:IPDAdmissionResponse; attendant:IPDAttend
         <p className="text-xs text-gray-600 whitespace-pre-wrap">{admission.reason_for_admission}</p>
       )}
     </div>
-    {billing && <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm mb-4">
+    {billing && <div className="hms-card p-4 shadow-sm mb-4">
       <h4 className="text-xs font-semibold text-gray-700 mb-2">Financial Summary</h4>
       <div className="grid grid-cols-4 gap-3 text-xs text-gray-600">
         <div><span className="font-medium">Charges:</span> INR {billing.total_charges?.toFixed(0)}</div>
@@ -273,7 +275,7 @@ const OverviewTab: React.FC<{admission:IPDAdmissionResponse; attendant:IPDAttend
         <div className="font-semibold"><span className="font-medium">Balance:</span> INR {billing.outstanding_balance?.toFixed(0)}</div>
       </div>
     </div>}
-    {activity.length > 0 && <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+    {activity.length > 0 && <div className="hms-card p-4 shadow-sm">
       <h4 className="text-xs font-semibold text-gray-700 mb-2">Recent Activity</h4>
       <div className="text-xs text-gray-500 space-y-1 max-h-32 overflow-y-auto">
         {activity.slice(0,8).map((av:any) => <div key={av.id}>{fmt(av.created_at)} &mdash; {av.action} {av.section ? '('+av.section+')' : ''}</div>)}
@@ -301,7 +303,7 @@ const TestsTab: React.FC<{aid:number; doctors:Doctor[]; onError:(s:string)=>void
     else { const e=await r.json(); onError(e.detail||'Error'); }
   };
   const fmt=(s?:string)=>{if(!s)return'-';const d=new Date(s);return `${('0'+d.getDate()).slice(-2)}-${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]}-${d.getFullYear()}`;};
-  return (<div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+  return (<div className="hms-card p-4 shadow-sm">
     <div className="flex items-center justify-between mb-3">
       <h4 className="text-xs font-semibold text-gray-700 m-0">Tests & Reports</h4>
       <button onClick={()=>setShowForm(!showForm)} className="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">{showForm?'Cancel':'+ Add Test'}</button>
@@ -313,7 +315,7 @@ const TestsTab: React.FC<{aid:number; doctors:Doctor[]; onError:(s:string)=>void
       <button onClick={addTest} className="px-4 py-2 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Save Test</button>
     </div>}
     {loading ? <p className="text-xs text-gray-400">Loading...</p> : tests.length === 0 ? <p className="text-xs text-gray-400">No tests recorded</p> :
-    <div className="overflow-x-auto"><table className="w-full text-xs"><thead><tr className="border-b border-gray-200 bg-gray-50">
+    <div className="overflow-x-auto"><table className="hms-table"><thead><tr className="border-b border-gray-200 bg-gray-50">
       <th className="py-1.5 px-2 text-left font-medium text-gray-600">Test</th><th className="py-1.5 px-2 text-left font-medium text-gray-600">Category</th><th className="py-1.5 px-2 text-left font-medium text-gray-600">Date</th><th className="py-1.5 px-2 text-center font-medium text-gray-600">Status</th><th className="py-1.5 px-2 text-center font-medium text-gray-600">Result</th><th className="py-1.5 px-2"></th>
     </tr></thead><tbody>{tests.map((t:any) => <tr key={t.id} className="border-b border-gray-100">
       <td className="py-1.5 px-2">{t.test_name}</td><td className="py-1.5 px-2 text-gray-500">{t.category||'-'}</td>
@@ -340,7 +342,7 @@ const MedicationsTab: React.FC<{aid:number; doctors:Doctor[]}> = ({aid, doctors}
     if(r.ok) { setShowForm(false); setF({}); const d=await fetch(BASE+`/ipd/admissions/${aid}/medications`).then(r=>r.json()); setMeds(Array.isArray(d)?d:[]); }
   };
   const fmt=(s?:string)=>{if(!s)return'-';const d=new Date(s);return `${('0'+d.getDate()).slice(-2)}-${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]}-${d.getFullYear()}`;};
-  return (<div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+  return (<div className="hms-card p-4 shadow-sm">
     <div className="flex items-center justify-between mb-3">
       <h4 className="text-xs font-semibold text-gray-700 m-0">Medications</h4>
       <button onClick={()=>setShowForm(!showForm)} className="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">{showForm?'Cancel':'+ Add Medication'}</button>
@@ -377,7 +379,7 @@ const MedicationsTab: React.FC<{aid:number; doctors:Doctor[]}> = ({aid, doctors}
       </div>
     </div>}
     {loading ? <p className="text-xs text-gray-400">Loading...</p> : meds.length === 0 ? <p className="text-xs text-gray-400">No medications recorded</p> :
-    <div className="overflow-x-auto"><table className="w-full text-xs"><thead><tr className="border-b border-gray-200 bg-gray-50">
+    <div className="overflow-x-auto"><table className="hms-table"><thead><tr className="border-b border-gray-200 bg-gray-50">
       <th className="py-1.5 px-2 text-left font-medium text-gray-600">Medicine</th><th className="py-1.5 px-2 text-left font-medium text-gray-600">Dose</th><th className="py-1.5 px-2 text-left font-medium text-gray-600">Route</th><th className="py-1.5 px-2 text-left font-medium text-gray-600">Freq</th><th className="py-1.5 px-2 text-left font-medium text-gray-600">Start</th><th className="py-1.5 px-2 text-left font-medium text-gray-600">End</th><th className="py-1.5 px-2 text-center font-medium text-gray-600">Status</th>
     </tr></thead><tbody>{meds.map((m:any) => <tr key={m.id} className="border-b border-gray-100">
       <td className="py-1.5 px-2">{m.medicine_name}</td><td className="py-1.5 px-2">{m.dose}</td><td className="py-1.5 px-2 text-gray-500">{m.route}</td><td className="py-1.5 px-2">{m.frequency}</td>
@@ -397,7 +399,7 @@ const InsuranceTab: React.FC<{aid:number}> = ({aid}) => {
     const r = await fetch(BASE+`/ipd/admissions/${aid}/insurance`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(f)});
     if(r.ok) { setShowForm(false); setF({provider:'',policy_number:'',policyholder_name:'',claim_status:'Not Submitted'}); const d=await fetch(BASE+`/ipd/admissions/${aid}/insurance`).then(r=>r.json()); setPolicies(Array.isArray(d)?d:[]); }
   };
-  return (<div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+  return (<div className="hms-card p-4 shadow-sm">
     <div className="flex items-center justify-between mb-3">
       <h4 className="text-xs font-semibold text-gray-700 m-0">Insurance</h4>
       <button onClick={()=>setShowForm(!showForm)} className="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">{showForm?'Cancel':'+ Add Insurance'}</button>
@@ -409,7 +411,7 @@ const InsuranceTab: React.FC<{aid:number}> = ({aid}) => {
       <button onClick={save} className="px-4 py-2 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Save Insurance</button>
     </div>}
     {loading ? <p className="text-xs text-gray-400">Loading...</p> : policies.length === 0 ? <p className="text-xs text-gray-400">No insurance records</p> :
-    <div className="overflow-x-auto"><table className="w-full text-xs"><thead><tr className="border-b border-gray-200 bg-gray-50">
+    <div className="overflow-x-auto"><table className="hms-table"><thead><tr className="border-b border-gray-200 bg-gray-50">
       <th className="py-1.5 px-2 text-left font-medium text-gray-600">Provider</th><th className="py-1.5 px-2 text-left font-medium text-gray-600">Policy#</th><th className="py-1.5 px-2 text-left font-medium text-gray-600">Holder</th><th className="py-1.5 px-2 text-center font-medium text-gray-600">Claim Status</th><th className="py-1.5 px-2 text-right font-medium text-gray-600">Approved</th>
     </tr></thead><tbody>{policies.map((p:any) => <tr key={p.id} className="border-b border-gray-100">
       <td className="py-1.5 px-2">{p.provider}</td><td className="py-1.5 px-2 font-mono">{p.policy_number||'-'}</td><td className="py-1.5 px-2">{p.policyholder_name||'-'}</td>
@@ -442,7 +444,7 @@ const BillingTab: React.FC<{aid:number; onPrintBill:(mode:string,c:any[],p:any[]
   };
   const fmt=(s?:string)=>{if(!s)return'-';const d=new Date(s);return `${('0'+d.getDate()).slice(-2)}-${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]}-${d.getFullYear()}`;};
   return (<div className="space-y-4">
-    {billing && <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+    {billing && <div className="hms-card p-4 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
         <h4 className="text-xs font-semibold text-gray-700 m-0">Financial Summary</h4>
         {charges.length>0 && <div className="flex gap-2">
@@ -458,7 +460,7 @@ const BillingTab: React.FC<{aid:number; onPrintBill:(mode:string,c:any[],p:any[]
       </div>
     </div>}
 
-    <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+    <div className="hms-card p-4 shadow-sm">
       <div className="flex items-center justify-between mb-2">
         <h4 className="text-xs font-semibold text-gray-700 m-0">Charges</h4>
         <button onClick={()=>setShowCharge(!showCharge)} className="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">{showCharge?'Cancel':'+ Add Charge'}</button>
@@ -494,7 +496,7 @@ const BillingTab: React.FC<{aid:number; onPrintBill:(mode:string,c:any[],p:any[]
         <button onClick={addCharge} className="px-4 py-2 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Add Charge</button>
       </div>}
       {loading ? <p className="text-xs text-gray-400">Loading...</p> : charges.length===0 ? <p className="text-xs text-gray-400">No charges added</p> :
-      <div className="overflow-x-auto"><div className="max-h-[380px] overflow-y-auto rounded-lg border border-gray-200"><table className="w-full text-xs"><thead><tr className="border-b border-gray-200 bg-gray-50 sticky top-0">
+      <div className="overflow-x-auto"><div className="max-h-[380px] overflow-y-auto rounded-lg border border-gray-200"><table className="hms-table"><thead><tr className="border-b border-gray-200 bg-gray-50 sticky top-0">
         <th className="py-1.5 px-2 text-left font-medium text-gray-600">Date</th><th className="py-1.5 px-2 text-left font-medium text-gray-600">Description</th><th className="py-1.5 px-2 text-left font-medium text-gray-600">Category</th><th className="py-1.5 px-2 text-right font-medium text-gray-600">Qty</th><th className="py-1.5 px-2 text-right font-medium text-gray-600">Rate</th><th className="py-1.5 px-2 text-right font-medium text-gray-600">Total</th>
       </tr></thead><tbody>{charges.map((ch:any) => <tr key={ch.id} className="border-b border-gray-100">
         <td className="py-1.5 px-2 whitespace-nowrap">{fmt(ch.charge_date||ch.charge_datetime)}</td><td className="py-1.5 px-2">{ch.description}</td><td className="py-1.5 px-2 text-gray-500">{ch.category||'-'}</td>
@@ -526,7 +528,7 @@ const PaymentsTab: React.FC<{aid:number; onPrintPayment:(p:any)=>void}> = ({aid,
   };
   const fmt=(s?:string)=>{if(!s)return'-';const d=new Date(s);return `${('0'+d.getDate()).slice(-2)}-${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]}-${d.getFullYear()}`;};
   return (<div className="space-y-4">
-    {billing && <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+    {billing && <div className="hms-card p-4 shadow-sm">
       <h4 className="text-xs font-semibold text-gray-700 mb-2">Payment Summary</h4>
       <div className="grid grid-cols-3 gap-3 text-xs">
         <div className="p-2 bg-emerald-50 rounded-lg"><span className="text-emerald-600">Total Paid</span><p className="font-semibold text-emerald-700 m-0 mt-0.5">INR {billing.total_payments?.toFixed(0)}</p></div>
@@ -534,7 +536,7 @@ const PaymentsTab: React.FC<{aid:number; onPrintPayment:(p:any)=>void}> = ({aid,
         <div className="p-2 bg-blue-50 rounded-lg"><span className="text-blue-600">Balance</span><p className="font-semibold text-blue-700 m-0 mt-0.5">INR {billing.outstanding_balance?.toFixed(0)}</p></div>
       </div>
     </div>}
-    <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+    <div className="hms-card p-4 shadow-sm">
       <div className="flex items-center justify-between mb-2">
         <h4 className="text-xs font-semibold text-gray-700 m-0">Payments</h4>
         <button onClick={()=>{setShowPayment(!showPayment);setP({payment_mode:'Cash'})}} className="px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700">{showPayment?'Cancel':'+ Record Payment'}</button>
@@ -546,7 +548,7 @@ const PaymentsTab: React.FC<{aid:number; onPrintPayment:(p:any)=>void}> = ({aid,
         <button onClick={addPayment} className="px-4 py-2 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Record Payment</button>
       </div>}
       {loading ? <p className="text-xs text-gray-400">Loading...</p> : payments.length===0 ? <p className="text-xs text-gray-400">No payments recorded</p> :
-      <div className="overflow-x-auto"><div className="max-h-[380px] overflow-y-auto rounded-lg border border-gray-200"><table className="w-full text-xs"><thead><tr className="border-b border-gray-200 bg-gray-50 sticky top-0">
+      <div className="overflow-x-auto"><div className="max-h-[380px] overflow-y-auto rounded-lg border border-gray-200"><table className="hms-table"><thead><tr className="border-b border-gray-200 bg-gray-50 sticky top-0">
         <th className="py-1.5 px-2 text-left font-medium text-gray-600">Receipt</th><th className="py-1.5 px-2 text-left font-medium text-gray-600">Date</th><th className="py-1.5 px-2 text-right font-medium text-gray-600">Amount</th><th className="py-1.5 px-2 text-left font-medium text-gray-600">Mode</th><th className="py-1.5 px-2 text-left font-medium text-gray-600">Ref</th><th className="py-1.5 px-2 text-center font-medium text-gray-600">Status</th><th className="py-1.5 px-2 text-center font-medium text-gray-600">Print</th>
       </tr></thead><tbody>{payments.map((pm:any) => <tr key={pm.id} className="border-b border-gray-100">
         <td className="py-1.5 px-2 font-mono">{pm.receipt_number}</td><td className="py-1.5 px-2 whitespace-nowrap">{fmt(pm.payment_datetime)}</td>
@@ -582,7 +584,7 @@ const DischargeTab: React.FC<{aid:number; doctors:Doctor[]; admission:IPDAdmissi
     else { const e=await r.json(); setFinError(e.detail||'Error'); }
   };
   const fmt=(s?:string)=>{if(!s)return'-';const d=new Date(s);return `${('0'+d.getDate()).slice(-2)}-${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]}-${d.getFullYear()}`;};
-  return (<div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+  return (<div className="hms-card p-4 shadow-sm">
     <div className="flex items-center justify-between mb-3">
       <h4 className="text-xs font-semibold text-gray-700 m-0">Discharge Summary {ds?.status==='Finalized'?<span className="text-emerald-600 ml-2">(Finalized)</span>:<span className="text-amber-600 ml-2">(Draft)</span>}</h4>
       <div className="flex gap-2">
@@ -620,7 +622,7 @@ const ActivityTab: React.FC<{aid:number}> = ({aid}) => {
   const BASE = API_BASE;
   useEffect(() => { fetch(BASE+`/ipd/admissions/${aid}/activity`).then(r=>r.json()).then(d=>setLogs(Array.isArray(d)?d:[])).catch(()=>{}).finally(()=>setLoading(false)); }, [aid]);
   const fmt=(s:string)=>{const d=new Date(s);return `${('0'+d.getDate()).slice(-2)}-${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]}-${d.getFullYear()} ${('0'+d.getHours()).slice(-2)}:${('0'+d.getMinutes()).slice(-2)}`;};
-  return (<div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+  return (<div className="hms-card p-4 shadow-sm">
     <h4 className="text-xs font-semibold text-gray-700 mb-3">Activity History</h4>
     {loading ? <p className="text-xs text-gray-400">Loading...</p> : logs.length === 0 ? <p className="text-xs text-gray-400">No activity recorded</p> :
     <div className="space-y-2 max-h-96 overflow-y-auto">{logs.map((l:any) => <div key={l.id} className="flex items-start gap-3 p-2 bg-gray-50 rounded-lg border border-gray-100">
