@@ -139,7 +139,7 @@ const NewAdmissionPage: React.FC = () => {
           </button>
         )}
         {showReg && !selectedPatient && (
-          <div className="mt-2 bg-gray-50 rounded-lg border border-gray-200 p-3 space-y-2">
+          <div className="mt-2 bg-gray-50 rounded-lg border border-gray-200 p-3 max-w-xs space-y-2">
             <p className="text-xs font-semibold text-gray-700">New Patient Registration</p>
             <div className="flex gap-2">
               <input type="text" value={regName} onChange={e => setRegName(e.target.value)} className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Full name *" />

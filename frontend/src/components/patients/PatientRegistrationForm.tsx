@@ -46,7 +46,7 @@ const PatientRegistrationForm: React.FC<PatientRegistrationFormProps> = ({
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-5">
+    <div className="bg-white border border-gray-200 rounded-lg p-5 max-w-sm">
       <h3 className="text-sm font-semibold text-gray-800 mb-4">Register New Patient</h3>
       <form onSubmit={handleSubmit} className="space-y-3">
         <input type="text" value={name}
