@@ -46,6 +46,7 @@ const ReportsPage: React.FC = () => {
   const [startDate, setStartDate] = useState(startOfMonth);
   const [endDate, setEndDate] = useState(today);
   const [activeReport, setActiveReport] = useState<ReportKey>('dailysummary');
+  const [section, setSection] = useState<'OPD' | 'IPD'>('OPD');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -74,6 +75,16 @@ const ReportsPage: React.FC = () => {
   const selectReport = (key: ReportKey) => {
     setActiveReport(key);
     fetchReport(key);
+  };
+
+  const selectSection = (sec: 'OPD' | 'IPD') => {
+    setSection(sec);
+    const inSection = REPORTS.some((r) => r.key === activeReport && r.group === sec);
+    if (!inSection) {
+      const first = REPORTS.find((r) => r.group === sec)!;
+      setActiveReport(first.key);
+      fetchReport(first.key);
+    }
   };
 
   const formatCurrency = (val: number) =>
@@ -131,9 +142,23 @@ const ReportsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Report pickers grouped by section */}
-      <GroupPicker group="OPD" items={opdReports} />
-      <GroupPicker group="IPD" items={ipdReports} />
+      {/* Section toggle: OPD | IPD — show one section at a time to maximize screen space */}
+      <div className="flex gap-2 mb-5">
+        {(['OPD', 'IPD'] as const).map((sec) => (
+          <button key={sec} onClick={() => selectSection(sec)}
+            className={`px-5 py-2 text-sm font-semibold rounded-lg transition-colors ${section === sec ? 'bg-blue-600 text-white shadow' : 'bg-white text-gray-600 border border-slate-200 hover:bg-slate-50'}`}>
+            {sec}
+            <span className={`ml-2 text-[11px] font-medium ${section === sec ? 'text-blue-200' : 'text-slate-400'}`}>
+              {sec === 'OPD' ? opdReports.length : ipdReports.length} reports
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {/* Report picker for the active section only */}
+      {section === 'OPD'
+        ? <GroupPicker group="OPD" items={opdReports} />
+        : <GroupPicker group="IPD" items={ipdReports} />}
 
       {error && <div className="mb-5 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700">{error}</div>}
 
@@ -329,7 +354,7 @@ const ReportsPage: React.FC = () => {
         </div>
       )}
 
-      {!daily && !doctorSummary && !patientList && !ipdAdmissions && !ipdBilling && !loading && !error && (
+      {!loading && !error && (section === 'OPD' ? (!daily && !doctorSummary && !patientList) : (!ipdAdmissions && !ipdBilling)) && (
         <div className="text-center py-12 text-gray-400">
           <p className="text-sm">Select a date range and click &quot;View Report&quot;</p>
         </div>
