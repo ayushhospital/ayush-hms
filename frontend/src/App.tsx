@@ -30,6 +30,61 @@ const Protected: React.FC<{ module?: string; superOnly?: boolean; children: Reac
   return <>{children}</>;
 };
 
+/* User avatar dropdown in top bar — user initial clickable for profile actions */
+const UserMenuDropdown: React.FC = () => {
+  const { user, logout } = useAuth();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handle = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handle);
+    return () => document.removeEventListener('mousedown', handle);
+  }, []);
+
+  return (
+    <div className="relative w-40 flex justify-end" ref={ref}>
+      <button onClick={() => setOpen(!open)}
+        className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-slate-100 transition-colors">
+        <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-[10px] font-bold uppercase shrink-0">
+          {user?.username?.slice(0, 2)}
+        </div>
+        <span className="text-sm font-semibold text-slate-700">{user?.username}</span>
+        <svg viewBox="0 0 24 24" width="14" height="14" className="text-slate-400 shrink-0">
+          <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-slate-200 rounded-xl shadow-xl py-1.5 z-50">
+          <div className="px-4 py-2 border-b border-slate-100">
+            <p className="text-sm font-semibold text-slate-900 m-0">{user?.username}</p>
+            <p className="text-[10px] text-slate-500 uppercase m-0 mt-0.5 tracking-wider">{user?.role}user</p>
+          </div>
+          <button onClick={() => { setOpen(false); (window as any).__openChangePw && (window as any).__openChangePw(); }}
+            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors text-left">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="1.7" fill="none" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="11" width="18" height="10" rx="2" />
+              <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+              <circle cx="12" cy="16" r="1" />
+            </svg>
+            Change Password
+          </button>
+          <button onClick={() => { setOpen(false); logout(); }}
+            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors text-left">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="1.7" fill="none" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <path d="M16 17l5-5-5-5M21 12H9" />
+            </svg>
+            Sign out
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 function AppRoutes() {
   const { user, logout } = useAuth();
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -60,18 +115,11 @@ function AppRoutes() {
       <main className={`flex-1 min-w-0 ${user ? '' : 'p-0'}`}>
         {user && (
           <>
-            {/* Top bar — date + user info */}
+            {/* Top bar — centered date + user dropdown */}
               <div className="no-print hidden lg:flex sticky top-0 z-30 border-b border-slate-200 bg-white/80 backdrop-blur-sm items-center justify-between px-6 lg:px-8 py-1.5">
-                <div className="flex-1" />
-                <TopBarDate />
-                <div className="flex items-center gap-2 ml-4">
-                  <span className="text-xs font-medium text-slate-500 hidden sm:inline">{user?.username}</span>
-                  <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-[10px] font-bold uppercase">{user?.username?.slice(0, 2)}</div>
-                  <button onClick={logout}
-                    className="text-[11px] font-medium text-slate-500 bg-slate-100 hover:bg-slate-200 rounded-lg px-2.5 py-1.5 transition-colors ml-1">
-                    Sign out
-                  </button>
-                </div>
+                <div className="w-40" /> {/* left spacer */}
+                <div className="flex-1 flex justify-center"><TopBarDate /></div>
+                <UserMenuDropdown />
               </div>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
               <Routes>
@@ -109,6 +157,9 @@ const ChangePasswordModal: React.FC<{ onClose: () => void; }> = ({ onClose }) =>
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [busy, setBusy] = useState(false);
+/* User avatar dropdown in top bar */
+
+/* Centered date/time/day in the top bar */
 
   const submit = async () => {
     setError('');
