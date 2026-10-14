@@ -576,7 +576,7 @@ const BillView: React.FC<{ sale: PharmacySaleResponse; onBack: () => void }> = (
         <button onClick={onBack} className="px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 mr-2">&larr; Back</button>
         <button onClick={() => window.print()} className="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Print</button>
       </div>
-      <div className="bg-white border border-slate-200 rounded-xl p-6 print:p-4 print:shadow-none print:border-0" style={{fontSize:'11pt'}}>
+      <div className="print-template bg-white border border-slate-200 rounded-xl p-6" style={{fontSize:'11pt'}}>
         <div className="text-center border-b-2 border-dashed border-slate-300 pb-3 mb-3">
           <h2 className="text-lg font-bold m-0">Ayush Hospital Pharmacy</h2>
           <p className="text-xs text-slate-500 m-0 mt-1">Bill No: <span className="font-semibold">{sale.sale_number}</span></p>
