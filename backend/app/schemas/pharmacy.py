@@ -124,6 +124,8 @@ class PharmacySaleCreate(BaseModel):
     phone_number: Optional[str] = None
     doctor_name: Optional[str] = None
     reference_no: Optional[str] = None
+    payment_mode: Optional[str] = Field(None, pattern="^(cash|upi|card)$")
+    payment_reference: Optional[str] = None
     discount_type: Optional[str] = Field(None, pattern="^(percentage|cash)$")
     discount_value: float = 0
     items: list[PharmacySaleItemInput]
@@ -149,6 +151,8 @@ class PharmacySaleResponse(BaseModel):
     phone_number: Optional[str] = None
     doctor_name: Optional[str] = None
     reference_no: Optional[str] = None
+    payment_mode: Optional[str] = None
+    payment_reference: Optional[str] = None
     discount_type: Optional[str] = None
     discount_value: float
     total_amount: float

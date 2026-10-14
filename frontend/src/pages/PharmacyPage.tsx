@@ -6,7 +6,7 @@ import type {
   Doctor,
 } from '../types';
 
-type TabId = 'vendors' | 'purchases' | 'pos';
+type TabId = 'vendors' | 'purchases' | 'availability' | 'pos';
 
 const PharmacyPage: React.FC = () => {
   const [tab, setTab] = useState<TabId>('vendors');
@@ -20,6 +20,7 @@ const PharmacyPage: React.FC = () => {
         {([
           { id: 'vendors' as TabId, label: 'Vendors' },
           { id: 'purchases' as TabId, label: 'Drug Entry (Purchase)' },
+          { id: 'availability' as TabId, label: 'Drug Availability' },
           { id: 'pos' as TabId, label: 'POS — Sales Counter' },
         ]).map((t) => (
           <button key={t.id} onClick={() => setTab(t.id)}
@@ -31,6 +32,7 @@ const PharmacyPage: React.FC = () => {
 
       {tab === 'vendors' && <VendorsTab />}
       {tab === 'purchases' && <PurchasesTab />}
+      {tab === 'availability' && <AvailabilityTab />}
       {tab === 'pos' && <PosTab />}
     </div>
   );
@@ -275,7 +277,65 @@ const PurchasesTab: React.FC = () => {
  * ===================================================== */
 
 /* =======================================================
- * 3. POS — SALES COUNTER TAB (revised)
+ * 3. DRUG AVAILABILITY TAB
+ * ===================================================== */
+
+const AvailabilityTab: React.FC = () => {
+  const [drugs, setDrugs] = useState<PharmacyDrug[]>([]);
+  const [q, setQ] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  const load = (query: string = '') => {
+    setLoading(true);
+    pharmacyApi.drugs.list(query).then(setDrugs).catch(() => setDrugs([])).finally(() => setLoading(false));
+  };
+  useEffect(() => { load(); }, []);
+
+  return (
+    <div>
+      <div className="flex justify-end mb-3">
+        <input value={q} onChange={e => { setQ(e.target.value); load(e.target.value); }}
+          placeholder="Search drug…" className="w-56 px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />
+      </div>
+      <div className="hms-card overflow-x-auto">
+        {loading ? (
+          <div className="py-10 text-center text-xs text-slate-400">Loading drugs…</div>
+        ) : drugs.length === 0 ? (
+          <div className="py-10 text-center text-xs text-slate-400">No drugs in stock. Add purchases in the Drug Entry tab.</div>
+        ) : (
+          <table className="hms-table">
+            <thead><tr>
+              <th>S.No</th><th>Drug Name</th><th>Type</th><th>Strength</th><th>Batch</th>
+              <th>Expiry</th><th className="text-right">Stock</th><th className="text-right">PP (Buy)</th><th className="text-right">SP (Sell)</th>
+            </tr></thead>
+            <tbody>
+              {drugs.map((d, i) => {
+                const low = d.quantity_in_stock <= 10;
+                const expSoon = d.expiry_date ? (new Date(d.expiry_date).getTime() - Date.now()) < 90 * 24 * 3600 * 1000 : false;
+                return (
+                  <tr key={d.id}>
+                    <td className="text-slate-400">{i+1}</td>
+                    <td className="font-medium">{d.name}</td>
+                    <td>{d.drug_type ?? '-'}</td>
+                    <td>{d.strength || '-'}</td>
+                    <td>{d.batch_number || '-'}</td>
+                    <td className={expSoon ? 'text-amber-600 font-medium' : ''}>{d.expiry_date || '-'}</td>
+                    <td className={`text-right font-semibold ${low ? 'text-red-600' : 'text-emerald-700'}`}>{d.quantity_in_stock}</td>
+                    <td className="text-right text-slate-500">₹{d.purchase_price ?? '-'}</td>
+                    <td className="text-right">₹{d.selling_price ?? '-'}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </div>
+  );
+};
+
+/* =======================================================
+ * 4. POS — SALES COUNTER TAB (revised)
  * ===================================================== */
 
 const PosTab: React.FC = () => {
@@ -296,6 +356,8 @@ const PosTab: React.FC = () => {
   const [cart, setCart] = useState<{drug:PharmacyDrug; qty:number; sp:number}[]>([]);
   const [discType, setDiscType] = useState<'percentage'|'cash'|''>('');
   const [discVal, setDiscVal] = useState('');
+  const [payMode, setPayMode] = useState<'cash'|'upi'|'card'>('cash');
+  const [payRef, setPayRef] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [lastSale, setLastSale] = useState<PharmacySaleResponse|null>(null);
@@ -362,6 +424,8 @@ const PosTab: React.FC = () => {
         phone_number: custType === 'walkin' ? patPhone : (selectedPat?.phone_number || patPhone),
         doctor_name: docName || undefined,
         reference_no: refNo || undefined,
+        payment_mode: payMode,
+        payment_reference: payRef || undefined,
         discount_type: discType || undefined,
         discount_value: parseFloat(discVal||'0'),
         items: cart.map(c => ({drug_id: c.drug.id, quantity: c.qty, unit_price: c.sp})),
@@ -571,6 +635,19 @@ const PosTab: React.FC = () => {
             <div className="flex justify-between text-sm font-bold border-t border-slate-200 pt-2">
               <span>Net Total</span><span>₹{Math.round(netTotal).toLocaleString()}</span>
             </div>
+            {/* Payment mode */}
+            <div className="flex items-center gap-2 mt-2">
+              <select value={payMode} onChange={e => setPayMode(e.target.value as any)}
+                className="flex-1 px-2 py-1.5 border border-slate-300 rounded-lg text-xs outline-none bg-white">
+                <option value="cash">💵 Cash</option>
+                <option value="upi">📱 UPI</option>
+                <option value="card">💳 Card</option>
+              </select>
+              {payMode !== 'cash' && (
+                <input value={payRef} onChange={e=>setPayRef(e.target.value)}
+                  placeholder="Txn / Ref No" className="w-28 px-2 py-1.5 border border-slate-300 rounded-lg text-xs outline-none" />
+              )}
+            </div>
           </div>
 
           <button onClick={submit} disabled={saving || cart.length === 0}
@@ -602,6 +679,9 @@ const BillView: React.FC<{ sale: PharmacySaleResponse; onBack: () => void }> = (
             {sale.phone_number && <p className="m-0 text-slate-500">Phone: {sale.phone_number}</p>}
             {sale.doctor_name && <p className="m-0"><span className="font-semibold">Doctor:</span> {sale.doctor_name}</p>}
             {sale.reference_no && <p className="m-0 text-slate-500">Ref No: {sale.reference_no}</p>}
+            {sale.payment_mode && (
+              <p className="m-0 text-slate-500">Payment: <span className="font-semibold capitalize">{sale.payment_mode}</span>{sale.payment_reference ? ` (${sale.payment_reference})` : ''}</p>
+            )}
           </div>
           <div className="text-xs text-right shrink-0">
             <p className="m-0 text-slate-500">Date</p>

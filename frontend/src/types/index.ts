@@ -349,6 +349,7 @@ export interface PharmacyVendorUpdatePayload {
 export interface PharmacyDrug {
   id: number;
   name: string;
+  drug_type: string | null;
   strength: string | null;
   manufacturer: string | null;
   batch_number: string | null;
@@ -394,6 +395,8 @@ export interface PharmacySaleCreatePayload {
   phone_number?: string;
   doctor_name?: string;
   reference_no?: string;
+  payment_mode?: 'cash' | 'upi' | 'card';
+  payment_reference?: string;
   discount_type?: 'percentage' | 'cash';
   discount_value: number;
   items: PharmacySaleItemInput[];
@@ -416,6 +419,8 @@ export interface PharmacySaleResponse {
   phone_number: string | null;
   doctor_name: string | null;
   reference_no: string | null;
+  payment_mode: string | null;
+  payment_reference: string | null;
   discount_type: string | null;
   discount_value: number;
   total_amount: number;
