@@ -95,15 +95,11 @@ const Sidebar: React.FC = () => {
     return true;
   });
 
-  const now = new Date();
-  const weekday = now.toLocaleDateString('en-IN', { weekday: 'short' });
-  const dateMain = now.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
-
   return (
     <aside className="no-print hidden lg:flex flex-col w-60 shrink-0 bg-slate-900 text-slate-300 border-r border-slate-800 sticky top-0 h-screen">
-      {/* App header inside the sidebar */}
+      {/* App header inside the sidebar — click to go home */}
       <div className="px-5 pt-6 pb-5 border-b border-slate-800">
-        <button onClick={() => (window.location.href = '/')} className="flex items-center gap-3 cursor-pointer w-full text-left">
+        <NavLink to="/" className="flex items-center gap-3 cursor-pointer w-full text-left no-underline text-slate-300 hover:text-white transition-colors">
           <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-900/40 shrink-0">
             <span className="text-white text-sm font-bold tracking-tight">AH</span>
           </div>
@@ -111,7 +107,7 @@ const Sidebar: React.FC = () => {
             <h1 className="text-white text-base font-bold m-0 leading-tight tracking-tight">Ayush HMS</h1>
             <p className="text-slate-400 text-[11px] m-0 mt-0.5">Hospital Management</p>
           </div>
-        </button>
+        </NavLink>
       </div>
 
       {/* Navigation */}
@@ -132,7 +128,7 @@ const Sidebar: React.FC = () => {
         })}
       </nav>
 
-      {/* Footer — signed-in user + date + sign out */}
+      {/* Footer — signed-in user + sign out */}
       <div className="px-5 py-4 border-t border-slate-800 space-y-3">
         <div className="flex items-center gap-2 px-1">
           <div className="w-7 h-7 rounded-full bg-blue-600/20 border border-blue-500/40 flex items-center justify-center shrink-0">
@@ -151,7 +147,6 @@ const Sidebar: React.FC = () => {
           </svg>
           Sign out
         </button>
-        <div className="text-[10px] text-slate-500 text-center">{dateMain} · {weekday}</div>
       </div>
     </aside>
   );

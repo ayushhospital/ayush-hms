@@ -30,7 +30,7 @@ const Protected: React.FC<{ module?: string; superOnly?: boolean; children: Reac
 };
 
 function AppRoutes() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   return (
     <div className="flex min-h-screen bg-slate-100">
@@ -49,20 +49,32 @@ function AppRoutes() {
 
       <main className={`flex-1 min-w-0 ${user ? '' : 'p-0'}`}>
         {user && (
-          <div className="max-w-7xl mx-auto px-6 lg:px-8 py-6">
-            <Routes>
-              <Route path="/login" element={<Navigate to="/" replace />} />
-              <Route path="/" element={<Protected><HomePage /></Protected>} />
-              <Route path="/opd" element={<Protected module="opd"><OPDPage /></Protected>} />
-              <Route path="/opd/patient/:id/consultations" element={<Protected module="opd"><PatientConsultationsPage /></Protected>} />
-              <Route path="/ipd" element={<Protected module="ipd"><IPDHomePage /></Protected>} />
-              <Route path="/ipd/new" element={<Protected module="ipd"><NewAdmissionPage /></Protected>} />
-              <Route path="/ipd/admissions/:id" element={<Protected module="ipd"><AdmissionWorkspacePage /></Protected>} />
-              <Route path="/reports" element={<Protected module="reports"><ReportsPage /></Protected>} />
-              <Route path="/users" element={<Protected superOnly><UsersPage /></Protected>} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </div>
+          <>
+            {/* Top bar — date prominently at the top right */}
+              <div className="no-print hidden lg:block sticky top-0 z-30 border-b border-slate-200 bg-white/80 backdrop-blur-sm">
+                <div className="max-w-7xl mx-auto px-6 lg:px-8 py-2 flex items-center justify-end">
+                  <TopBarDate />
+                  <button onClick={logout}
+                    className="ml-4 text-[11px] font-medium text-slate-500 bg-slate-100 hover:bg-slate-200 rounded-lg px-2.5 py-1.5 transition-colors">
+                    Sign out
+                  </button>
+                </div>
+              </div>
+            <div className="max-w-7xl mx-auto px-6 lg:px-8 py-6">
+              <Routes>
+                <Route path="/login" element={<Navigate to="/" replace />} />
+                <Route path="/" element={<Protected><HomePage /></Protected>} />
+                <Route path="/opd" element={<Protected module="opd"><OPDPage /></Protected>} />
+                <Route path="/opd/patient/:id/consultations" element={<Protected module="opd"><PatientConsultationsPage /></Protected>} />
+                <Route path="/ipd" element={<Protected module="ipd"><IPDHomePage /></Protected>} />
+                <Route path="/ipd/new" element={<Protected module="ipd"><NewAdmissionPage /></Protected>} />
+                <Route path="/ipd/admissions/:id" element={<Protected module="ipd"><AdmissionWorkspacePage /></Protected>} />
+                <Route path="/reports" element={<Protected module="reports"><ReportsPage /></Protected>} />
+                <Route path="/users" element={<Protected superOnly><UsersPage /></Protected>} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </div>
+          </>
         )}
         {!user && (
           <Routes>
@@ -74,6 +86,24 @@ function AppRoutes() {
     </div>
   );
 }
+
+const TopBarDate: React.FC = () => {
+  const now = new Date();
+  const weekday = now.toLocaleDateString('en-IN', { weekday: 'long' });
+  const dateMain = now.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+  const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+  return (
+    <div className="flex items-center gap-3">
+      <span className="text-[10px] font-bold uppercase tracking-widest text-blue-600 bg-blue-50 border border-blue-100 rounded-md px-2 py-1">
+        Today
+      </span>
+      <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">{weekday}</span>
+      <span className="text-sm font-bold text-slate-800">{dateMain}</span>
+      <span className="text-[11px] font-medium text-slate-400 tabular-nums">{timeStr}</span>
+    </div>
+  );
+};
 
 const MobileNav: React.FC = () => {
   const { hasModule, isSuper } = useAuth();
