@@ -147,10 +147,22 @@ const ReportsPage: React.FC = () => {
             <div className="px-4 py-2 bg-slate-100 rounded-lg"><p className="text-lg font-bold text-slate-800 m-0">{daily.grand_total.toLocaleString('en-IN')}</p><p className="text-[10px] text-slate-600 m-0">Grand Total (₹)</p></div>
           </div>
           <table className="hms-table">
-            <thead><tr>
-              <th>Date</th><th>New</th><th>Follow-up</th><th>Visits</th><th>Patients</th>
-              <th className="text-right">Cash</th><th className="text-right">UPI</th><th className="text-right">Total</th>
-            </tr></thead>
+            <thead>
+              <tr>
+                <th rowSpan={2}>Date</th>
+                <th colSpan={4} className="text-center">Visits</th>
+                <th colSpan={3} className="text-center">Collections (₹)</th>
+              </tr>
+              <tr>
+                <th>New</th>
+                <th>Follow-up</th>
+                <th>Total Visits</th>
+                <th>Unique Patients</th>
+                <th className="text-right">Cash</th>
+                <th className="text-right">UPI</th>
+                <th className="text-right">Total</th>
+              </tr>
+            </thead>
             <tbody>
               {daily.rows.map((row) => (
                 <tr key={row.date}>
@@ -166,7 +178,11 @@ const ReportsPage: React.FC = () => {
               ))}
             </tbody>
             <tfoot><tr className="bg-slate-50 font-semibold">
-              <td colSpan={3}>Total</td><td>{daily.grand_total_visits}</td><td></td>
+              <td>Total</td>
+              <td>{daily.rows.reduce((s,r)=>s+r.new_visits,0)}</td>
+              <td>{daily.rows.reduce((s,r)=>s+r.followup_visits,0)}</td>
+              <td>{daily.grand_total_visits}</td>
+              <td>-</td>
               <td className="text-right">₹{daily.grand_total_cash.toLocaleString('en-IN')}</td>
               <td className="text-right">₹{daily.grand_total_upi.toLocaleString('en-IN')}</td>
               <td className="text-right">₹{daily.grand_total.toLocaleString('en-IN')}</td>
@@ -197,7 +213,9 @@ const ReportsPage: React.FC = () => {
               ))}
             </tbody>
             <tfoot><tr className="bg-slate-50 font-semibold">
-              <td colSpan={4}>Total</td>
+              <td colSpan={2}>Total</td>
+              <td className="text-right">{doctorSummary.rows.reduce((s,r)=>s+r.new_visits,0)}</td>
+              <td className="text-right">{doctorSummary.rows.reduce((s,r)=>s+r.follow_up_visits,0)}</td>
               <td className="text-right">{doctorSummary.rows.reduce((s,r)=>s+r.total_consultations,0)}</td>
               <td className="text-right">{formatCurrency(doctorSummary.grand_total)}</td>
             </tr></tfoot>
@@ -266,7 +284,9 @@ const ReportsPage: React.FC = () => {
               <td className="text-right">{ipdAdmissions.grand_total}</td>
               <td className="text-right">{ipdAdmissions.grand_open}</td>
               <td className="text-right">{ipdAdmissions.grand_discharged}</td>
-              <td colSpan={3}></td>
+              <td className="text-right">{ipdAdmissions.rows.reduce((s,r)=>s+r.planned,0)}</td>
+              <td className="text-right">{ipdAdmissions.rows.reduce((s,r)=>s+r.emergency,0)}</td>
+              <td className="text-right">{ipdAdmissions.rows.reduce((s,r)=>s+r.referral,0)}</td>
             </tr></tfoot>
           </table>
         </div>

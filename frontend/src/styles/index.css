@@ -78,13 +78,13 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: #64748b;
-  border-bottom: 1px solid #e2e8f0;
+  border: 1px solid #e2e8f0;
   white-space: nowrap;
 }
 
 .hms-table tbody td {
-  padding: 0.65rem 0.75rem;
-  border-bottom: 1px solid #f1f5f9;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid #f1f5f9;
   color: #334155;
   vertical-align: middle;
 }
@@ -93,8 +93,26 @@ body {
   background: #eff6ff;
 }
 
-.hms-table tbody tr:last-child td {
-  border-bottom: none;
+.hms-table tfoot td {
+  padding: 0.625rem 0.75rem;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  font-weight: 600;
+  color: #1e293b;
+  white-space: nowrap;
+}
+
+/* Alignment utilities must win on header/body/footer cells too */
+.hms-table thead th.text-right,
+.hms-table tbody td.text-right,
+.hms-table tfoot td.text-right {
+  text-align: right;
+}
+
+.hms-table thead th.text-center,
+.hms-table tbody td.text-center,
+.hms-table tfoot td.text-center {
+  text-align: center;
 }
 
 /* Primary actions / inputs for consistent form styling */
