@@ -27,8 +27,8 @@ const FamilyList: React.FC<FamilyListProps> = ({ patients, onNewConsultation, on
   const [editSaving, setEditSaving] = useState(false);
 
   return (
-    <div className="overflow-x-auto bg-white rounded-xl border border-gray-200 shadow-sm">
-      <table className="w-full text-[12px] border-collapse">
+    <div className="overflow-x-auto hms-card shadow-sm">
+      <table className="hms-table">
         <thead>
           <tr className="border-b border-gray-200 bg-gray-50">
             <th className="py-2.5 px-4 text-left text-[11px] font-semibold text-gray-600">Patient Name</th>

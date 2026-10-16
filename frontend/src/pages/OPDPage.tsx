@@ -7,6 +7,7 @@ import FamilyList from '../components/patients/FamilyList';
 import PatientRegistrationForm from '../components/patients/PatientRegistrationForm';
 import ConsultationForm from '../components/consultations/ConsultationForm';
 import ConsultationSlip from '../components/consultations/ConsultationSlip';
+import PageHeader from '../components/ui/PageHeader';
 
 const OPDPage: React.FC = () => {
   const navigate = useNavigate();
@@ -102,10 +103,7 @@ const OPDPage: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto px-2">
-      <div className="mb-6">
-        <h2 className="text-lg font-bold text-gray-900 m-0">OPD — Patient Management</h2>
-        <p className="text-xs text-gray-500 mt-0.5">Search to find or register a patient</p>
-      </div>
+      <PageHeader title="OPD — Patient Management" subtitle="Search to find or register a patient" />
 
       {/* Search mode tabs */}
       <div className="flex gap-2 mb-4">

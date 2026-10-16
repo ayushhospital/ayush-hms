@@ -9,28 +9,74 @@ import type {
   DailySummaryReport,
   DoctorSummaryReport,
   PatientListReport,
+  IPDAdmissionsReport,
+  IPDBillingReport,
   IPDAdmissionListResponse,
   IPDAdmissionResponse,
   IPDAdmissionCreate,
   IPDAttendantResponse,
+  LoginResponse,
+  AuthUser,
+  UserCreatePayload,
+  UserUpdatePayload,
+  PharmacyVendor,
+  PharmacyVendorCreatePayload,
+  PharmacyVendorUpdatePayload,
+  PharmacyDrug,
+  PharmacyPurchaseCreatePayload,
+  PharmacySaleCreatePayload,
+  PharmacySaleResponse,
 } from '../types';
 
 export const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
 
+const TOKEN_KEY = 'hms_token';
+export const getToken = () => localStorage.getItem(TOKEN_KEY);
+export const setToken = (token: string | null) => {
+  if (token) localStorage.setItem(TOKEN_KEY, token);
+  else localStorage.removeItem(TOKEN_KEY);
+};
+
+/** fetch() with the Authorization header attached (for raw server calls). */
+export async function apiFetch(url: string, options?: RequestInit): Promise<Response> {
+  const token = getToken();
+  const headers: Record<string, string> = {
+    ...(options?.headers as Record<string, string> | undefined),
+  };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const response = await fetch(url, { ...options, headers });
+  if (response.status === 401 && token) {
+    setToken(null);
+    window.location.href = '/login';
+  }
+  return response;
+}
+
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
+  const token = getToken();
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options?.headers as Record<string, string> | undefined),
+  };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
   const response = await fetch(`${API_BASE}${url}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
     ...options,
+    headers,
   });
+
+  if (response.status === 401 && token && !url.startsWith('/auth/login')) {
+    setToken(null);
+    window.location.href = '/login';
+    throw new Error('Session expired, please login again');
+  }
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: response.statusText }));
     throw new Error(error.detail || `HTTP ${response.status}`);
   }
 
+  if (response.status === 204) return undefined as T;
   return response.json();
 }
 
@@ -103,7 +149,61 @@ export const reportsApi = {
 
   patientList: (startDate: string, endDate: string) =>
     request<PatientListReport>(`/reports/patient-list?start_date=${startDate}&end_date=${endDate}`),
+
+  ipdAdmissionsSummary: (startDate: string, endDate: string) =>
+    request<IPDAdmissionsReport>(`/reports/ipd-admissions-summary?start_date=${startDate}&end_date=${endDate}`),
+
+  ipdBilling: (startDate: string, endDate: string) =>
+    request<IPDBillingReport>(`/reports/ipd-billing?start_date=${startDate}&end_date=${endDate}`),
 };
+// Auth API
+export const authApi = {
+  login: (username: string, password: string) =>
+    request<LoginResponse>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ username, password }),
+    }),
+  me: () => request<AuthUser>('/auth/me'),
+  logout: () => request<{ status: string }>('/auth/logout', { method: 'POST' }),
+  changePassword: (currentPassword: string, newPassword: string) =>
+    request<{ status: string }>('/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+    }),
+};
+
+// Users API (super users only)
+export const usersApi = {
+  list: () => request<AuthUser[]>('/users'),
+  create: (data: UserCreatePayload) =>
+    request<AuthUser>('/users', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id: number, data: UserUpdatePayload) =>
+    request<AuthUser>(`/users/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  remove: (id: number) =>
+    request<void>(`/users/${id}`, { method: 'DELETE' }),
+};
+
+// Pharmacy API
+export const pharmacyApi = {
+  vendors: {
+    list: () => request<PharmacyVendor[]>('/pharmacy/vendors'),
+    create: (d: PharmacyVendorCreatePayload) => request<PharmacyVendor>('/pharmacy/vendors', { method: 'POST', body: JSON.stringify(d) }),
+    update: (id: number, d: PharmacyVendorUpdatePayload) => request<PharmacyVendor>(`/pharmacy/vendors/${id}`, { method: 'PUT', body: JSON.stringify(d) }),
+    remove: (id: number) => request<void>(`/pharmacy/vendors/${id}`, { method: 'DELETE' }),
+  },
+  drugs: {
+    list: (q: string = '') => request<PharmacyDrug[]>(`/pharmacy/drugs?q=${encodeURIComponent(q)}`),
+  },
+  purchases: {
+    create: (d: PharmacyPurchaseCreatePayload) => request<any>('/pharmacy/purchases', { method: 'POST', body: JSON.stringify(d) }),
+  },
+  sales: {
+    create: (d: PharmacySaleCreatePayload) => request<PharmacySaleResponse>('/pharmacy/sales', { method: 'POST', body: JSON.stringify(d) }),
+    get: (id: number) => request<PharmacySaleResponse>(`/pharmacy/sales/${id}`),
+    list: () => request<PharmacySaleResponse[]>('/pharmacy/sales'),
+  },
+};
+
 // IPD API
 export const ipdApi = {
   list: (params?: { status?: string; search?: string; start_date?: string; end_date?: string; discharged_start?: string; discharged_end?: string; view?: string; recent_days?: number; limit?: number }) => {

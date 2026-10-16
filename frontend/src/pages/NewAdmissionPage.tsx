@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { patientsApi, doctorsApi, ipdApi } from '../services/api';
 import type { Patient, Doctor } from '../types';
+import PageHeader from '../components/ui/PageHeader';
 
 const NewAdmissionPage: React.FC = () => {
   const navigate = useNavigate();
@@ -96,9 +97,9 @@ const NewAdmissionPage: React.FC = () => {
     } finally { setSubmitting(false); }
   };
 
-  return (<div className="max-w-2xl mx-auto">
-    <button onClick={() => navigate('/ipd')} className="mb-4 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">&larr; Back to IPD</button>
-    <h2 className="text-base font-semibold text-gray-900 m-0 mb-2">New IPD Admission</h2>
+  return (<div className="max-w-3xl mx-auto">
+    <PageHeader title="New IPD Admission" subtitle="Register a patient and create an inpatient admission"
+      actions={<button onClick={() => navigate('/ipd')} className="px-4 py-2 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">&larr; Back to IPD</button>} />
 
     <div className="flex gap-2 mb-4">
       {['Select Patient', 'Admission Details', 'Attendant & Confirm'].map((l, i) => (
@@ -138,7 +139,7 @@ const NewAdmissionPage: React.FC = () => {
           </button>
         )}
         {showReg && !selectedPatient && (
-          <div className="mt-2 bg-gray-50 rounded-lg border border-gray-200 p-3 space-y-2">
+          <div className="mt-2 bg-gray-50 rounded-lg border border-gray-200 p-3 max-w-xs space-y-2">
             <p className="text-xs font-semibold text-gray-700">New Patient Registration</p>
             <div className="flex gap-2">
               <input type="text" value={regName} onChange={e => setRegName(e.target.value)} className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Full name *" />

@@ -241,3 +241,190 @@ export interface DailySummaryReport {
   grand_total_upi: number;
   grand_total: number;
 }
+
+// IPD Reports
+export interface IPDAdmissionsRow {
+  date: string;
+  total_admissions: number;
+  open_count: number;
+  discharged_count: number;
+  planned: number;
+  emergency: number;
+  referral: number;
+}
+
+export interface IPDAdmissionsReport {
+  start_date: string;
+  end_date: string;
+  rows: IPDAdmissionsRow[];
+  grand_total: number;
+  grand_open: number;
+  grand_discharged: number;
+}
+
+export interface IPDBillingRow {
+  admission_number: string;
+  admission_date: string;
+  patient_name: string;
+  patient_uhid: string;
+  ward_bed: string | null;
+  total_charges: number;
+  total_paid: number;
+  outstanding: number;
+}
+
+export interface IPDBillingReport {
+  start_date: string;
+  end_date: string;
+  rows: IPDBillingRow[];
+  grand_charges: number;
+  grand_paid: number;
+  grand_outstanding: number;
+}
+
+// Auth & Users
+export type ModuleKey = 'opd' | 'ipd' | 'reports' | 'pharmacy';
+
+export interface AuthUser {
+  id: number;
+  username: string;
+  role: 'super' | 'normal';
+  modules: ModuleKey[];
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface LoginResponse {
+  token: string;
+  user: AuthUser;
+}
+
+export interface UserCreatePayload {
+  username: string;
+  password: string;
+  role: 'super' | 'normal';
+  modules: ModuleKey[];
+}
+
+export interface UserUpdatePayload {
+  password?: string;
+  role?: 'super' | 'normal';
+  modules?: ModuleKey[];
+  is_active?: boolean;
+}
+
+// Pharmacy types
+export interface PharmacyVendor {
+  id: number;
+  vendor_name: string;
+  drug_license_number: string;
+  gst_number: string;
+  contact_number: string;
+  pincode: string;
+  country: string;
+  city: string;
+  address: string;
+  email: string | null;
+  pancard_number: string | null;
+  created_at: string;
+}
+
+export interface PharmacyVendorCreatePayload {
+  vendor_name: string;
+  drug_license_number: string;
+  gst_number: string;
+  contact_number: string;
+  pincode: string;
+  country: string;
+  city: string;
+  address: string;
+  email?: string;
+  pancard_number?: string;
+}
+
+export interface PharmacyVendorUpdatePayload {
+  [key: string]: any;
+}
+
+export interface PharmacyDrug {
+  id: number;
+  name: string;
+  drug_type: string | null;
+  strength: string | null;
+  manufacturer: string | null;
+  batch_number: string | null;
+  expiry_date: string | null;
+  purchase_price: number | null;
+  selling_price: number | null;
+  quantity_in_stock: number;
+  vendor_id: number | null;
+}
+
+export interface PharmacyPurchaseItemInput {
+  drug_name: string;
+  strength?: string;
+  batch_number?: string;
+  expiry_date?: string;
+  quantity: number;
+  purchase_price: number;
+  selling_price: number;
+}
+
+export interface PharmacyPurchaseCreatePayload {
+  vendor_id: number;
+  invoice_number: string;
+  invoice_date: string;
+  invoice_amount: number;
+  pay_type: string;
+  discount_type: string;
+  discount: number;
+  gross_amount: number;
+  items: PharmacyPurchaseItemInput[];
+}
+
+export interface PharmacySaleItemInput {
+  drug_id: number;
+  quantity: number;
+  unit_price: number;
+}
+
+export interface PharmacySaleCreatePayload {
+  customer_type: 'patient' | 'self';
+  patient_id?: number;
+  patient_name?: string;
+  phone_number?: string;
+  doctor_name?: string;
+  reference_no?: string;
+  payment_mode?: 'cash' | 'upi' | 'card';
+  payment_reference?: string;
+  discount_type?: 'percentage' | 'cash';
+  discount_value: number;
+  items: PharmacySaleItemInput[];
+}
+
+export interface PharmacySaleItemResponse {
+  id: number;
+  drug_name: string;
+  strength: string | null;
+  quantity: number;
+  unit_price: number;
+  line_total: number;
+}
+
+export interface PharmacySaleResponse {
+  id: number;
+  sale_number: string;
+  customer_type: string;
+  patient_name: string | null;
+  phone_number: string | null;
+  doctor_name: string | null;
+  reference_no: string | null;
+  payment_mode: string | null;
+  payment_reference: string | null;
+  discount_type: string | null;
+  discount_value: number;
+  total_amount: number;
+  net_amount: number;
+  created_at: string;
+  items: PharmacySaleItemResponse[];
+}

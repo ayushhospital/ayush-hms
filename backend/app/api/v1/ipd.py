@@ -5,6 +5,7 @@ from typing import Optional
 from app.core.database import get_db
 from app.models.ipd import (IPDAdmission, IPDAttendant, IPDTests, IPDMedication,
     IPDInsurancePolicy, IPDCharge, IPDPayment, IPDRefund, IPDDischargeSummary, IPDActivityLog)
+from app.services.auth_service import require_modules
 from app.services.ipd_service import (create_admission, get_admission_by_id, list_admissions,
     admission_to_response, update_attendant, generate_receipt_number, generate_refund_number,
     _log_activity)
@@ -20,7 +21,7 @@ from app.schemas.ipd import (
     IPDActivityLogResponse,
 )
 
-router = APIRouter(prefix='/ipd', tags=['ipd'])
+router = APIRouter(prefix='/ipd', tags=['ipd'], dependencies=[Depends(require_modules('ipd'))])
 import pytz
 from sqlalchemy import func, text
 

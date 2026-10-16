@@ -203,3 +203,42 @@ class PatientListReport(BaseModel):
     end_date: date
     rows: list[PatientListRow]
     total_count: int
+
+
+class IPDAdmissionsRow(BaseModel):
+    date: date
+    total_admissions: int
+    open_count: int
+    discharged_count: int
+    planned: int
+    emergency: int
+    referral: int
+
+
+class IPDAdmissionsReport(BaseModel):
+    start_date: date
+    end_date: date
+    rows: list[IPDAdmissionsRow]
+    grand_total: int
+    grand_open: int
+    grand_discharged: int
+
+
+class IPDBillingRow(BaseModel):
+    admission_number: str
+    admission_date: datetime
+    patient_name: str
+    patient_uhid: str
+    ward_bed: Optional[str] = None
+    total_charges: float
+    total_paid: float
+    outstanding: float
+
+
+class IPDBillingReport(BaseModel):
+    start_date: date
+    end_date: date
+    rows: list[IPDBillingRow]
+    grand_charges: float
+    grand_paid: float
+    grand_outstanding: float

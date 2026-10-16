@@ -5,12 +5,15 @@ from datetime import date, datetime, timedelta
 from app.models.consultation import Consultation
 from app.models.doctor import Doctor
 from app.models.patient import Patient
+from app.models.ipd import IPDAdmission, IPDCharge, IPDPayment
 from app.schemas.schemas import (
     RevenueReport, RevenueReportRow,
     FootfallReport,
     DoctorSummaryReport, DoctorSummaryRow,
     PatientListReport, PatientListRow,
     DailySummaryReport, DailySummaryRow,
+    IPDAdmissionsReport, IPDAdmissionsRow,
+    IPDBillingReport, IPDBillingRow,
 )
 
 
@@ -254,4 +257,116 @@ def get_daily_summary_report(db: Session, start_date: date, end_date: date) -> D
         grand_total_cash=grand_cash,
         grand_total_upi=grand_upi,
         grand_total=grand_total,
+    )
+
+
+def get_ipd_admissions_report(db: Session, start_date: date, end_date: date) -> IPDAdmissionsReport:
+    """Day-wise IPD admissions summary: total, open/discharged and by admission type."""
+    start_dt, end_dt = _get_date_bounds(start_date, end_date)
+
+    rows = db.query(
+        func.date(IPDAdmission.admission_datetime).label("dt"),
+        func.count(IPDAdmission.id).label("total_admissions"),
+        func.coalesce(func.sum(case((IPDAdmission.status == "Open", 1), else_=0)), 0).label("open_count"),
+        func.coalesce(func.sum(case((IPDAdmission.status != "Open", 1), else_=0)), 0).label("discharged_count"),
+        func.coalesce(func.sum(case((IPDAdmission.admission_type == "Planned", 1), else_=0)), 0).label("planned"),
+        func.coalesce(func.sum(case((IPDAdmission.admission_type == "Emergency", 1), else_=0)), 0).label("emergency"),
+        func.coalesce(func.sum(case((IPDAdmission.admission_type == "Referral", 1), else_=0)), 0).label("referral"),
+    ).filter(
+        IPDAdmission.admission_datetime >= start_dt,
+        IPDAdmission.admission_datetime < end_dt,
+    ).group_by(
+        func.date(IPDAdmission.admission_datetime),
+    ).order_by(
+        func.date(IPDAdmission.admission_datetime),
+    ).all()
+
+    report_rows = []
+    grand_total = grand_open = grand_discharged = 0
+    for r in rows:
+        report_rows.append(IPDAdmissionsRow(
+            date=r.dt,
+            total_admissions=int(r.total_admissions),
+            open_count=int(r.open_count),
+            discharged_count=int(r.discharged_count),
+            planned=int(r.planned),
+            emergency=int(r.emergency),
+            referral=int(r.referral),
+        ))
+        grand_total += int(r.total_admissions)
+        grand_open += int(r.open_count)
+        grand_discharged += int(r.discharged_count)
+
+    return IPDAdmissionsReport(
+        start_date=start_date, end_date=end_date,
+        rows=report_rows,
+        grand_total=grand_total,
+        grand_open=grand_open,
+        grand_discharged=grand_discharged,
+    )
+
+
+def get_ipd_billing_report(db: Session, start_date: date, end_date: date) -> IPDBillingReport:
+    """Per-admission charges, payments and outstanding balance for a date range."""
+    start_dt, end_dt = _get_date_bounds(start_date, end_date)
+
+    # Aggregate charges and payments in subqueries to avoid cross-multiplication.
+    charges_subq = db.query(
+        IPDCharge.admission_id,
+        func.coalesce(func.sum(IPDCharge.total_amount), 0).label("total_charges"),
+    ).group_by(IPDCharge.admission_id).subquery()
+
+    payments_subq = db.query(
+        IPDPayment.admission_id,
+        func.coalesce(func.sum(IPDPayment.amount), 0).label("total_paid"),
+    ).group_by(IPDPayment.admission_id).subquery()
+
+    rows = db.query(
+        IPDAdmission.admission_number,
+        IPDAdmission.admission_datetime,
+        Patient.name.label("patient_name"),
+        Patient.uhid.label("patient_uhid"),
+        IPDAdmission.ward_bed,
+        charges_subq.c.total_charges,
+        payments_subq.c.total_paid,
+    ).join(
+        Patient, IPDAdmission.patient_id == Patient.id,
+    ).outerjoin(
+        charges_subq, charges_subq.c.admission_id == IPDAdmission.id,
+    ).outerjoin(
+        payments_subq, payments_subq.c.admission_id == IPDAdmission.id,
+    ).filter(
+        IPDAdmission.admission_datetime >= start_dt,
+        IPDAdmission.admission_datetime < end_dt,
+    ).order_by(
+        IPDAdmission.admission_datetime.desc(),
+        IPDAdmission.admission_number,
+    ).all()
+
+    report_rows = []
+    grand_charges = grand_paid = grand_outstanding = 0.0
+    for r in rows:
+        total_charges = float(r.total_charges or 0)
+        total_paid = float(r.total_paid or 0)
+        outstanding = round(total_charges - total_paid, 2)
+        report_rows.append(IPDBillingRow(
+            admission_number=r.admission_number,
+            admission_date=r.admission_datetime,
+            patient_name=r.patient_name,
+            patient_uhid=r.patient_uhid,
+            ward_bed=r.ward_bed,
+            total_charges=total_charges,
+            total_paid=total_paid,
+            outstanding=outstanding,
+        ))
+        grand_charges += total_charges
+        grand_paid += total_paid
+        grand_outstanding += outstanding
+
+    return IPDBillingReport(
+        start_date=start_date, end_date=end_date,
+        rows=report_rows,
+        grand_charges=round(grand_charges, 2),
+        grand_paid=round(grand_paid, 2),
+        grand_outstanding=round(grand_outstanding, 2),
     )

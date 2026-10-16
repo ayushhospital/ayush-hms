@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { patientsApi } from '../services/api';
 import type { Patient, ConsultationResponse } from '../types';
 import ConsultationSlip from '../components/consultations/ConsultationSlip';
+import PageHeader from '../components/ui/PageHeader';
 
 const PatientConsultationsPage: React.FC = () => {
   const { id } = useParams();
@@ -48,21 +49,11 @@ const PatientConsultationsPage: React.FC = () => {
   );
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <button onClick={()=>navigate('/opd' + backQ)} className="mb-4 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">&larr; Back to patients</button>
-      <div className="bg-white rounded-xl border border-gray-200 px-5 py-4 shadow-sm mb-4">
-        <div className="flex items-center justify-between mb-1">
-          <h2 className="text-base font-semibold text-gray-900 m-0">{patient.name}</h2>
-          <span className="text-xs text-gray-500">{patient.uhid}</span>
-        </div>
-        <div className="flex items-center gap-3 text-[12px] text-gray-500 mt-2">
-          <span>{patient.gender}</span><span className="text-gray-300">|</span>
-          <span>Age {patient.age}</span><span className="text-gray-300">|</span>
-          <span>{patient.phone_number}</span>
-        </div>
-      </div>
+    <div className="max-w-3xl mx-auto">
+      <PageHeader title={patient.name} subtitle={`${patient.uhid}  |  ${patient.gender}, Age ${patient.age}  |  ${patient.phone_number}`}
+        actions={<button onClick={()=>navigate('/opd' + backQ)} className="px-4 py-2 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">&larr; Back to patients</button>} />
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+      <div className="hms-card shadow-sm">
         <div className="flex items-center justify-between px-5 py-3 border-b border-gray-200">
           <h3 className="text-sm font-semibold text-gray-800 m-0">Consultations <span className="text-gray-400 text-[11px]">({consultations.length})</span></h3>
         </div>
@@ -70,8 +61,8 @@ const PatientConsultationsPage: React.FC = () => {
           <div className="px-5 py-8 text-center text-xs text-gray-400">No consultations yet</div>
         ) : (
           <div className="px-4 py-3">
-            {active.length>0 && <div className="bg-green-50 rounded-lg p-3"><h4 className="text-xs font-semibold text-green-700 mb-2">Active Consultations</h4><div className="overflow-x-auto"><table className="w-full text-[11px]"><thead><tr className="border-b border-gray-200"><th className="py-1.5 px-2 text-left text-[10px] text-gray-500">Doctor</th><th className="py-1.5 px-2 text-left text-[10px] text-gray-500">Status</th><th className="py-1.5 px-2 text-left text-[10px] text-gray-500">Start</th><th className="py-1.5 px-2 text-left text-[10px] text-gray-500">End</th><th className="py-1.5 px-2 text-left text-[10px] text-gray-500">Visit</th><th className="py-1.5 px-2 text-left text-[10px] text-gray-500">Pay</th><th className="py-1.5 px-2"></th></tr></thead><tbody>{active.map(row)}</tbody></table></div></div>}
-            {expired.length>0 && <div className="bg-amber-50 rounded-lg p-3 mt-2"><h4 className="text-xs font-semibold text-amber-800 mb-2">Past Consultations</h4><div className="overflow-x-auto"><table className="w-full text-[11px]"><thead><tr className="border-b border-gray-200"><th className="py-1.5 px-2 text-left text-[10px] text-gray-500">Doctor</th><th className="py-1.5 px-2 text-left text-[10px] text-gray-500">Status</th><th className="py-1.5 px-2 text-left text-[10px] text-gray-500">Start</th><th className="py-1.5 px-2 text-left text-[10px] text-gray-500">End</th><th className="py-1.5 px-2 text-left text-[10px] text-gray-500">Visit</th><th className="py-1.5 px-2 text-left text-[10px] text-gray-500">Pay</th><th className="py-1.5 px-2"></th></tr></thead><tbody>{expired.map(row)}</tbody></table></div></div>}
+            {active.length>0 && <div className="bg-green-50 rounded-lg p-3"><h4 className="text-xs font-semibold text-green-700 mb-2">Active Consultations</h4><div className="overflow-x-auto"><table className="hms-table"><thead><tr className="border-b border-gray-200"><th className="py-1.5 px-2 text-left text-[10px] text-gray-500">Doctor</th><th className="py-1.5 px-2 text-left text-[10px] text-gray-500">Status</th><th className="py-1.5 px-2 text-left text-[10px] text-gray-500">Start</th><th className="py-1.5 px-2 text-left text-[10px] text-gray-500">End</th><th className="py-1.5 px-2 text-left text-[10px] text-gray-500">Visit</th><th className="py-1.5 px-2 text-left text-[10px] text-gray-500">Pay</th><th className="py-1.5 px-2"></th></tr></thead><tbody>{active.map(row)}</tbody></table></div></div>}
+            {expired.length>0 && <div className="bg-amber-50 rounded-lg p-3 mt-2"><h4 className="text-xs font-semibold text-amber-800 mb-2">Past Consultations</h4><div className="overflow-x-auto"><table className="hms-table"><thead><tr className="border-b border-gray-200"><th className="py-1.5 px-2 text-left text-[10px] text-gray-500">Doctor</th><th className="py-1.5 px-2 text-left text-[10px] text-gray-500">Status</th><th className="py-1.5 px-2 text-left text-[10px] text-gray-500">Start</th><th className="py-1.5 px-2 text-left text-[10px] text-gray-500">End</th><th className="py-1.5 px-2 text-left text-[10px] text-gray-500">Visit</th><th className="py-1.5 px-2 text-left text-[10px] text-gray-500">Pay</th><th className="py-1.5 px-2"></th></tr></thead><tbody>{expired.map(row)}</tbody></table></div></div>}
           </div>
         )}
       </div>
