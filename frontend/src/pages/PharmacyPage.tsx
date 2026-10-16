@@ -395,11 +395,14 @@ const PosTab: React.FC = () => {
   // Unified typeahead: auto-search as you type (300ms debounce), auto-select single match
   useEffect(() => {
     const q = smartQ.trim();
-    if (q.length < 3) { setSmartResults([]); setNoMatch(false); return; }
+    setSmartResults([]); setNoMatch(false);
+    if (q.length < 3) return;
+    const isDigits = /^\d+$/.test(q);
+    // Wait for a complete phone number before searching (backend needs 10+ digits)
+    if (isDigits && q.length < 10) return;
     const t = setTimeout(async () => {
       setSearching(true);
       try {
-        const isDigits = /^\d+$/.test(q);
         const res = isDigits
           ? await patientsApi.search(q)
           : await patientsApi.searchByUhid(q).catch(() => ({ patients: [] }));
@@ -509,6 +512,9 @@ const PosTab: React.FC = () => {
                   className="px-3 py-2 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 whitespace-nowrap">+ Walk-in</button>
               </div>
               {searching && <p className="text-[10px] text-slate-400 mt-1.5">Searching…</p>}
+              {!searching && /^\d+$/.test(smartQ.trim()) && smartQ.trim().length >= 3 && smartQ.trim().length < 10 && (
+                <p className="text-[10px] text-slate-400 mt-1.5">Keep typing — phone search uses the full 10-digit number…</p>
+              )}
 
               {/* Multiple matches → selection list */}
               {smartResults.length > 1 && (
@@ -529,7 +535,7 @@ const PosTab: React.FC = () => {
                 <div className="mt-2 p-3 bg-slate-50 border border-slate-200 rounded-lg">
                   <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">{noMatch ? 'No registered patient found — proceed as walk-in' : 'Walk-in sale'}</p>
                   <div className="grid grid-cols-[1fr_150px_auto] gap-2 items-center">
-                    <input value={walkinName} onChange={e=>setWalkinName(e.target.value)} placeholder="Customer name" autoFocus
+                    <input value={walkinName} onChange={e=>setWalkinName(e.target.value)} placeholder="Customer name"
                       className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />
                     <input value={walkinPhone} onChange={e=>setWalkinPhone(e.target.value)} placeholder="Phone (optional)"
                       className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />
