@@ -217,19 +217,18 @@ const ChangePasswordModal: React.FC<{ onClose: () => void; }> = ({ onClose }) =>
   );
 };
 const TopBarDate: React.FC = () => {
-  const now = new Date();
+  const [now, setNow] = useState(new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
   const weekday = now.toLocaleDateString('en-IN', { weekday: 'long' });
   const dateMain = now.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
   const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
 
   return (
-    <div className="flex items-center gap-3">
-      <span className="text-[10px] font-bold uppercase tracking-widest text-blue-600 bg-blue-50 border border-blue-100 rounded-md px-2 py-1">
-        Today
-      </span>
-      <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">{weekday}</span>
-      <span className="text-sm font-bold text-slate-800">{dateMain}</span>
-      <span className="text-[11px] font-medium text-slate-400 tabular-nums">{timeStr}</span>
+    <div className="flex items-center">
+      <span className="text-xs font-semibold text-slate-600 whitespace-nowrap">{weekday}, {dateMain} <span className="font-bold text-slate-800 tabular-nums ml-1">{timeStr}</span></span>
     </div>
   );
 };
