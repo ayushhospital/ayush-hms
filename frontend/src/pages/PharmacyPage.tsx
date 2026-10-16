@@ -339,13 +339,17 @@ const AvailabilityTab: React.FC = () => {
  * ===================================================== */
 
 const PosTab: React.FC = () => {
-  const [custType, setCustType] = useState<'patient'|'walkin'>('walkin');
-  const [patPhone, setPatPhone] = useState('');
-  const [patName, setPatName] = useState('');
-  const [patQ, setPatQ] = useState('');
-  const [patResults, setPatResults] = useState<any[]>([]);
+  // Smart customer search (unified typeahead — auto-detects patient vs walk-in)
+  const [smartQ, setSmartQ] = useState('');
+  const [smartResults, setSmartResults] = useState<any[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [noMatch, setNoMatch] = useState(false);
+  const [walkinForm, setWalkinForm] = useState(false);
+  const [mode, setMode] = useState<'search'|'patient'|'walkin'>('search');
+  const [walkinName, setWalkinName] = useState('');
+  const [walkinPhone, setWalkinPhone] = useState('');
   const [selectedPat, setSelectedPat] = useState<any>(null);
-  const [patInfo, setPatInfo] = useState<string>('');
+  const [linkVisit, setLinkVisit] = useState(false);
   const [refNo, setRefNo] = useState('');
   const [consOptions, setConsOptions] = useState<{label: string; value: string}[]>([]);
   const [ipdOptions, setIpdOptions] = useState<{label: string; value: string}[]>([]);
@@ -367,44 +371,47 @@ const PosTab: React.FC = () => {
 
   useEffect(() => { doctorsApi.list().then(setDoctors).catch(()=>{}); }, []);
 
-  const fetchPatient = async () => {
-    if (patQ.length < 2) return;
-    setSelectedPat(null); setPatInfo(''); setRefNo('');
-    try {
-      const res = await patientsApi.search(patQ);
-      setPatResults(res.patients.map((r:any)=>r.patient));
-      if (res.patients.length === 0) setPatInfo('No patient found');
-    } catch { setPatInfo('Search failed'); }
-  };
-
-  const pickPatient = (p: any) => {
+  const applyPatient = (p: any) => {
     setSelectedPat(p);
-    setPatInfo(`${p.name} | ${p.gender} | Age ${p.age} | ${p.uhid}`);
-    setPatName(p.name);
-    setPatResults([]);
-    setRefNo('');
-    setConsOptions([]);
-    setIpdOptions([]);
-    // Fetch this patient's OPD consultations & IPD admissions separately
+    setMode('patient');
+    setSmartQ(''); setSmartResults([]); setNoMatch(false); setWalkinForm(false);
+    setLinkVisit(false); setRefNo(''); setConsOptions([]); setIpdOptions([]);
+    // Pre-fetch visit history in the background (for the optional visit linking)
     Promise.all([
       patientsApi.getConsultations(p.id).catch(() => []),
       ipdApi.list({ search: p.phone_number, limit: 100 }).catch(() => ({ admissions: [] })),
     ]).then(([cons, adm]: any) => {
-      const consOpts: {label: string; value: string}[] = [];
-      (Array.isArray(cons) ? cons : []).forEach((c: any) => {
-        if (c.consultation_number) consOpts.push({ label: c.consultation_number, value: c.consultation_number });
-      });
-      const ipdOpts: {label: string; value: string}[] = [];
-      ((adm?.admissions) || []).forEach((a: any) => {
-        if (a.patient_id === p.id && a.admission_number) ipdOpts.push({ label: a.admission_number, value: a.admission_number });
-      });
+      const consOpts = (Array.isArray(cons) ? cons : [])
+        .filter((c:any)=>c.consultation_number)
+        .map((c:any)=>({label:c.consultation_number, value:c.consultation_number}));
+      const ipdOpts = ((adm?.admissions)||[])
+        .filter((a:any)=>a.patient_id===p.id && a.admission_number)
+        .map((a:any)=>({label:a.admission_number, value:a.admission_number}));
       setConsOptions(consOpts);
       setIpdOptions(ipdOpts);
-      // Default to OPD if there are consultations, else IPD if admissions exist
-      if (consOpts.length > 0) { setVisitType('opd'); setRefNo(consOpts[0].value); }
-      else if (ipdOpts.length > 0) { setVisitType('ipd'); setRefNo(ipdOpts[0].value); }
     });
   };
+
+  // Unified typeahead: auto-search as you type (300ms debounce), auto-select single match
+  useEffect(() => {
+    const q = smartQ.trim();
+    if (q.length < 3) { setSmartResults([]); setNoMatch(false); return; }
+    const t = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const isDigits = /^\d+$/.test(q);
+        const res = isDigits
+          ? await patientsApi.search(q)
+          : await patientsApi.searchByUhid(q).catch(() => ({ patients: [] }));
+        const pats = ((res as any).patients || []).map((r:any)=>r.patient);
+        setSmartResults(pats);
+        setNoMatch(pats.length === 0);
+        if (pats.length === 1) applyPatient(pats[0]); // auto-select single match
+      } catch { setSmartResults([]); setNoMatch(true); }
+      finally { setSearching(false); }
+    }, 300);
+    return () => clearTimeout(t);
+  }, [smartQ]);
 
   const activeRefOptions = visitType === 'opd' ? consOptions : ipdOptions;
 
@@ -412,6 +419,29 @@ const PosTab: React.FC = () => {
     setVisitType(vt);
     const opts = vt === 'opd' ? consOptions : ipdOptions;
     setRefNo(opts.length > 0 ? opts[0].value : '');
+  };
+
+  const enableVisitLink = () => {
+    setLinkVisit(true);
+    const opts = visitType === 'opd' ? consOptions : ipdOptions;
+    if (opts.length > 0) setRefNo(opts[0].value);
+  };
+
+  const resetCustomer = () => {
+    setMode('search'); setSelectedPat(null); setSmartQ('');
+    setSmartResults([]); setNoMatch(false); setWalkinForm(false);
+    setWalkinName(''); setWalkinPhone(''); setLinkVisit(false);
+    setRefNo(''); setConsOptions([]); setIpdOptions([]); setDocId(0); setDocCustom('');
+  };
+
+  const confirmWalkin = () => {
+    setMode('walkin');
+    setSmartQ(''); setNoMatch(false); setWalkinForm(false);
+  };
+
+  const openWalkinForm = () => {
+    setWalkinForm(true);
+    if (/^\d+$/.test(smartQ.trim()) && smartQ.trim().length >= 6) setWalkinPhone(smartQ.trim());
   };
 
   const docName = doctors.find(d => d.id === docId)?.name || docCustom;
@@ -433,12 +463,12 @@ const PosTab: React.FC = () => {
     setSaving(true); setError('');
     try {
       const sale = await pharmacyApi.sales.create({
-        customer_type: custType === 'walkin' ? 'self' : 'patient',
-        patient_id: selectedPat?.id || undefined,
-        patient_name: custType === 'walkin' ? (patName || 'Walk-in') : selectedPat?.name,
-        phone_number: custType === 'walkin' ? patPhone : (selectedPat?.phone_number || patPhone),
-        doctor_name: docName || undefined,
-        reference_no: refNo || undefined,
+        customer_type: mode === 'patient' ? 'patient' : 'self',
+        patient_id: mode === 'patient' ? selectedPat?.id : undefined,
+        patient_name: mode === 'patient' ? selectedPat.name : (walkinName || 'Walk-in'),
+        phone_number: mode === 'patient' ? selectedPat.phone_number : (walkinPhone || undefined),
+        doctor_name: (mode === 'patient' && !linkVisit) ? undefined : (docName || undefined),
+        reference_no: (mode === 'patient' && linkVisit) ? (refNo || undefined) : undefined,
         payment_mode: payMode,
         payment_reference: payRef || undefined,
         discount_type: discType || undefined,
@@ -461,123 +491,111 @@ const PosTab: React.FC = () => {
         {/* LEFT — Customer + Drug search */}
         <div className="lg:col-span-3 space-y-4">
 
-          {/* Customer section */}
-          <div className="hms-card p-4">
-            <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3"><span className="text-blue-600">①</span> Customer</h4>
-
-            {/* Row 1: type + search/fetch (aligned grid) */}
-            <div className="grid grid-cols-[150px_1fr_auto] gap-2 items-center">
-              <select value={custType} onChange={e => { setCustType(e.target.value as any); setSelectedPat(null); setPatInfo(''); }}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none bg-white">
-                <option value="walkin">Walk-in</option>
-                <option value="patient">Registered Patient</option>
-              </select>
-
-              {custType === 'walkin' ? (
-                <div className="grid grid-cols-[1fr_170px] gap-2">
-                  <input value={patName} onChange={e=>setPatName(e.target.value)} placeholder="Name" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />
-                  <input value={patPhone} onChange={e=>setPatPhone(e.target.value)} placeholder="Phone number" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />
+          {/* Customer — smart typeahead OR compact selected card */}
+          {mode === 'search' ? (
+            <div className="hms-card p-4">
+              <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3"><span className="text-blue-600">①</span> Customer</h4>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <svg viewBox="0 0 24 24" width="15" height="15" className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                    <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.8" fill="none" />
+                    <path d="M20 20l-3.5-3.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                  </svg>
+                  <input value={smartQ} onChange={e => setSmartQ(e.target.value)}
+                    placeholder="Search patient — phone / UHID (auto-detects)…"
+                    className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
-              ) : (
-                <>
-                  <input value={patQ} onChange={e => setPatQ(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') fetchPatient(); }}
-                    placeholder="Search by phone / UHID / admission no" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />
-                  <button onClick={fetchPatient} className="px-4 py-2 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 whitespace-nowrap">Fetch</button>
-                </>
+                <button onClick={openWalkinForm}
+                  className="px-3 py-2 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 whitespace-nowrap">+ Walk-in</button>
+              </div>
+              {searching && <p className="text-[10px] text-slate-400 mt-1.5">Searching…</p>}
+
+              {/* Multiple matches → selection list */}
+              {smartResults.length > 1 && (
+                <div className="mt-2 border border-slate-200 rounded-lg divide-y divide-slate-100 max-h-44 overflow-y-auto">
+                  <p className="px-3 py-1.5 text-[10px] font-semibold text-slate-500 uppercase tracking-wider bg-slate-50">{smartResults.length} patients share this number — select one</p>
+                  {smartResults.map((p:any) => (
+                    <button key={p.id} onClick={() => applyPatient(p)}
+                      className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-blue-50 transition-colors">
+                      <span className="text-xs font-medium text-slate-800">{p.name} <span className="text-slate-400">({p.gender}, Age {p.age})</span></span>
+                      <span className="text-[10px] text-slate-500 font-mono">{p.uhid}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* No match (or explicit walk-in) → inline walk-in form */}
+              {(noMatch || walkinForm) && (
+                <div className="mt-2 p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                  <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">{noMatch ? 'No registered patient found — proceed as walk-in' : 'Walk-in sale'}</p>
+                  <div className="grid grid-cols-[1fr_150px_auto] gap-2 items-center">
+                    <input value={walkinName} onChange={e=>setWalkinName(e.target.value)} placeholder="Customer name" autoFocus
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />
+                    <input value={walkinPhone} onChange={e=>setWalkinPhone(e.target.value)} placeholder="Phone (optional)"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />
+                    <button onClick={confirmWalkin} disabled={!walkinName.trim()}
+                      className="px-3 py-2 text-xs font-semibold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 disabled:opacity-50 whitespace-nowrap">✓ Continue</button>
+                  </div>
+                </div>
               )}
             </div>
-
-            {/* Walk-in: doctor row */}
-            {custType === 'walkin' && doctors.length > 0 && (
-              <div className="mt-2 grid grid-cols-[150px_1fr] gap-2 items-center">
-                <span className="text-xs font-medium text-slate-600 text-right pr-2">Doctor</span>
-                <div className="flex gap-2">
-                  <select value={docId} onChange={e => { setDocId(parseInt(e.target.value)); setDocCustom(''); }}
-                    className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none bg-white">
-                    <option value={0}>Select doctor</option>
-                    {doctors.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                    <option value={-1}>Other</option>
-                  </select>
-                  {docId === -1 && <input value={docCustom} onChange={e=>setDocCustom(e.target.value)} placeholder="Doctor name" className="w-44 px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />}
+          ) : (
+            /* Compact selected customer card + optional visit linking */
+            <div className="hms-card p-3">
+              <div className="flex items-center justify-between gap-2">
+                <div className="min-w-0 flex items-center gap-2">
+                  <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full shrink-0 ${mode === 'patient' ? 'bg-blue-50 text-blue-600' : 'bg-amber-50 text-amber-600'}`}>{mode === 'patient' ? 'Patient' : 'Walk-in'}</span>
+                  <span className="text-sm font-semibold text-slate-900 truncate">{mode === 'patient' ? selectedPat.name : walkinName}</span>
+                  <span className="text-xs text-slate-400 shrink-0">|</span>
+                  <span className="text-xs text-slate-500 shrink-0">{mode === 'patient' ? selectedPat.phone_number : walkinPhone || '—'}</span>
+                  {mode === 'patient' && <span className="text-[10px] font-mono text-slate-400 shrink-0 hidden sm:inline">{selectedPat.uhid}</span>}
                 </div>
+                <button onClick={resetCustomer}
+                  className="px-2.5 py-1.5 text-[11px] font-medium text-blue-600 bg-blue-50 rounded-md hover:bg-blue-100 shrink-0">{mode === 'patient' ? 'Change' : 'Edit'}</button>
               </div>
-            )}
 
-            {/* Registered: matching patients list */}
-            {custType === 'patient' && patResults.length > 0 && (
-              <div className="mt-3 border border-slate-200 rounded-lg divide-y divide-slate-100 max-h-44 overflow-y-auto">
-                <p className="px-3 py-1.5 text-[10px] font-semibold text-slate-500 uppercase tracking-wider bg-slate-50">{patResults.length} patient(s) found — select one</p>
-                {patResults.map((p:any) => (
-                  <button key={p.id} onClick={() => pickPatient(p)}
-                    className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-blue-50 transition-colors">
-                    <span className="text-xs font-medium text-slate-800">{p.name} <span className="text-slate-400">({p.gender}, Age {p.age})</span></span>
-                    <span className="text-[10px] text-slate-500 font-mono">{p.uhid}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Registered: selected patient info */}
-            {custType === 'patient' && patInfo && (
-              <div className="mt-3 p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700">{patInfo}</div>
-            )}
-            {/* Registered: Visit type (OPD/IPD) + Ref No + Doctor */}
-            {custType === 'patient' && selectedPat && (
-              <div className="mt-3 space-y-3">
-                {/* Visit type toggle */}
-                <div>
-                  <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Visit Type</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button type="button" onClick={() => switchVisitType('opd')}
-                      className={`px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${visitType === 'opd' ? 'bg-blue-600 text-white shadow' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}`}>
-                      OPD Consultation {consOptions.length > 0 && <span className={visitType==='opd' ? 'text-blue-200' : 'text-slate-400'}>({consOptions.length})</span>}
-                    </button>
-                    <button type="button" onClick={() => switchVisitType('ipd')}
-                      className={`px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${visitType === 'ipd' ? 'bg-blue-600 text-white shadow' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}`}>
-                      IPD Admission {ipdOptions.length > 0 && <span className={visitType==='ipd' ? 'text-blue-200' : 'text-slate-400'}>({ipdOptions.length})</span>}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Ref No + Doctor side by side */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">
-                      {visitType === 'opd' ? 'Consultation No' : 'IP Admission No'}
-                    </label>
-                    {activeRefOptions.length > 0 ? (
-                      <select value={activeRefOptions.some(o => o.value === refNo) ? refNo : ''} onChange={e => setRefNo(e.target.value)}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none bg-white">
-                        {activeRefOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                        <option value="">Other / none</option>
+              {/* Optional visit linking (registered patients only) */}
+              {mode === 'patient' && (
+                <div className="mt-2.5 pt-2.5 border-t border-slate-100">
+                  <label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer select-none">
+                    <input type="checkbox" checked={linkVisit}
+                      onChange={e => e.target.checked ? enableVisitLink() : setLinkVisit(false)}
+                      className="accent-blue-600 w-3.5 h-3.5" />
+                    Link to hospital visit {consOptions.length + ipdOptions.length > 0 && <span className="text-slate-400">({consOptions.length} OPD · {ipdOptions.length} IPD)</span>}
+                  </label>
+                  {linkVisit && (
+                    <div className="mt-2.5 grid grid-cols-3 gap-2">
+                      <select value={visitType} onChange={e => switchVisitType(e.target.value as any)}
+                        className="w-full px-2.5 py-2 border border-slate-300 rounded-lg text-xs outline-none bg-white">
+                        <option value="opd">OPD Consultation</option>
+                        <option value="ipd">IPD Admission</option>
                       </select>
-                    ) : (
-                      <input value={refNo} onChange={e=>setRefNo(e.target.value)}
-                        placeholder={visitType === 'opd' ? 'No OPD visits — enter no.' : 'No IPD admissions — enter no.'}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Doctor</label>
-                    <div className="flex gap-2">
-                      <select value={docId} onChange={e => { setDocId(parseInt(e.target.value)); setDocCustom(''); }}
-                        className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none bg-white">
-                        <option value={0}>Select doctor</option>
-                        {doctors.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                        <option value={-1}>Other</option>
-                      </select>
-                      {docId === -1 && <input value={docCustom} onChange={e=>setDocCustom(e.target.value)} placeholder="Name" className="w-28 px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />}
+                      {activeRefOptions.length > 0 ? (
+                        <select value={activeRefOptions.some(o => o.value === refNo) ? refNo : ''} onChange={e => setRefNo(e.target.value)}
+                          className="w-full px-2.5 py-2 border border-slate-300 rounded-lg text-xs outline-none bg-white">
+                          {activeRefOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                          <option value="">No number</option>
+                        </select>
+                      ) : (
+                        <input value={refNo} onChange={e=>setRefNo(e.target.value)}
+                          placeholder={visitType === 'opd' ? 'Consultation no.' : 'IP admission no.'}
+                          className="w-full px-2.5 py-2 border border-slate-300 rounded-lg text-xs outline-none" />
+                      )}
+                      <div className="flex gap-1.5">
+                        <select value={docId} onChange={e => { setDocId(parseInt(e.target.value)); setDocCustom(''); }}
+                          className="flex-1 px-2.5 py-2 border border-slate-300 rounded-lg text-xs outline-none bg-white">
+                          <option value={0}>Doctor…</option>
+                          {doctors.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                          <option value={-1}>Other</option>
+                        </select>
+                        {docId === -1 && <input value={docCustom} onChange={e=>setDocCustom(e.target.value)} placeholder="Name" className="w-24 px-2 py-2 border border-slate-300 rounded-lg text-xs outline-none" />}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
-                {activeRefOptions.length > 0 && !activeRefOptions.some(o => o.value === refNo) && (
-                  <input value={refNo} onChange={e=>setRefNo(e.target.value)} placeholder="Enter reference number manually"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />
-                )}
-              </div>
-            )}
-          </div>
-
+              )}
+            </div>
+          )}
           {/* Drug search */}
           <div className="hms-card p-4">
             <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3"><span className="text-blue-600">②</span> Search Drugs</h4>
