@@ -228,7 +228,9 @@ const TopBarDate: React.FC = () => {
 
   return (
     <div className="flex items-center">
-      <span className="text-xs font-semibold text-slate-600 whitespace-nowrap">{weekday}, {dateMain} <span className="font-bold text-slate-800 tabular-nums ml-1">{timeStr}</span></span>
+      <span className="text-sm font-medium text-slate-400 whitespace-nowrap">{weekday},</span>
+      <span className="text-sm font-semibold text-slate-700 ml-1.5 whitespace-nowrap">{dateMain}</span>
+      <span className="text-sm font-bold text-blue-600 tabular-nums ml-2.5">{timeStr}</span>
     </div>
   );
 };
