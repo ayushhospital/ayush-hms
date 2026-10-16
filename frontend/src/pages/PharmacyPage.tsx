@@ -347,7 +347,9 @@ const PosTab: React.FC = () => {
   const [selectedPat, setSelectedPat] = useState<any>(null);
   const [patInfo, setPatInfo] = useState<string>('');
   const [refNo, setRefNo] = useState('');
-  const [refOptions, setRefOptions] = useState<{label: string; value: string}[]>([]);
+  const [consOptions, setConsOptions] = useState<{label: string; value: string}[]>([]);
+  const [ipdOptions, setIpdOptions] = useState<{label: string; value: string}[]>([]);
+  const [visitType, setVisitType] = useState<'opd'|'ipd'>('opd');
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [docId, setDocId] = useState(0);
   const [docCustom, setDocCustom] = useState('');
@@ -381,22 +383,35 @@ const PosTab: React.FC = () => {
     setPatName(p.name);
     setPatResults([]);
     setRefNo('');
-    setRefOptions([]);
-    // Fetch this patient's consultation numbers & IP admission numbers for the Ref No dropdown
+    setConsOptions([]);
+    setIpdOptions([]);
+    // Fetch this patient's OPD consultations & IPD admissions separately
     Promise.all([
       patientsApi.getConsultations(p.id).catch(() => []),
       ipdApi.list({ search: p.phone_number, limit: 100 }).catch(() => ({ admissions: [] })),
     ]).then(([cons, adm]: any) => {
-      const opts: {label: string; value: string}[] = [];
+      const consOpts: {label: string; value: string}[] = [];
       (Array.isArray(cons) ? cons : []).forEach((c: any) => {
-        if (c.consultation_number) opts.push({ label: `Consultation: ${c.consultation_number}`, value: c.consultation_number });
+        if (c.consultation_number) consOpts.push({ label: c.consultation_number, value: c.consultation_number });
       });
+      const ipdOpts: {label: string; value: string}[] = [];
       ((adm?.admissions) || []).forEach((a: any) => {
-        if (a.patient_id === p.id && a.admission_number) opts.push({ label: `IP Admission: ${a.admission_number}`, value: a.admission_number });
+        if (a.patient_id === p.id && a.admission_number) ipdOpts.push({ label: a.admission_number, value: a.admission_number });
       });
-      setRefOptions(opts);
-      if (opts.length > 0) setRefNo(opts[0].value); // pre-select the latest
+      setConsOptions(consOpts);
+      setIpdOptions(ipdOpts);
+      // Default to OPD if there are consultations, else IPD if admissions exist
+      if (consOpts.length > 0) { setVisitType('opd'); setRefNo(consOpts[0].value); }
+      else if (ipdOpts.length > 0) { setVisitType('ipd'); setRefNo(ipdOpts[0].value); }
     });
+  };
+
+  const activeRefOptions = visitType === 'opd' ? consOptions : ipdOptions;
+
+  const switchVisitType = (vt: 'opd'|'ipd') => {
+    setVisitType(vt);
+    const opts = vt === 'opd' ? consOptions : ipdOptions;
+    setRefNo(opts.length > 0 ? opts[0].value : '');
   };
 
   const docName = doctors.find(d => d.id === docId)?.name || docCustom;
@@ -448,7 +463,7 @@ const PosTab: React.FC = () => {
 
           {/* Customer section */}
           <div className="hms-card p-4">
-            <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">Customer</h4>
+            <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3"><span className="text-blue-600">①</span> Customer</h4>
 
             {/* Row 1: type + search/fetch (aligned grid) */}
             <div className="grid grid-cols-[150px_1fr_auto] gap-2 items-center">
@@ -506,46 +521,66 @@ const PosTab: React.FC = () => {
             {custType === 'patient' && patInfo && (
               <div className="mt-3 p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700">{patInfo}</div>
             )}
-            {/* Registered: Ref No + Doctor side by side */}
+            {/* Registered: Visit type (OPD/IPD) + Ref No + Doctor */}
             {custType === 'patient' && selectedPat && (
-              <div className="mt-3 grid grid-cols-2 gap-3">
+              <div className="mt-3 space-y-3">
+                {/* Visit type toggle */}
                 <div>
-                  <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Ref No</label>
-                  {refOptions.length > 0 ? (
-                    <select value={refOptions.some(o => o.value === refNo) ? refNo : ''} onChange={e => setRefNo(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none bg-white">
-                      {refOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                      <option value="">Other / none</option>
-                    </select>
-                  ) : (
-                    <input value={refNo} onChange={e=>setRefNo(e.target.value)}
-                      placeholder="Consultation / IP No"
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />
-                  )}
-                </div>
-                <div>
-                  <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Doctor</label>
-                  <div className="flex gap-2">
-                    <select value={docId} onChange={e => { setDocId(parseInt(e.target.value)); setDocCustom(''); }}
-                      className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none bg-white">
-                      <option value={0}>Select doctor</option>
-                      {doctors.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                      <option value={-1}>Other</option>
-                    </select>
-                    {docId === -1 && <input value={docCustom} onChange={e=>setDocCustom(e.target.value)} placeholder="Name" className="w-28 px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />}
+                  <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Visit Type</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button type="button" onClick={() => switchVisitType('opd')}
+                      className={`px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${visitType === 'opd' ? 'bg-blue-600 text-white shadow' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}`}>
+                      OPD Consultation {consOptions.length > 0 && <span className={visitType==='opd' ? 'text-blue-200' : 'text-slate-400'}>({consOptions.length})</span>}
+                    </button>
+                    <button type="button" onClick={() => switchVisitType('ipd')}
+                      className={`px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${visitType === 'ipd' ? 'bg-blue-600 text-white shadow' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}`}>
+                      IPD Admission {ipdOptions.length > 0 && <span className={visitType==='ipd' ? 'text-blue-200' : 'text-slate-400'}>({ipdOptions.length})</span>}
+                    </button>
                   </div>
                 </div>
+
+                {/* Ref No + Doctor side by side */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                      {visitType === 'opd' ? 'Consultation No' : 'IP Admission No'}
+                    </label>
+                    {activeRefOptions.length > 0 ? (
+                      <select value={activeRefOptions.some(o => o.value === refNo) ? refNo : ''} onChange={e => setRefNo(e.target.value)}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none bg-white">
+                        {activeRefOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                        <option value="">Other / none</option>
+                      </select>
+                    ) : (
+                      <input value={refNo} onChange={e=>setRefNo(e.target.value)}
+                        placeholder={visitType === 'opd' ? 'No OPD visits — enter no.' : 'No IPD admissions — enter no.'}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Doctor</label>
+                    <div className="flex gap-2">
+                      <select value={docId} onChange={e => { setDocId(parseInt(e.target.value)); setDocCustom(''); }}
+                        className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none bg-white">
+                        <option value={0}>Select doctor</option>
+                        {doctors.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                        <option value={-1}>Other</option>
+                      </select>
+                      {docId === -1 && <input value={docCustom} onChange={e=>setDocCustom(e.target.value)} placeholder="Name" className="w-28 px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />}
+                    </div>
+                  </div>
+                </div>
+                {activeRefOptions.length > 0 && !activeRefOptions.some(o => o.value === refNo) && (
+                  <input value={refNo} onChange={e=>setRefNo(e.target.value)} placeholder="Enter reference number manually"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />
+                )}
               </div>
-            )}
-            {custType === 'patient' && selectedPat && refOptions.length > 0 && !refOptions.some(o => o.value === refNo) && (
-              <input value={refNo} onChange={e=>setRefNo(e.target.value)} placeholder="Enter reference number manually"
-                className="mt-2 w-full px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />
             )}
           </div>
 
           {/* Drug search */}
           <div className="hms-card p-4">
-            <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">Search Drugs</h4>
+            <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3"><span className="text-blue-600">②</span> Search Drugs</h4>
             <input value={searchQ} onChange={e => setSearchQ(e.target.value)}
               placeholder="Type drug name to search…" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />
             {searchQ && drugs.length > 0 && (
@@ -587,7 +622,7 @@ const PosTab: React.FC = () => {
 
         {/* RIGHT — Cart & billing */}
         <div className="lg:col-span-2 hms-card p-4 flex flex-col">
-          <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">Cart ({cart.length})</h4>
+          <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3"><span className="text-blue-600">③</span> Cart &amp; Payment ({cart.length})</h4>
 
           {cart.length > 0 ? (
             <div className="overflow-x-auto mb-3">
