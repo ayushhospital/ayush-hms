@@ -61,6 +61,7 @@ body {
 
 .hms-table {
   width: 100%;
+  min-width: 620px; /* allow horizontal scroll inside overflow-x-auto cards on phones */
   border-collapse: collapse;
   font-size: 0.8125rem;
   color: #334155;

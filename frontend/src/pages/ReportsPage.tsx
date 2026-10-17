@@ -29,7 +29,7 @@ const REPORTS: ReportMeta[] = [
 const ReportButton: React.FC<{ meta: ReportMeta; active: boolean; onClick: () => void; count: number }> = ({ meta, active, onClick, count }) => (
   <button
     onClick={onClick}
-    className={`hms-card flex-1 min-w-[190px] text-left px-4 py-3 transition-all cursor-pointer ${active ? 'border-blue-500 ring-2 ring-blue-200' : 'hover:border-blue-200'}`}
+    className={`hms-card flex-1 min-w-[160px] sm:min-w-[190px] text-left px-4 py-3 transition-all cursor-pointer ${active ? 'border-blue-500 ring-2 ring-blue-200' : 'hover:border-blue-200'}`}
   >
     <div className="flex items-center justify-between mb-1">
       <span className={`text-xs font-bold uppercase tracking-wider ${active ? 'text-blue-600' : 'text-slate-400'}`}>{meta.label}</span>
@@ -124,7 +124,7 @@ const ReportsPage: React.FC = () => {
 
       {/* Date range filter */}
       <div className="hms-card p-4 mb-6">
-        <div className="flex flex-wrap items-end gap-4">
+        <div className="grid grid-cols-1 sm:flex sm:flex-wrap sm:items-end gap-3 sm:gap-4">
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-0.5">Start</label>
             <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)}
@@ -136,14 +136,14 @@ const ReportsPage: React.FC = () => {
               className="px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
           <button onClick={() => fetchReport()} disabled={loading}
-            className="hms-btn-primary disabled:opacity-50">
+            className="w-full sm:w-auto hms-btn-primary disabled:opacity-50">
             {loading ? 'Loading...' : 'View Report'}
           </button>
         </div>
       </div>
 
       {/* Section toggle: OPD | IPD — show one section at a time to maximize screen space */}
-      <div className="flex gap-2 mb-5">
+      <div className="grid grid-cols-2 sm:flex sm:gap-2 gap-2 mb-5">
         {(['OPD', 'IPD'] as const).map((sec) => (
           <button key={sec} onClick={() => selectSection(sec)}
             className={`px-5 py-2 text-sm font-semibold rounded-lg transition-colors ${section === sec ? 'bg-blue-600 text-white shadow' : 'bg-white text-gray-600 border border-slate-200 hover:bg-slate-50'}`}>

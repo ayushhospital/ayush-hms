@@ -167,7 +167,7 @@ const NewAdmissionPage: React.FC = () => {
     {step === 2 && (<div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
       <h3 className="text-sm font-semibold text-gray-800 mb-3">Admission Details</h3>
       <div className="space-y-3">
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1"><label className="block text-xs font-medium text-gray-600 mb-0.5">Type *</label>
             <select value={admissionType} onChange={e => setAdmissionType(e.target.value as 'Planned' | 'Emergency' | 'Referral')}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none bg-white">
@@ -184,7 +184,7 @@ const NewAdmissionPage: React.FC = () => {
           className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Reason for admission *" />
         <textarea value={initialDiagnosis} onChange={e => setInitialDiagnosis(e.target.value)} rows={2}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Initial diagnosis (optional)" />
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1"><label className="block text-xs font-medium text-gray-600 mb-0.5">How did the patient arrive?</label>
             <select value={referralSource} onChange={e => { setReferralSource(e.target.value); if (e.target.value === 'Self') setReferringProvider(''); }}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none bg-white">
@@ -192,7 +192,7 @@ const NewAdmissionPage: React.FC = () => {
           <div className="flex-1"><label className="block text-xs font-medium text-gray-600 mb-0.5">Dept</label>
             <input type="text" value={dept} onChange={e => setDept(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Department" /></div>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1"><label className="block text-xs font-medium text-gray-600 mb-0.5">Ward/Bed</label>
             <input type="text" value={wardBed} onChange={e => setWardBed(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="e.g. Ward A, Bed 12" /></div>
           {referralSource !== 'Self' && <div className="flex-1"><label className="block text-xs font-medium text-gray-600 mb-0.5">Referred by (name)</label>
@@ -208,7 +208,7 @@ const NewAdmissionPage: React.FC = () => {
     {step === 3 && (<div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
       <h3 className="text-sm font-semibold text-gray-800 mb-3">Attendant &amp; Confirm</h3>
       <div className="space-y-3">
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1"><label className="block text-xs font-medium text-gray-600 mb-0.5">Attendant Name *</label>
             <input type="text" value={attName} onChange={e => setAttName(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Full name" /></div>
           <div className="flex-1"><label className="block text-xs font-medium text-gray-600 mb-0.5">Relationship *</label>
@@ -216,7 +216,7 @@ const NewAdmissionPage: React.FC = () => {
               {['Spouse','Parent','Child','Sibling','Relative','Friend','Other'].map(r => <option key={r} value={r}>{r}</option>)}
             </select></div>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1"><label className="block text-xs font-medium text-gray-600 mb-0.5">Phone *</label>
             <input type="tel" value={attPhone} onChange={e => setAttPhone(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Phone number" /></div>
           <div className="flex-1"><label className="block text-xs font-medium text-gray-600 mb-0.5">Alt Phone</label>

@@ -178,7 +178,7 @@ const OverviewTab: React.FC<{admission:IPDAdmissionResponse; attendant:IPDAttend
 
   return (<>
     {msg && <div className={`mb-3 px-3 py-2 rounded-lg text-xs ${msg.includes('failed')||msg.includes('required')||msg.includes('cannot') ? 'bg-red-50 text-red-700' : 'bg-blue-50 text-blue-700'}`}>{msg}</div>}
-    <div className="grid grid-cols-2 gap-4 mb-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4">
       <div className="hms-card p-4 shadow-sm">
         <div className="flex items-center justify-between mb-2">
           <h4 className="text-xs font-semibold text-gray-700 m-0">Admission Details</h4>
@@ -195,11 +195,11 @@ const OverviewTab: React.FC<{admission:IPDAdmissionResponse; attendant:IPDAttend
                 <option value="">Select doctor...</option>
                 {doctors.map((doc:any) => <option key={doc.id} value={doc.id}>{doc.name}</option>)}
               </select></div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div><label className={lbl}>Department</label><input value={a.department||''} onChange={e=>setA({...a,department:e.target.value})} className={inp} /></div>
               <div><label className={lbl}>Ward/Bed</label><input value={a.ward_bed||''} onChange={e=>setA({...a,ward_bed:e.target.value})} className={inp} /></div>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div><label className={lbl}>Referral Source</label>
                 <select value={a.referral_source||''} onChange={e=>setA({...a,referral_source:e.target.value})} className={inp+' bg-white'}>
                   <option value="">-</option><option>Self</option><option>Doctor</option><option>Hospital</option><option>Other</option>
@@ -227,14 +227,14 @@ const OverviewTab: React.FC<{admission:IPDAdmissionResponse; attendant:IPDAttend
         </div>
         {editing==='attendant' && attendant ? (
           <div className="space-y-2">
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div><label className={lbl}>Name *</label><input value={at.name||''} onChange={e=>setAt({...at,name:e.target.value})} className={inp} /></div>
               <div><label className={lbl}>Relation *</label>
                 <select value={at.relation||''} onChange={e=>setAt({...at,relation:e.target.value})} className={inp+' bg-white'}>
                   <option>Spouse</option><option>Parent</option><option>Child</option><option>Sibling</option><option>Relative</option><option>Friend</option><option>Other</option>
                 </select></div>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div><label className={lbl}>Phone *</label><input value={at.phone_number||''} onChange={e=>setAt({...at,phone_number:e.target.value})} className={inp} /></div>
               <div><label className={lbl}>Alt Phone</label><input value={at.alternate_phone_number||''} onChange={e=>setAt({...at,alternate_phone_number:e.target.value})} className={inp} /></div>
             </div>
@@ -268,7 +268,7 @@ const OverviewTab: React.FC<{admission:IPDAdmissionResponse; attendant:IPDAttend
     </div>
     {billing && <div className="hms-card p-4 shadow-sm mb-4">
       <h4 className="text-xs font-semibold text-gray-700 mb-2">Financial Summary</h4>
-      <div className="grid grid-cols-4 gap-3 text-xs text-gray-600">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs text-gray-600">
         <div><span className="font-medium">Charges:</span> INR {billing.total_charges?.toFixed(0)}</div>
         <div className="text-emerald-600"><span className="font-medium">Payments:</span> INR {billing.total_payments?.toFixed(0)}</div>
         <div className="text-amber-600"><span className="font-medium">Refunds:</span> INR {billing.total_refunds?.toFixed(0)}</div>
@@ -310,7 +310,7 @@ const TestsTab: React.FC<{aid:number; doctors:Doctor[]; onError:(s:string)=>void
     </div>
     {showForm && <div className="bg-gray-50 rounded-lg p-3 mb-3 space-y-2">
       <input value={fName} onChange={e=>setFName(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Test name *" />
-      <div className="flex gap-3"><input value={fCat} onChange={e=>setFCat(e.target.value)} className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Category" />
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3"><input value={fCat} onChange={e=>setFCat(e.target.value)} className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Category" />
       <input value={fNotes} onChange={e=>setFNotes(e.target.value)} className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Notes" /></div>
       <button onClick={addTest} className="px-4 py-2 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Save Test</button>
     </div>}
@@ -348,14 +348,14 @@ const MedicationsTab: React.FC<{aid:number; doctors:Doctor[]}> = ({aid, doctors}
       <button onClick={()=>setShowForm(!showForm)} className="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">{showForm?'Cancel':'+ Add Medication'}</button>
     </div>
     {showForm && <div className="bg-gray-50 rounded-lg p-3 mb-3 space-y-2">
-      <div className="flex gap-3"><input value={f.medicine_name||''} onChange={e=>setF({...f,medicine_name:e.target.value})} className="w-56 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Medicine *" /><input value={f.strength||''} onChange={e=>setF({...f,strength:e.target.value})} className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Strength (e.g. 500 mg)" /></div>
-      <div className="flex gap-3"><input value={f.dose||''} onChange={e=>setF({...f,dose:e.target.value})} className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Dose * (e.g. 1 tablet, 5 ml)" />
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3"><input value={f.medicine_name||''} onChange={e=>setF({...f,medicine_name:e.target.value})} className="w-56 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Medicine *" /><input value={f.strength||''} onChange={e=>setF({...f,strength:e.target.value})} className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Strength (e.g. 500 mg)" /></div>
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3"><input value={f.dose||''} onChange={e=>setF({...f,dose:e.target.value})} className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Dose * (e.g. 1 tablet, 5 ml)" />
       <select value={f.route||''} onChange={e=>setF({...f,route:e.target.value})} className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none bg-white">
         <option value="">Route *</option>
         <option>Oral</option><option>IV</option><option>IM</option><option>Subcutaneous</option>
         <option>Topical</option><option>Sublingual</option><option>Inhalation</option><option>Suppository</option>
       </select></div>
-      <div className="flex gap-3">
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
         <select value={f.frequency||''} onChange={e=>setF({...f,frequency:e.target.value})} className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none bg-white">
           <option value="">Frequency *</option>
           <option value="OD">OD - Once daily</option>
@@ -406,7 +406,7 @@ const InsuranceTab: React.FC<{aid:number}> = ({aid}) => {
     </div>
     {showForm && <div className="bg-gray-50 rounded-lg p-3 mb-3 space-y-2">
       <input value={f.provider} onChange={e=>setF({...f,provider:e.target.value})} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Insurance provider *" />
-      <div className="flex gap-3"><input value={f.policy_number||''} onChange={e=>setF({...f,policy_number:e.target.value})} className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Policy number" />
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3"><input value={f.policy_number||''} onChange={e=>setF({...f,policy_number:e.target.value})} className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Policy number" />
       <input value={f.policyholder_name||''} onChange={e=>setF({...f,policyholder_name:e.target.value})} className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Policyholder" /></div>
       <button onClick={save} className="px-4 py-2 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Save Insurance</button>
     </div>}
@@ -452,7 +452,7 @@ const BillingTab: React.FC<{aid:number; onPrintBill:(mode:string,c:any[],p:any[]
           <button onClick={()=>onPrintBill('detailed', charges, payments, billing)} className="px-3 py-1.5 text-xs font-medium text-white bg-gray-600 rounded-lg hover:bg-gray-700">Detailed Bill</button>
         </div>}
       </div>
-      <div className="grid grid-cols-4 gap-3 text-xs">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
         <div className="p-2 bg-gray-50 rounded-lg"><span className="text-gray-500">Total Charges</span><p className="font-semibold text-gray-800 m-0 mt-0.5">INR {billing.total_charges?.toFixed(0)}</p></div>
         <div className="p-2 bg-emerald-50 rounded-lg"><span className="text-emerald-600">Payments</span><p className="font-semibold text-emerald-700 m-0 mt-0.5">INR {billing.total_payments?.toFixed(0)}</p></div>
         <div className="p-2 bg-amber-50 rounded-lg"><span className="text-amber-600">Refunds</span><p className="font-semibold text-amber-700 m-0 mt-0.5">INR {billing.total_refunds?.toFixed(0)}</p></div>
@@ -467,7 +467,7 @@ const BillingTab: React.FC<{aid:number; onPrintBill:(mode:string,c:any[],p:any[]
       </div>
       {showCharge && <div className="bg-gray-50 rounded-lg p-3 mb-3 space-y-2">
         <input value={c.description||''} onChange={e=>setC({...c,description:e.target.value})} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Description *" />
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <select value={c.category||''} onChange={e=>setC({...c,category:e.target.value})} className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none bg-white">
             <option value="">Category...</option>
             <option>Room Rent</option>
@@ -489,7 +489,7 @@ const BillingTab: React.FC<{aid:number; onPrintBill:(mode:string,c:any[],p:any[]
           </select>
           <input value={c.unit_price||''} onChange={e=>setC({...c,unit_price:e.target.value})} type="number" step="0.01" className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Unit price *" />
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <input value={c.quantity||1} onChange={e=>setC({...c,quantity:e.target.value})} type="number" className="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Qty" />
           <label className="flex-1 flex items-center gap-2 text-xs text-gray-500"><input value={c.charge_date||new Date().toISOString().substring(0,10)} onChange={e=>setC({...c,charge_date:e.target.value})} type="date" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" /></label>
         </div>
@@ -542,7 +542,7 @@ const PaymentsTab: React.FC<{aid:number; onPrintPayment:(p:any)=>void}> = ({aid,
         <button onClick={()=>{setShowPayment(!showPayment);setP({payment_mode:'Cash'})}} className="px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700">{showPayment?'Cancel':'+ Record Payment'}</button>
       </div>
       {showPayment && <div className="bg-gray-50 rounded-lg p-3 mb-3 space-y-2">
-        <div className="flex gap-3"><input value={p.amount||''} onChange={e=>setP({...p,amount:e.target.value})} type="number" step="0.01" className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Amount *" />
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3"><input value={p.amount||''} onChange={e=>setP({...p,amount:e.target.value})} type="number" step="0.01" className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Amount *" />
         <select value={p.payment_mode||'Cash'} onChange={e=>setP({...p,payment_mode:e.target.value})} className="px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none bg-white"><option value="Cash">Cash</option><option value="UPI">UPI</option><option value="Card">Card</option><option value="Bank Transfer">Bank Transfer</option></select></div>
         <input value={p.transaction_reference||''} onChange={e=>setP({...p,transaction_reference:e.target.value})} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="Transaction reference" />
         <button onClick={addPayment} className="px-4 py-2 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Record Payment</button>
@@ -595,7 +595,7 @@ const DischargeTab: React.FC<{aid:number; doctors:Doctor[]; admission:IPDAdmissi
     </div>
     {finError && <div className="p-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-600 mb-2">{finError}</div>}
     {loading ? <p className="text-xs text-gray-400">Loading...</p> : <div className="space-y-2.5">
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div><label className="block text-xs font-medium text-gray-600 mb-0.5">Discharge Date</label>
           <input type="date" value={f.discharge_datetime?f.discharge_datetime.substring(0,10):''} onChange={e=>setF({...f,discharge_datetime:e.target.value+'T00:00:00'})} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" /></div>
         <div><label className="block text-xs font-medium text-gray-600 mb-0.5">Discharging Doctor</label>

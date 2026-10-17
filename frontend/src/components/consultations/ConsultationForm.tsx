@@ -99,7 +99,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Visit Type *</label>
             <select value={visitType}
@@ -116,7 +116,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Fee (₹) *</label>
             <input type="number" value={feeAmount}

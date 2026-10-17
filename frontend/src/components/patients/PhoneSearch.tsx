@@ -16,8 +16,8 @@ const PhoneSearch: React.FC<PhoneSearchProps> = ({ onSearch, loading }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-xl shadow-sm w-max">
-      <div className="flex items-center gap-3 px-4 py-2.5">
+    <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-xl shadow-sm w-full sm:w-max">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 px-4 py-2.5">
         <span className="text-gray-400 text-base">&#128222;</span>
         <input
           id="phone-search"
@@ -26,7 +26,7 @@ const PhoneSearch: React.FC<PhoneSearchProps> = ({ onSearch, loading }) => {
           value={phone}
           onChange={(e) => setPhone(e.target.value.replace(/[^0-9+\-\s]/g, ''))}
           placeholder="Enter phone number"
-          className="w-56 border-0 bg-transparent text-sm outline-none placeholder-gray-400"
+          className="w-full sm:w-56 border-0 bg-transparent text-sm outline-none placeholder-gray-400"
           autoFocus
         />
         <button

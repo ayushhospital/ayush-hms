@@ -80,7 +80,7 @@ const IPDHomePage: React.FC = () => {
       />
 
       {/* Summary cards */}
-      <div className="grid grid-cols-4 gap-3 mb-5">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
         <div className="hms-card px-4 py-3 shadow-sm">
           <p className="text-2xl font-bold m-0 text-emerald-600">{summary.open_count}</p>
           <p className="text-xs text-gray-500 mt-1">Open Admissions</p>
@@ -101,9 +101,9 @@ const IPDHomePage: React.FC = () => {
 
       {/* Search and filters */}
       <div className="hms-card px-4 py-3 mb-4">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 w-full max-w-full sm:w-auto sm:max-w-none">
           <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-            className={`flex-1 ${inp}`}
+            className={`flex-1 min-w-0 ${inp}`}
             placeholder={mode==='active' ? 'Search by admission ID, phone or name' : 'Search old discharges by admission ID, phone or name'}
             onKeyDown={e => { if (e.key === 'Enter') loadAdmissions(); }} />
           <button onClick={() => loadAdmissions()}
@@ -123,7 +123,7 @@ const IPDHomePage: React.FC = () => {
         </div>
 
         {mode === 'history' && (
-          <div className="grid grid-cols-4 gap-3 mt-3 border-t border-gray-100 pt-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3 border-t border-gray-100 pt-3">
             <div>
               <label className={lbl}>Admitted From</label>
               <input type="date" value={admittedFrom} onChange={e => setAdmittedFrom(e.target.value)} className={`w-full ${inp}`} />

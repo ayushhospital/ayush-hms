@@ -534,7 +534,7 @@ const PosTab: React.FC = () => {
               {(noMatch || walkinForm) && (
                 <div className="mt-2 p-3 bg-slate-50 border border-slate-200 rounded-lg">
                   <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">{noMatch ? 'No registered patient found — proceed as walk-in' : 'Walk-in sale'}</p>
-                  <div className="grid grid-cols-[1fr_150px_auto] gap-2 items-center">
+                  <div className="grid grid-cols-1 sm:grid-cols-[1fr_150px_auto] gap-2 sm:items-center">
                     <input value={walkinName} onChange={e=>setWalkinName(e.target.value)} placeholder="Customer name"
                       className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none" />
                     <input value={walkinPhone} onChange={e=>setWalkinPhone(e.target.value)} placeholder="Phone (optional)"
@@ -570,7 +570,7 @@ const PosTab: React.FC = () => {
                     Link to hospital visit {consOptions.length + ipdOptions.length > 0 && <span className="text-slate-400">({consOptions.length} OPD · {ipdOptions.length} IPD)</span>}
                   </label>
                   {linkVisit && (
-                    <div className="mt-2.5 grid grid-cols-3 gap-2">
+                    <div className="mt-2.5 grid grid-cols-1 sm:grid-cols-3 gap-2">
                       <select value={visitType} onChange={e => switchVisitType(e.target.value as any)}
                         className="w-full px-2.5 py-2 border border-slate-300 rounded-lg text-xs outline-none bg-white">
                         <option value="opd">OPD Consultation</option>
