@@ -106,10 +106,13 @@ function AppRoutes() {
             <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center text-[10px] font-bold">AH</div>
             <span className="text-sm font-bold">Ayush HMS</span>
           </Link>
-          <div className="flex items-center gap-2 min-w-0 flex-1 justify-end">
-            <span className="hidden min-[430px]:inline shrink-0"><MobileDate /></span>
-            <MobileNav />
-          </div>
+          <MobileNav />
+        </div>
+      )}
+
+      {user && (
+        <div className="flex items-center gap-2 min-w-0 pl-10 py-2.5">
+          <UserMenuDropdown />
         </div>
       )}
 
