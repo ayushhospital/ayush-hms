@@ -32,7 +32,7 @@ const Protected: React.FC<{ module?: string; superOnly?: boolean; children: Reac
 };
 
 /* User avatar dropdown in top bar — user initial clickable for profile actions */
-const UserMenuDropdown: React.FC = () => {
+const UserMenuDropdown: React.FC<{ compact?: boolean }> = ({ compact = false }) => {
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -45,6 +45,56 @@ const UserMenuDropdown: React.FC = () => {
     return () => document.removeEventListener('mousedown', handle);
   }, []);
 
+  if (compact) {
+    // Mobile: show just the avatar badge + down arrow (no username text)
+    return (
+      <div className="relative flex items-center gap-1 shrink-0" ref={ref}>
+        <button
+          onClick={() => setOpen(!open)}
+          className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-[10px] font-bold uppercase hover:bg-blue-700 transition-colors shrink-0"
+          aria-label="User menu"
+        >
+          {user?.username?.slice(0, 2)}
+        </button>
+        <button
+          onClick={() => setOpen(!open)}
+          className="flex items-center justify-center shrink-0"
+          aria-label="Toggle user menu"
+        >
+          <svg viewBox="0 0 24 24" width="14" height="14" className="text-slate-400 shrink-0">
+            <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+        {open && (
+          <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-slate-200 rounded-xl shadow-xl py-1.5 z-50">
+            <div className="px-4 py-2 border-b border-slate-100">
+              <p className="text-sm font-semibold text-slate-900 m-0">{user?.username}</p>
+              <p className="text-[10px] text-slate-500 uppercase m-0 mt-0.5 tracking-wider">{user?.role}user</p>
+            </div>
+            <button onClick={() => { setOpen(false); (window as any).__openChangePw && (window as any).__openChangePw(); }}
+              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors text-left">
+              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="1.7" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="10" rx="2" />
+                <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+                <circle cx="12" cy="16" r="1" />
+              </svg>
+              Change Password
+            </button>
+            <button onClick={() => { setOpen(false); logout(); }}
+              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors text-left">
+              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="1.7" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <path d="M16 17l5-5-5-5M21 12H9" />
+              </svg>
+              Sign out
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Desktop: show full dropdown with username and all menu items
   return (
     <div className="relative w-40 flex justify-end" ref={ref}>
       <button onClick={() => setOpen(!open)}
