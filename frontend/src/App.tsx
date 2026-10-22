@@ -158,7 +158,7 @@ function AppRoutes() {
           </Link>
           <div className="flex items-center gap-2 min-w-0 flex-1 justify-end">
             <MobileNav />
-            <UserMenuDropdown />
+            <UserMenuDropdown compact={true} />
           </div>
         </div>
       )}
