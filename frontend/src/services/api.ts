@@ -33,7 +33,7 @@ import type {
 const isLocalFrontend = typeof window !== 'undefined'
   && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 export const API_BASE = (import.meta.env.VITE_API_BASE_URL as string)
-  || (isLocalFrontend ? 'http://localhost:8000/api/v1' : 'https://ayush-hms.onrender.com/api/v1');
+  || (isLocalFrontend ? 'http://localhost:8000/api/v1' : 'https://ayush-hms-1.onrender.com/api/v1');
 
 const TOKEN_KEY = 'hms_token';
 export const getToken = () => localStorage.getItem(TOKEN_KEY);
